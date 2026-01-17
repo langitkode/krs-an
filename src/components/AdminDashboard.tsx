@@ -46,6 +46,68 @@ export function AdminDashboard() {
   const [isAiCleaning, setIsAiCleaning] = useState(false);
   const [rawText, setRawText] = useState("");
   const [isAiDialogOpen, setIsAiDialogOpen] = useState(false);
+  const [scraperMode, setScraperMode] = useState<"ai" | "manual">("manual");
+
+  const handleManualParse = async () => {
+    if (!rawText.trim()) return;
+    setIsAiCleaning(true);
+    try {
+      const lines = rawText.split("\n");
+      const data: any[] = [];
+
+      lines.forEach((line) => {
+        if (!line.trim()) return;
+
+        // Split by tabs (standard for Excel/Sheets copy-paste)
+        const columns = line.split("\t");
+
+        // Expected Order: Code, Name, SKS, Prodi, Class, Lecturer, Room, Schedule
+        // Handle cases where columns might be empty but present
+        if (columns.length < 2) return;
+
+        const scheduleRaw = columns[7]?.trim() || "";
+        const scheduleParts = scheduleRaw
+          ? scheduleRaw
+              .split(";")
+              .map((s: string) => {
+                const match = s
+                  .trim()
+                  .match(/(\w+)\s+(\d{1,2}:\d{2})-(\d{1,2}:\d{2})/);
+                if (match) {
+                  return { day: match[1], start: match[2], end: match[3] };
+                }
+                return null;
+              })
+              .filter(Boolean)
+          : [];
+
+        data.push({
+          code: columns[0]?.trim() || "N/A",
+          name: columns[1]?.trim() || "Untitled",
+          sks: parseInt(columns[2]) || 0,
+          prodi: columns[3]?.trim() || "General",
+          class: columns[4]?.trim() || "-",
+          lecturer: columns[5]?.trim() || "-",
+          room: columns[6]?.trim() || "-",
+          schedule: scheduleParts,
+        });
+      });
+
+      if (data.length === 0)
+        throw new Error("No valid data found. Use Tab-separated format.");
+
+      await bulkImport({ courses: data });
+      toast.success(
+        `Successfully parsed and deployed ${data.length} components.`,
+      );
+      setIsAiDialogOpen(false);
+      setRawText("");
+    } catch (err: any) {
+      toast.error("Parsing failed: " + err.message);
+    } finally {
+      setIsAiCleaning(false);
+    }
+  };
 
   if (user === undefined) {
     return (
@@ -420,36 +482,96 @@ export function AdminDashboard() {
       </Tabs>
 
       <Dialog open={isAiDialogOpen} onOpenChange={setIsAiDialogOpen}>
-        <DialogContent className="max-w-3xl bg-white rounded-3xl p-8 border-none shadow-2xl">
+        <DialogContent className="max-w-4xl bg-white rounded-3xl p-8 border-none shadow-2xl overflow-y-auto max-h-[90vh]">
           <DialogHeader className="mb-6">
-            <DialogTitle className="text-2xl font-display font-bold text-slate-900 italic flex items-center gap-3">
-              <Wand2 className="w-6 h-6 text-blue-700" />
-              Intelligence Scraper
-            </DialogTitle>
-            <DialogDescription className="text-[11px] font-mono text-slate-400 uppercase tracking-widest pt-2 border-t border-slate-100">
-              Paste raw text from the university portal. AI will architect the
-              schema.
-            </DialogDescription>
+            <div className="flex justify-between items-start">
+              <div className="space-y-1">
+                <DialogTitle className="text-2xl font-display font-bold text-slate-900 italic flex items-center gap-3">
+                  <Wand2 className="w-6 h-6 text-blue-700" />
+                  Intelligence Scraper
+                </DialogTitle>
+                <DialogDescription className="text-[11px] font-mono text-slate-400 uppercase tracking-widest pt-2">
+                  Architect your database from raw terminal data or pasted
+                  sheets.
+                </DialogDescription>
+              </div>
+              <div className="flex bg-slate-100 p-1 rounded-xl">
+                <Button
+                  variant={scraperMode === "manual" ? "secondary" : "ghost"}
+                  size="sm"
+                  onClick={() => setScraperMode("manual")}
+                  className={`rounded-lg font-mono text-[9px] uppercase tracking-wider px-4 ${scraperMode === "manual" ? "bg-white shadow-sm" : ""}`}
+                >
+                  Manual Core
+                </Button>
+                <Button
+                  variant={scraperMode === "ai" ? "secondary" : "ghost"}
+                  size="sm"
+                  onClick={() => setScraperMode("ai")}
+                  className={`rounded-lg font-mono text-[9px] uppercase tracking-wider px-4 ${scraperMode === "ai" ? "bg-white shadow-sm" : ""}`}
+                >
+                  AI Architect
+                </Button>
+              </div>
+            </div>
           </DialogHeader>
 
-          <div className="space-y-4">
-            <Textarea
-              value={rawText}
-              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                setRawText(e.target.value)
-              }
-              placeholder="Paste messy schedule text here... (Example: Prodi Informatika, MK: Data Science, Jadwal: Senin 07:00-09:00...)"
-              className="min-h-[300px] bg-slate-50 border-none rounded-2xl p-6 font-mono text-xs leading-relaxed focus-visible:ring-blue-700"
-            />
-            <div className="flex items-center gap-2 p-4 bg-blue-50/50 rounded-xl border border-blue-50">
-              <AlertCircle className="w-4 h-4 text-blue-700 flex-shrink-0" />
-              <p className="text-[10px] text-blue-900 leading-normal">
-                AI will attempt to match:{" "}
-                <strong>
-                  Code, Name, SKS, Prodi, Class, Lecturer, Room, and Schedule
-                </strong>
-                . Verify output after deployment.
-              </p>
+          <div className="space-y-6">
+            <div className="relative group">
+              <Textarea
+                value={rawText}
+                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                  setRawText(e.target.value)
+                }
+                placeholder={
+                  scraperMode === "manual"
+                    ? "Paste spreadsheet rows here (Tab separated)...\nOrder: Code [TAB] Name [TAB] SKS [TAB] Prodi [TAB] Class [TAB] Lecturer [TAB] Room [TAB] Schedule"
+                    : "Paste messy schedule text here... AI will analyze and structure it automatically."
+                }
+                className="min-h-[350px] bg-slate-50 border-none rounded-2xl p-6 font-mono text-xs leading-relaxed focus-visible:ring-blue-700 transition-all group-focus-within:bg-white group-focus-within:shadow-inner"
+              />
+              {scraperMode === "manual" && (
+                <div className="absolute top-4 right-4">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      const template =
+                        "CODE\tNAME\tSKS\tPRODI\tCLASS\tLECTURER\tROOM\tMon 07:00-09:00";
+                      navigator.clipboard.writeText(template);
+                      toast.success("Header template copied to clipboard");
+                    }}
+                    className="h-7 px-3 text-[9px] font-mono uppercase tracking-widest text-slate-400 hover:text-blue-700 hover:bg-blue-50"
+                  >
+                    <Copy className="w-3 h-3 mr-2" />
+                    Copy Template
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            <div
+              className={`p-5 rounded-2xl border transition-colors ${scraperMode === "manual" ? "bg-slate-50 border-slate-100" : "bg-blue-50/50 border-blue-50"}`}
+            >
+              <div className="flex gap-4 items-start">
+                <AlertCircle
+                  className={`w-5 h-5 flex-shrink-0 mt-0.5 ${scraperMode === "manual" ? "text-slate-400" : "text-blue-700"}`}
+                />
+                <div className="space-y-2">
+                  <p className="text-[11px] font-bold uppercase tracking-tight text-slate-900">
+                    {scraperMode === "manual"
+                      ? "Deterministic Core Mode"
+                      : "AI Intelligence Mode"}
+                  </p>
+                  <p
+                    className={`text-[10px] leading-relaxed ${scraperMode === "manual" ? "text-slate-500" : "text-blue-900"}`}
+                  >
+                    {scraperMode === "manual"
+                      ? "Directly maps columns from Tab-Separated values (Excel/CSV). Handles empty columns automatically. This method is 100% accurate if your format follows the template."
+                      : "Uses Gemini AI to extract structured records from unstructured text. Best for messy portal copies. May require human verification after deployment."}
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -462,17 +584,23 @@ export function AdminDashboard() {
               Cancel
             </Button>
             <Button
-              onClick={handleAiCleanup}
+              onClick={
+                scraperMode === "manual" ? handleManualParse : handleAiCleanup
+              }
               disabled={isAiCleaning || !rawText.trim()}
-              className="bg-blue-700 hover:bg-blue-800 text-white font-display font-medium px-8 rounded-xl shadow-lg shadow-blue-100 min-w-[160px]"
+              className={`${scraperMode === "manual" ? "bg-slate-900 shadow-slate-200" : "bg-blue-700 shadow-blue-100"} hover:opacity-90 text-white font-display font-medium px-8 rounded-xl shadow-lg min-w-[180px] transition-all`}
             >
               {isAiCleaning ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Architecting...
+                  {scraperMode === "manual" ? "Parsing..." : "Architecting..."}
                 </>
               ) : (
-                "Execute Deployment"
+                <>
+                  {scraperMode === "manual"
+                    ? "Execute Manual Sync"
+                    : "Execute AI Deployment"}
+                </>
               )}
             </Button>
           </DialogFooter>
