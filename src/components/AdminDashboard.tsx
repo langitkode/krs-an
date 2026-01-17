@@ -57,26 +57,49 @@ export function AdminDashboard() {
 
   if (user === null || !user.isAdmin) {
     return (
-      <div className="flex flex-col items-center justify-center p-20 space-y-4">
-        <AlertCircle className="w-12 h-12 text-red-500" />
-        <h1 className="text-2xl font-display font-bold">Access Denied</h1>
-        <p className="text-slate-500">
-          Only authorized architects can access the core. Use your standard
-          terminal.
-        </p>
-        <Button variant="outline" onClick={() => (window.location.href = "/")}>
-          Return to Base
-        </Button>
-        {user?.tokenIdentifier && (
-          <div className="mt-8 pt-8 border-t border-slate-100 text-center">
-            <p className="text-[10px] font-mono text-slate-300 uppercase tracking-widest mb-2">
-              Architect Identity Token
-            </p>
-            <code className="px-3 py-1 bg-slate-50 rounded text-[10px] text-slate-400 font-mono break-all max-w-xs">
-              {user.tokenIdentifier}
-            </code>
-          </div>
-        )}
+      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-8 animate-in zoom-in duration-500">
+        <div className="relative">
+          <div className="absolute inset-0 bg-red-100 blur-2xl rounded-full opacity-20 animate-pulse" />
+          <AlertCircle className="w-16 h-16 text-red-500 relative" />
+        </div>
+
+        <div className="text-center space-y-3">
+          <h1 className="text-3xl font-display font-bold text-slate-900 italic">
+            Access Denied
+          </h1>
+          <p className="text-slate-500 max-w-xs mx-auto leading-relaxed">
+            Your identity is not recognized as a <strong>Core Architect</strong>
+            . Access to university master data is restricted.
+          </p>
+        </div>
+
+        <div className="flex flex-col gap-4 w-full max-w-xs">
+          <Button
+            className="w-full h-12 bg-slate-900 hover:bg-slate-800 rounded-xl font-display text-sm tracking-wide"
+            onClick={() => (window.location.href = "/")}
+          >
+            Return to Planner
+          </Button>
+
+          {user?.tokenIdentifier && (
+            <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 space-y-4">
+              <div className="space-y-1 text-center">
+                <p className="text-[10px] font-mono text-slate-400 uppercase tracking-widest">
+                  Architect Identity Token
+                </p>
+                <div className="p-2 bg-white rounded-lg border border-slate-100 break-all">
+                  <code className="text-[9px] text-blue-700 font-mono leading-tight">
+                    {user.tokenIdentifier}
+                  </code>
+                </div>
+              </div>
+              <p className="text-[9px] text-slate-400 text-center leading-normal">
+                Use this token with the <code>makeAdmin</code> mutation in your
+                developer console to gain access.
+              </p>
+            </div>
+          )}
+        </div>
       </div>
     );
   }
