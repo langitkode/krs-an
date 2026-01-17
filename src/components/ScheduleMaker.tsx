@@ -248,46 +248,44 @@ export function ScheduleMaker() {
 
   if (step === "config") {
     return (
-      <div className="max-w-3xl mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-        <div className="text-center space-y-3">
-          <Badge className="bg-blue-50 text-blue-700 hover:bg-blue-50 border-none px-4 py-1 rounded-full font-mono text-[10px] tracking-widest mb-2">
+      <div className="max-w-3xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="text-center space-y-2">
+          <Badge className="bg-slate-900/5 text-slate-600 hover:bg-slate-900/10 border-slate-200 px-3 py-0.5 rounded-full font-mono text-[9px] tracking-widest mb-1">
             ACADEMIC YEAR 2024/2025
           </Badge>
-          <h2 className="text-4xl font-bold font-display text-slate-900 tracking-tight italic">
+          <h2 className="text-3xl font-bold font-display text-slate-900 tracking-tight">
             Architect Your Semester
           </h2>
-          <p className="text-slate-500 max-w-lg mx-auto leading-relaxed">
-            Begin your planning session by selecting your academic profile or
-            uploading a custom schedule architecture.
+          <p className="text-slate-600 max-w-lg mx-auto leading-relaxed text-sm">
+            Select your academic profile or upload a custom architecture.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8">
+        <div className="grid md:grid-cols-2 gap-6">
           {/* Master Data Option */}
           <Card
-            className={`relative group transition-all duration-500 border-2 ${sessionProfile.useMaster ? "border-blue-700 bg-blue-50/10 shadow-2xl shadow-blue-50" : "border-slate-100 hover:border-blue-200"}`}
+            className={`relative group transition-all duration-500 border-2 ${sessionProfile.useMaster ? "border-blue-700 bg-blue-50/10 shadow-xl shadow-blue-50/50" : "border-slate-200 hover:border-blue-200"}`}
             onClick={() =>
               setSessionProfile((p) => ({ ...p, useMaster: true }))
             }
           >
-            <CardHeader className="p-8">
-              <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center mb-6 border border-slate-100 shadow-sm group-hover:scale-110 transition-transform">
+            <CardHeader className="p-6 pb-4">
+              <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center mb-4 border border-slate-100 shadow-sm group-hover:scale-110 transition-transform">
                 <GraduationCap
-                  className={`w-7 h-7 ${sessionProfile.useMaster ? "text-blue-700" : "text-slate-400"}`}
+                  className={`w-6 h-6 ${sessionProfile.useMaster ? "text-blue-700" : "text-slate-400"}`}
                 />
               </div>
-              <CardTitle className="text-xl font-display mb-2">
+              <CardTitle className="text-lg font-display mb-1">
                 University Master
               </CardTitle>
-              <CardDescription>
-                Auto-load courses from the university curriculum. Precision
-                engineered.
+              <CardDescription className="text-xs text-slate-500 leading-relaxed">
+                Auto-load courses from the university curriculum.
               </CardDescription>
             </CardHeader>
-            <CardContent className="p-8 pt-0 space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-[10px] uppercase font-mono tracking-widest text-slate-400">
+            <CardContent className="p-6 pt-0 space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-[9px] uppercase font-mono tracking-widest text-slate-500">
                     Prodi
                   </Label>
                   <Input
@@ -298,11 +296,11 @@ export function ScheduleMaker() {
                         prodi: e.target.value.toUpperCase(),
                       }))
                     }
-                    className="bg-white/50 border-slate-100"
+                    className="h-9 bg-white border-slate-200 text-xs"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] uppercase font-mono tracking-widest text-slate-400">
+                <div className="space-y-1.5">
+                  <Label className="text-[9px] uppercase font-mono tracking-widest text-slate-500">
                     Semester
                   </Label>
                   <Input
@@ -314,14 +312,14 @@ export function ScheduleMaker() {
                         semester: parseInt(e.target.value),
                       }))
                     }
-                    className="bg-white/50 border-slate-100"
+                    className="h-9 bg-white border-slate-200 text-xs"
                   />
                 </div>
               </div>
               <Button
                 onClick={() => handleStartSession("master")}
                 disabled={!sessionProfile.useMaster}
-                className="w-full bg-blue-700 hover:bg-blue-800 text-white rounded-xl h-12 shadow-lg shadow-blue-100"
+                className="w-full bg-blue-700 hover:bg-blue-800 text-white rounded-xl h-10 shadow-lg shadow-blue-100/50 text-xs"
               >
                 Sync University Data
               </Button>
@@ -330,31 +328,30 @@ export function ScheduleMaker() {
 
           {/* Manual/Upload Option */}
           <Card
-            className={`relative group transition-all duration-500 border-2 ${!sessionProfile.useMaster ? "border-slate-900 bg-slate-50 shadow-2xl shadow-slate-200" : "border-slate-100 hover:border-slate-200"}`}
+            className={`relative group transition-all duration-500 border-2 ${!sessionProfile.useMaster ? "border-slate-900 bg-slate-50 shadow-xl shadow-slate-200" : "border-slate-200 hover:border-slate-300"}`}
             onClick={() =>
               setSessionProfile((p) => ({ ...p, useMaster: false }))
             }
           >
-            <CardHeader className="p-8">
-              <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center mb-6 border border-slate-100 shadow-sm group-hover:scale-110 transition-transform">
+            <CardHeader className="p-6 pb-4">
+              <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center mb-4 border border-slate-100 shadow-sm group-hover:scale-110 transition-transform">
                 <Sparkles
-                  className={`w-7 h-7 ${!sessionProfile.useMaster ? "text-slate-900" : "text-slate-400"}`}
+                  className={`w-6 h-6 ${!sessionProfile.useMaster ? "text-slate-900" : "text-slate-400"}`}
                 />
               </div>
-              <CardTitle className="text-xl font-display mb-2">
+              <CardTitle className="text-lg font-display mb-1">
                 Custom Architect
               </CardTitle>
-              <CardDescription>
-                Upload your own PDF or start from an empty canvas. Complete
-                freedom.
+              <CardDescription className="text-xs text-slate-500 leading-relaxed">
+                Upload your own PDF or start from an empty canvas.
               </CardDescription>
             </CardHeader>
-            <CardContent className="p-8 pt-4 flex items-end grow">
+            <CardContent className="p-6 pt-0">
               <Button
                 variant="outline"
                 onClick={() => handleStartSession("manual")}
                 disabled={sessionProfile.useMaster}
-                className="w-full border-slate-200 hover:bg-white hover:text-slate-900 rounded-xl h-12"
+                className="w-full border-slate-300 hover:bg-white hover:text-slate-900 rounded-xl h-10 text-xs mt-4"
               >
                 Manual Architecture
               </Button>
@@ -362,7 +359,7 @@ export function ScheduleMaker() {
           </Card>
         </div>
 
-        <p className="text-center text-[10px] font-mono text-slate-300 uppercase tracking-[0.4em] pt-10">
+        <p className="text-center text-[9px] font-mono text-slate-400 uppercase tracking-[0.4em] pt-4">
           POWERED BY THE CORE ARCHITECT ENGINE
         </p>
       </div>
@@ -371,19 +368,18 @@ export function ScheduleMaker() {
 
   if (step === "upload") {
     return (
-      <div className="max-w-2xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-        <div className="text-center space-y-2">
-          <h2 className="text-3xl font-bold font-display text-slate-900 tracking-tight">
+      <div className="max-w-2xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="text-center space-y-1.5">
+          <h2 className="text-2xl font-bold font-display text-slate-900 tracking-tight">
             Generate Your Vision
           </h2>
-          <p className="text-slate-500">
-            Upload your academic PDF and let our AI architect your ideal
-            semester.
+          <p className="text-sm text-slate-600">
+            Upload your academic PDF for AI-powered architecture.
           </p>
         </div>
 
         <Card className="border-2 border-dashed border-slate-200 bg-white/50 hover:bg-white hover:border-blue-200 transition-all duration-300">
-          <CardContent className="pt-16 pb-16 text-center">
+          <CardContent className="pt-10 pb-10 text-center">
             <input
               type="file"
               accept=".pdf"
@@ -396,36 +392,36 @@ export function ScheduleMaker() {
               htmlFor="pdf-upload"
               className="cursor-pointer group flex flex-col items-center"
             >
-              <div className="w-20 h-20 bg-slate-50 rounded-2xl flex items-center justify-center mb-6 border border-slate-100 group-hover:bg-blue-50 group-hover:border-blue-100 transition-all">
+              <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mb-4 border border-slate-100 group-hover:bg-blue-50 group-hover:border-blue-100 transition-all">
                 {aiMutation.isPending ? (
-                  <Loader2 className="w-8 h-8 text-blue-700 animate-spin" />
+                  <Loader2 className="w-6 h-6 text-blue-700 animate-spin" />
                 ) : (
-                  <Upload className="w-8 h-8 text-slate-400 group-hover:text-blue-700 transition-colors" />
+                  <Upload className="w-6 h-6 text-slate-400 group-hover:text-blue-700 transition-colors" />
                 )}
               </div>
-              <CardTitle className="text-xl font-display mb-2">
+              <CardTitle className="text-lg font-display mb-1">
                 {aiMutation.isPending
                   ? "Analyzing Documents..."
                   : "Select Document"}
               </CardTitle>
-              <CardDescription className="max-w-xs mx-auto mb-6 leading-relaxed">
-                Drag and drop your academic PDF or click to browse. Let AI
-                architect your semester.
+              <CardDescription className="max-w-xs mx-auto mb-4 leading-relaxed text-xs text-slate-500">
+                Drag and drop your academic PDF here. Let AI architect your
+                semester.
               </CardDescription>
-              <div className="flex items-center gap-2 bg-slate-900 text-white px-4 py-1.5 rounded-full shadow-lg mb-8">
-                <span className="text-[10px] font-mono tracking-widest uppercase">
+              <div className="flex items-center gap-2 bg-slate-900 text-white px-3 py-1 rounded-full shadow-lg mb-6">
+                <span className="text-[9px] font-mono tracking-widest uppercase">
                   {userData?.credits ?? 5} TOKENS REMAINING
                 </span>
               </div>
             </label>
 
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-8 border-t border-slate-100">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-6 border-t border-slate-100">
               <Button
                 variant="ghost"
                 onClick={handleManualInput}
-                className="font-mono text-[10px] uppercase tracking-widest text-slate-400 hover:text-blue-700 transition-colors gap-2"
+                className="font-mono text-[9px] uppercase tracking-widest text-slate-500 hover:text-blue-700 transition-colors gap-2 h-8"
               >
-                <Plus className="w-3.5 h-3.5" /> Manual Architecture
+                <Plus className="w-3 h-3" /> Manual Architecture
               </Button>
               <div className="hidden sm:block w-1.5 h-1.5 rounded-full bg-slate-200" />
               <div className="relative">
@@ -440,10 +436,10 @@ export function ScheduleMaker() {
                   <Button
                     variant="ghost"
                     asChild
-                    className="font-mono text-[10px] uppercase tracking-widest text-slate-400 hover:text-blue-700 transition-colors gap-2 cursor-pointer"
+                    className="font-mono text-[9px] uppercase tracking-widest text-slate-500 hover:text-blue-700 transition-colors gap-2 cursor-pointer h-8"
                   >
                     <span>
-                      <FileJson className="w-3.5 h-3.5" /> Import Strategy
+                      <FileJson className="w-3 h-3" /> Import Strategy
                     </span>
                   </Button>
                 </label>
@@ -452,7 +448,7 @@ export function ScheduleMaker() {
           </CardContent>
         </Card>
 
-        <p className="text-center text-[10px] font-mono text-slate-300 uppercase tracking-[0.3em]">
+        <p className="text-center text-[9px] font-mono text-slate-400 uppercase tracking-[0.3em]">
           INTELLIGENT ACADEMIC COMPOSER
         </p>
 
@@ -481,111 +477,109 @@ export function ScheduleMaker() {
       .reduce((sum, [_, variations]) => sum + (variations[0]?.sks || 0), 0);
 
     return (
-      <div className="space-y-10 animate-in fade-in duration-500">
-        <div className="flex flex-col md:flex-row justify-between items-end gap-6 bg-white p-8 rounded-2xl border border-slate-100 shadow-sm transition-all hover:shadow-md">
-          <div className="space-y-2">
-            <div className="flex items-center gap-3">
-              <h2 className="text-3xl font-bold font-display text-slate-900 tracking-tight">
+      <div className="space-y-6 animate-in fade-in duration-500">
+        <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm transition-all hover:shadow-md">
+          <div className="space-y-1 text-center md:text-left">
+            <div className="flex flex-col md:flex-row items-center gap-2">
+              <h2 className="text-2xl font-bold font-display text-slate-900 tracking-tight">
                 Curate Your Semester
               </h2>
               <Badge
                 variant="outline"
-                className={`px-3 py-1 font-mono text-xs ${totalSelectedSks > sessionProfile.maxSks ? "border-red-200 text-red-700 bg-red-50" : "border-blue-100 text-blue-700 bg-blue-50"}`}
+                className={`px-2 py-0.5 font-mono text-[10px] ${totalSelectedSks > sessionProfile.maxSks ? "border-red-200 text-red-700 bg-red-50" : "border-blue-100 text-blue-700 bg-blue-50"}`}
               >
                 {totalSelectedSks} / {sessionProfile.maxSks} SKS
               </Badge>
             </div>
-            <p className="text-slate-500">
-              Select the courses you wish to include in your strategy.
+            <p className="text-xs text-slate-600">
+              Select courses to include in your architecture.
             </p>
           </div>
           <Button
             onClick={handleGenerate}
-            size="xl"
+            size="lg"
             disabled={
               totalSelectedSks > sessionProfile.maxSks ||
               selectedCodes.length === 0
             }
-            className="gap-3 bg-blue-700 hover:bg-blue-800 text-base px-8 h-14 rounded-xl shadow-lg shadow-blue-100 transition-all active:scale-95 disabled:opacity-50"
+            className="gap-2 bg-blue-700 hover:bg-blue-800 text-sm px-8 h-11 rounded-xl shadow-lg shadow-blue-100/50 transition-all active:scale-95 disabled:opacity-50 w-full md:w-auto"
           >
-            <Brain className="w-5 h-5" />
-            Engineer Schedule
+            <Brain className="w-4 h-4" />
+            Arrange Schedule
           </Button>
         </div>
 
         <Dialog open={isMasterSearchOpen} onOpenChange={setIsMasterSearchOpen}>
-          <DialogContent className="max-w-2xl bg-white rounded-3xl p-8 border-none shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
-            <DialogHeader className="mb-6">
-              <DialogTitle className="text-2xl font-display font-bold text-slate-900 italic flex items-center gap-3">
-                <Search className="w-6 h-6 text-blue-700" />
+          <DialogContent className="max-w-xl bg-white rounded-3xl p-6 border-none shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
+            <DialogHeader className="mb-4">
+              <DialogTitle className="text-xl font-display font-bold text-slate-900 flex items-center gap-2">
+                <Search className="w-5 h-5 text-blue-700" />
                 Master Catalog
               </DialogTitle>
-              <DialogDescription className="text-[11px] font-mono text-slate-400 uppercase tracking-widest pt-2">
-                Search the entire university catalog for this prodi.
+              <DialogDescription className="text-[10px] font-mono text-slate-500 uppercase tracking-widest pt-1">
+                University Component Database
               </DialogDescription>
             </DialogHeader>
 
-            <div className="relative mb-6">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <div className="relative mb-4">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
               <Input
-                placeholder="Search by code or name... (e.g. Algoritma)"
+                placeholder="Search code or name..."
                 value={masterSearchQuery}
                 onChange={(e) => setMasterSearchQuery(e.target.value)}
-                className="pl-12 bg-slate-50 border-none rounded-xl h-12 focus-visible:ring-blue-700"
+                className="pl-10 bg-slate-50 border-slate-200 rounded-xl h-10 text-xs focus-visible:ring-blue-700"
               />
             </div>
 
-            <div className="flex-1 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto space-y-1.5 pr-2 custom-scrollbar">
               {filteredMaster?.map((c, i) => (
                 <div
                   key={i}
-                  className="p-4 bg-slate-50 hover:bg-white hover:shadow-md border border-transparent hover:border-blue-100 rounded-xl transition-all cursor-pointer group flex justify-between items-center"
+                  className="p-3 bg-slate-50 hover:bg-white hover:shadow-md border border-slate-100 hover:border-blue-100 rounded-xl transition-all cursor-pointer group flex justify-between items-center"
                   onClick={() => handleAddMasterCourse(c)}
                 >
-                  <div className="space-y-1">
+                  <div className="space-y-0.5">
                     <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-mono bg-white px-2 py-0.5 rounded border border-slate-100 text-slate-500">
+                      <span className="text-[9px] font-mono bg-white px-1.5 py-0.5 rounded border border-slate-200 text-slate-600">
                         {c.code}
                       </span>
-                      <span className="text-[10px] font-mono text-blue-700 font-bold uppercase tracking-wider">
+                      <span className="text-[9px] font-mono text-blue-700 font-bold uppercase">
                         {c.class}
                       </span>
                     </div>
-                    <p className="text-sm font-bold text-slate-900 group-hover:text-blue-700">
+                    <p className="text-xs font-bold text-slate-900 group-hover:text-blue-700">
                       {c.name}
                     </p>
-                    <p className="text-[10px] text-slate-400 italic">
+                    <p className="text-[9px] text-slate-500 italic truncate max-w-[200px]">
                       {c.lecturer}
                     </p>
                   </div>
-                  <div className="text-right flex flex-col items-end gap-2">
+                  <div className="text-right flex flex-col items-end gap-1.5">
                     <Badge
                       variant="outline"
-                      className="bg-white text-[10px] font-mono border-slate-100"
+                      className="bg-white text-[9px] font-mono border-slate-200 text-slate-600"
                     >
                       {c.sks} SKS
                     </Badge>
-                    <PlusCircle className="w-5 h-5 text-slate-200 group-hover:text-blue-700 transition-colors" />
+                    <PlusCircle className="w-4 h-4 text-slate-300 group-hover:text-blue-700 transition-colors" />
                   </div>
                 </div>
               ))}
               {filteredMaster?.length === 0 && (
-                <div className="text-center py-12 space-y-3">
-                  <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mx-auto">
-                    <Search className="w-6 h-6 text-slate-300" />
-                  </div>
-                  <p className="text-xs text-slate-400 font-mono uppercase tracking-widest">
+                <div className="text-center py-8 space-y-2">
+                  <Search className="w-5 h-5 text-slate-300 mx-auto" />
+                  <p className="text-[10px] text-slate-500 font-mono uppercase tracking-widest">
                     No components found
                   </p>
                 </div>
               )}
             </div>
 
-            <DialogFooter className="mt-6 pt-6 border-t border-slate-100">
+            <DialogFooter className="mt-4 pt-4 border-t border-slate-100">
               <Button
                 variant="ghost"
                 onClick={() => setIsMasterSearchOpen(false)}
-                className="font-mono text-[10px] uppercase tracking-widest"
+                className="font-mono text-[9px] uppercase tracking-widest h-8"
               >
                 Close Catalog
               </Button>
@@ -593,30 +587,30 @@ export function ScheduleMaker() {
           </DialogContent>
         </Dialog>
 
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {/* Add from Master Data */}
           <Card
             onClick={() => setIsMasterSearchOpen(true)}
-            className="border-2 border-dashed border-blue-200 bg-blue-50/20 hover:bg-white hover:border-blue-400 transition-all duration-300 cursor-pointer flex flex-col items-center justify-center min-h-[180px] group shadow-sm hover:shadow-md"
+            className="border-2 border-dashed border-blue-200 bg-blue-50/20 hover:bg-white hover:border-blue-400 transition-all duration-300 cursor-pointer flex flex-col items-center justify-center min-h-[130px] group shadow-sm hover:shadow-md"
           >
-            <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center mb-4 border border-blue-100 group-hover:border-blue-300 transition-colors shadow-sm">
-              <PlusCircle className="w-6 h-6 text-blue-500 group-hover:text-blue-700" />
+            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center mb-2 border border-blue-100 group-hover:border-blue-300 transition-colors shadow-sm">
+              <PlusCircle className="w-5 h-5 text-blue-500 group-hover:text-blue-700" />
             </div>
-            <span className="text-xs font-mono uppercase tracking-[0.2em] text-blue-600 group-hover:text-blue-900 font-bold text-center px-4">
-              Add from Master Data
+            <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-blue-600 group-hover:text-blue-900 font-bold text-center px-4">
+              Add Master Data
             </span>
           </Card>
 
           {/* Add Manual Option */}
           <Card
             onClick={handleManualInput}
-            className="border-2 border-dashed border-slate-100 bg-slate-50/50 hover:bg-white hover:border-blue-200 transition-all duration-300 cursor-pointer flex flex-col items-center justify-center min-h-[180px] group"
+            className="border-2 border-dashed border-slate-200 bg-slate-50/50 hover:bg-white hover:border-blue-200 transition-all duration-300 cursor-pointer flex flex-col items-center justify-center min-h-[130px] group"
           >
-            <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center mb-4 border border-slate-100 group-hover:border-blue-100 transition-colors shadow-sm">
-              <Plus className="w-5 h-5 text-slate-300 group-hover:text-blue-700" />
+            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center mb-2 border border-slate-100 group-hover:border-blue-100 transition-colors shadow-sm">
+              <Plus className="w-4 h-4 text-slate-400 group-hover:text-blue-700" />
             </div>
-            <span className="text-xs font-mono uppercase tracking-[0.2em] text-slate-400 group-hover:text-blue-700">
-              Manual Architecture
+            <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-slate-500 group-hover:text-blue-700">
+              Manual Add
             </span>
           </Card>
 
@@ -625,55 +619,57 @@ export function ScheduleMaker() {
               key={code}
               className={`cursor-pointer transition-all duration-300 border-2 overflow-hidden group relative ${
                 selectedCodes.includes(code)
-                  ? "border-blue-700 bg-blue-50/10 shadow-xl shadow-blue-50/50"
-                  : "border-slate-100 hover:border-blue-200 hover:shadow-lg"
+                  ? "border-blue-700 bg-blue-50/10 shadow-lg shadow-blue-50/50"
+                  : "border-slate-200 hover:border-blue-200 hover:shadow-md"
               }`}
               onClick={() => toggleCourse(code)}
             >
-              <CardHeader className="p-6 pb-2">
-                <div className="flex justify-between items-start mb-4">
-                  <div className="px-2 py-0.5 bg-slate-100 rounded text-[10px] font-mono text-slate-600 uppercase tracking-tighter">
+              <CardHeader className="p-4 pb-1">
+                <div className="flex justify-between items-start mb-2">
+                  <div className="px-1.5 py-0.5 bg-slate-100 rounded text-[9px] font-mono text-slate-600 uppercase">
                     {code}
                   </div>
                   <div
-                    className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
+                    className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
                       selectedCodes.includes(code)
                         ? "bg-blue-700 border-blue-700"
-                        : "border-slate-200 group-hover:border-blue-200"
+                        : "border-slate-300 group-hover:border-blue-300"
                     }`}
                   >
                     {selectedCodes.includes(code) && (
-                      <CheckCircle2 className="w-3.5 h-3.5 text-white" />
+                      <CheckCircle2 className="w-3 text-white" />
                     )}
                   </div>
                 </div>
-                <CardTitle className="text-lg font-display leading-tight group-hover:text-blue-700 transition-colors mb-2 pr-12">
+                <CardTitle className="text-sm font-display leading-tight group-hover:text-blue-700 transition-colors mb-2 pr-10">
                   {options[0].name}
                 </CardTitle>
 
                 {/* Edit/Delete Overlays */}
-                <div className="absolute top-16 right-4 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="absolute top-10 right-3 flex flex-col gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-8 w-8 rounded-lg border-slate-100 hover:text-blue-700 bg-white/80 backdrop-blur"
+                    className="h-7 w-7 rounded-md border-slate-200 hover:text-blue-700 bg-white/90 backdrop-blur shadow-sm"
                     onClick={(e) => handleEditCourse(e, options[0])}
                   >
-                    <Edit3 className="w-3.5 h-3.5" />
+                    <Edit3 className="w-3 h-3" />
                   </Button>
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-8 w-8 rounded-lg border-slate-100 hover:text-red-500 hover:bg-red-50 bg-white/80 backdrop-blur"
+                    className="h-7 w-7 rounded-md border-slate-200 hover:text-red-500 hover:bg-red-50 bg-white/90 backdrop-blur shadow-sm"
                     onClick={(e) => handleDeleteCourse(e, options[0].id)}
                   >
-                    <Trash className="w-3.5 h-3.5" />
+                    <Trash className="w-3 h-3" />
                   </Button>
                 </div>
               </CardHeader>
-              <CardContent className="p-6 pt-0">
-                <div className="flex items-center gap-2 text-xs font-mono text-slate-400 uppercase tracking-widest mt-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
+              <CardContent className="p-4 pt-0">
+                <div className="flex items-center gap-1.5 text-[10px] font-mono text-slate-500 uppercase tracking-widest mt-1">
+                  <span
+                    className={`w-1.5 h-1.5 rounded-full ${selectedCodes.includes(code) ? "bg-blue-500 animate-pulse" : "bg-slate-300"}`}
+                  />
                   {options.length} Variations
                 </div>
               </CardContent>
@@ -681,21 +677,21 @@ export function ScheduleMaker() {
           ))}
         </div>
 
-        <div className="flex flex-col sm:flex-row justify-between items-center pt-8 border-t border-slate-100 gap-4">
+        <div className="flex flex-col sm:flex-row justify-between items-center pt-6 border-t border-slate-100 gap-4">
           <Button
             variant="link"
-            onClick={() => setStep("upload")}
-            className="text-slate-400 hover:text-blue-700 font-mono text-xs uppercase tracking-widest gap-2"
+            onClick={() => setStep("config")}
+            className="text-slate-500 hover:text-blue-700 font-mono text-[10px] uppercase tracking-widest gap-2"
           >
-            <ChevronLeft className="w-3 h-3" /> Start Over
+            <ChevronLeft className="w-3 h-3" /> Back to Profile
           </Button>
 
           <Button
             variant="outline"
             onClick={handleExportJSON}
-            className="gap-2 font-mono text-[10px] uppercase tracking-widest border-slate-200 hover:bg-slate-50 hover:text-blue-700 h-10 px-6 rounded-xl"
+            className="gap-2 font-mono text-[9px] uppercase tracking-widest border-slate-200 hover:bg-slate-50 hover:text-blue-700 h-9 px-5 rounded-xl"
           >
-            <Download className="w-3.5 h-3.5" /> Export Strategy
+            <Download className="w-3 h-3" /> Export Strategy
           </Button>
         </div>
 
@@ -717,46 +713,46 @@ export function ScheduleMaker() {
     );
 
     return (
-      <div className="space-y-10 animate-in fade-in duration-500">
-        <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6 bg-white p-8 rounded-2xl border border-slate-100 shadow-sm">
-          <div className="flex items-center gap-6">
+      <div className="space-y-6 animate-in fade-in duration-500">
+        <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+          <div className="flex items-center gap-4">
             <Button
               variant="outline"
               size="icon"
               onClick={() => setStep("select")}
-              className="w-12 h-12 rounded-xl border-slate-200 hover:bg-slate-50 hover:text-blue-700"
+              className="w-10 h-10 rounded-xl border-slate-200 hover:bg-slate-50 hover:text-blue-700"
             >
-              <ChevronLeft className="w-5 h-5" />
+              <ChevronLeft className="w-4 h-4" />
             </Button>
             <div>
-              <div className="flex items-center gap-3 mb-1">
-                <h2 className="text-3xl font-bold font-display text-slate-900">
+              <div className="flex items-center gap-3 mb-0.5">
+                <h2 className="text-2xl font-bold font-display text-slate-900">
                   {currentPlan.name}
                 </h2>
                 <Badge
                   variant="outline"
-                  className="border-blue-100 text-blue-700 bg-blue-50/50 px-3 font-mono text-[10px] uppercase tracking-widest"
+                  className="border-blue-100 text-blue-700 bg-blue-50/50 px-2 font-mono text-[9px] uppercase tracking-widest"
                 >
-                  PROFESSIONAL LOOK
+                  PRECISE FIT
                 </Badge>
               </div>
-              <p className="text-slate-400 font-mono text-xs tracking-widest uppercase">
-                STRATEGY {currentPlanIndex + 1} OF {plans.length} • {totalSKS}{" "}
-                SKS TOTAL
+              <p className="text-slate-500 font-mono text-[9px] tracking-widest uppercase">
+                PLAN {currentPlanIndex + 1} OF {plans.length} • {totalSKS} SKS
+                TOTAL
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 bg-slate-50 p-1.5 rounded-xl border border-slate-100">
+          <div className="flex items-center gap-1.5 bg-slate-50 p-1 rounded-xl border border-slate-200">
             <Button
               variant="ghost"
               disabled={currentPlanIndex === 0}
               onClick={() => setCurrentPlanIndex((prev) => prev - 1)}
-              className="h-10 px-4 font-mono text-[10px] uppercase tracking-widest"
+              className="h-8 px-3 font-mono text-[10px] uppercase tracking-widest"
             >
               Prev
             </Button>
-            <div className="px-4 py-1 text-xs font-mono font-bold text-slate-400 border-x border-slate-200">
+            <div className="px-3 py-1 text-[10px] font-mono font-bold text-slate-500 border-x border-slate-200">
               {String(currentPlanIndex + 1).padStart(2, "0")}/
               {String(plans.length).padStart(2, "0")}
             </div>
@@ -764,56 +760,60 @@ export function ScheduleMaker() {
               variant="ghost"
               disabled={currentPlanIndex === plans.length - 1}
               onClick={() => setCurrentPlanIndex((prev) => prev + 1)}
-              className="h-10 px-4 font-mono text-[10px] uppercase tracking-widest"
+              className="h-8 px-3 font-mono text-[10px] uppercase tracking-widest"
             >
               Next
             </Button>
           </div>
         </div>
 
-        <div className="grid xl:grid-cols-4 gap-8">
+        <div className="grid xl:grid-cols-4 gap-6">
           <div className="xl:col-span-3">
-            <div className="bg-white p-2 rounded-3xl border border-slate-100 shadow-2xl shadow-blue-50/20 overflow-hidden">
+            <div className="bg-white p-1 rounded-2xl border border-slate-200 shadow-xl shadow-blue-50/20 overflow-hidden">
               <ScheduleGrid courses={currentPlan.courses} />
             </div>
           </div>
-          <div className="space-y-8">
+          <div className="space-y-6">
             <PlanAnalysis plan={currentPlan} />
 
-            <Card className="border-slate-100 shadow-sm overflow-hidden rounded-2xl">
-              <CardHeader className="bg-slate-50/50 border-b border-slate-100">
-                <CardTitle className="text-sm font-display flex items-center justify-between">
+            <Card className="border-slate-200 shadow-sm overflow-hidden rounded-2xl">
+              <CardHeader className="bg-slate-50/50 py-3 border-b border-slate-200">
+                <CardTitle className="text-xs font-display flex items-center justify-between">
                   <span>Course Inventory</span>
-                  <span className="text-[10px] font-mono text-slate-400">
+                  <span className="text-[9px] font-mono text-slate-500">
                     {currentPlan.courses.length} Items
                   </span>
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-0">
-                <div className="divide-y divide-slate-100 text-sm">
+                <div className="divide-y divide-slate-100 text-[11px]">
                   {currentPlan.courses.map((c, i) => (
                     <div
                       key={i}
-                      className="p-5 hover:bg-slate-50/50 transition-colors group"
+                      className="p-3 hover:bg-slate-50/50 transition-colors group"
                     >
                       <div className="flex justify-between items-start mb-1">
-                        <p className="font-bold text-slate-900 group-hover:text-blue-700 transition-colors">
-                          {c.code}
-                        </p>
-                        <span className="text-[10px] bg-slate-100 px-1.5 py-0.5 rounded text-slate-400 font-mono">
+                        <div className="flex flex-col">
+                          <span className="text-[9px] font-mono text-slate-500 uppercase">
+                            {c.code}
+                          </span>
+                          <p className="font-bold text-slate-900 group-hover:text-blue-700 transition-colors truncate max-w-[140px] text-xs">
+                            {c.name}
+                          </p>
+                        </div>
+                        <Badge
+                          variant="outline"
+                          className="text-[8px] h-4 px-1 font-mono border-slate-200 text-slate-600 bg-white"
+                        >
+                          {c.sks} SKS
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-2 text-[9px] font-mono text-slate-500 uppercase">
+                        <span className="text-blue-700 font-bold">
                           {c.class}
                         </span>
-                      </div>
-                      <p className="text-slate-500 text-xs leading-relaxed line-clamp-2">
-                        {c.name}
-                      </p>
-                      <div className="mt-3 flex items-center justify-between">
-                        <span className="text-[10px] font-mono text-slate-300 uppercase truncate pr-4">
-                          {c.lecturer}
-                        </span>
-                        <span className="text-[10px] font-mono text-blue-700 bg-blue-50 px-1 rounded">
-                          {c.sks} SKS
-                        </span>
+                        <span className="text-slate-300">•</span>
+                        <span className="truncate">{c.lecturer}</span>
                       </div>
                     </div>
                   ))}

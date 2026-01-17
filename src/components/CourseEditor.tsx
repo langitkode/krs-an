@@ -90,21 +90,21 @@ export function CourseEditor({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl bg-white rounded-3xl p-8 border-none shadow-2xl overflow-y-auto max-h-[90vh]">
-        <DialogHeader className="mb-6">
-          <DialogTitle className="text-2xl font-display font-bold text-slate-900 italic">
+      <DialogContent className="max-w-xl bg-white rounded-3xl p-6 border-none shadow-2xl overflow-y-auto max-h-[85vh]">
+        <DialogHeader className="mb-4">
+          <DialogTitle className="text-xl font-display font-bold text-slate-900 italic">
             {course ? "Edit Strategy Component" : "Architect New Course"}
           </DialogTitle>
-          <p className="text-sm text-slate-400 font-mono uppercase tracking-widest pt-1 border-t border-slate-100">
+          <p className="text-[10px] text-slate-500 font-mono uppercase tracking-widest pt-1.5 border-t border-slate-100 mt-1">
             {course
               ? "Modifying existing data entry"
               : "Defining manual academic resource"}
           </p>
         </DialogHeader>
 
-        <div className="grid grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <Label className="text-[10px] font-mono uppercase tracking-widest text-slate-400">
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-1.5">
+            <Label className="text-[9px] font-mono uppercase tracking-widest text-slate-500">
               Course Code
             </Label>
             <Input
@@ -113,11 +113,11 @@ export function CourseEditor({
                 setFormData({ ...formData, code: e.target.value })
               }
               placeholder="e.g. CS101"
-              className="font-mono bg-slate-50 border-none h-11 focus-visible:ring-blue-700"
+              className="font-mono bg-slate-50 border-slate-200 h-9 text-xs focus-visible:ring-blue-700"
             />
           </div>
-          <div className="space-y-2">
-            <Label className="text-[10px] font-mono uppercase tracking-widest text-slate-400">
+          <div className="space-y-1.5">
+            <Label className="text-[9px] font-mono uppercase tracking-widest text-slate-500">
               Class Name / Group
             </Label>
             <Input
@@ -126,11 +126,11 @@ export function CourseEditor({
                 setFormData({ ...formData, class: e.target.value })
               }
               placeholder="e.g. A"
-              className="bg-slate-50 border-none h-11 focus-visible:ring-blue-700"
+              className="bg-slate-50 border-slate-200 h-9 text-xs focus-visible:ring-blue-700"
             />
           </div>
-          <div className="col-span-2 space-y-2">
-            <Label className="text-[10px] font-mono uppercase tracking-widest text-slate-400">
+          <div className="col-span-2 space-y-1.5">
+            <Label className="text-[9px] font-mono uppercase tracking-widest text-slate-500">
               Full Course Name
             </Label>
             <Input
@@ -139,11 +139,11 @@ export function CourseEditor({
                 setFormData({ ...formData, name: e.target.value })
               }
               placeholder="e.g. Advanced AI Management"
-              className="bg-slate-50 border-none h-11 focus-visible:ring-blue-700 font-medium"
+              className="bg-slate-50 border-slate-200 h-9 text-xs focus-visible:ring-blue-700 font-medium"
             />
           </div>
-          <div className="space-y-2">
-            <Label className="text-[10px] font-mono uppercase tracking-widest text-slate-400">
+          <div className="space-y-1.5">
+            <Label className="text-[9px] font-mono uppercase tracking-widest text-slate-500">
               SKS (Credits)
             </Label>
             <Input
@@ -152,11 +152,11 @@ export function CourseEditor({
               onChange={(e) =>
                 setFormData({ ...formData, sks: Number(e.target.value) })
               }
-              className="bg-slate-50 border-none h-11 focus-visible:ring-blue-700"
+              className="bg-slate-50 border-slate-200 h-9 text-xs focus-visible:ring-blue-700 font-mono"
             />
           </div>
-          <div className="space-y-2">
-            <Label className="text-[10px] font-mono uppercase tracking-widest text-slate-400">
+          <div className="space-y-1.5">
+            <Label className="text-[9px] font-mono uppercase tracking-widest text-slate-500">
               Academic Room
             </Label>
             <Input
@@ -165,11 +165,11 @@ export function CourseEditor({
                 setFormData({ ...formData, room: e.target.value })
               }
               placeholder="e.g. Lab 01"
-              className="bg-slate-50 border-none h-11 focus-visible:ring-blue-700"
+              className="bg-slate-50 border-slate-200 h-9 text-xs focus-visible:ring-blue-700"
             />
           </div>
-          <div className="col-span-2 space-y-2">
-            <Label className="text-[10px] font-mono uppercase tracking-widest text-slate-400">
+          <div className="col-span-2 space-y-1.5">
+            <Label className="text-[9px] font-mono uppercase tracking-widest text-slate-500">
               Professor / Lecturer
             </Label>
             <Input
@@ -178,14 +178,14 @@ export function CourseEditor({
                 setFormData({ ...formData, lecturer: e.target.value })
               }
               placeholder="e.g. Dr. John Doe"
-              className="bg-slate-50 border-none h-11 focus-visible:ring-blue-700"
+              className="bg-slate-50 border-slate-200 h-9 text-xs focus-visible:ring-blue-700"
             />
           </div>
         </div>
 
-        <div className="mt-8 pt-8 border-t border-slate-100">
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="text-sm font-display font-bold flex items-center gap-2">
+        <div className="mt-6 pt-6 border-t border-slate-100">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-xs font-display font-bold flex items-center gap-2">
               <Clock className="w-4 h-4 text-blue-700" />
               Schedule Slots
             </h3>
@@ -193,23 +193,23 @@ export function CourseEditor({
               variant="outline"
               size="sm"
               onClick={addSlot}
-              className="h-8 border-slate-200 text-xs font-mono uppercase tracking-widest hover:bg-blue-50 hover:text-blue-700"
+              className="h-7 border-slate-200 text-[9px] font-mono uppercase tracking-widest hover:bg-blue-50 hover:text-blue-700"
             >
-              <Plus className="w-3.5 h-3.5 mr-2" />
+              <Plus className="w-3 h-3 mr-2" />
               Add Segment
             </Button>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-2">
             {formData.schedule?.map((slot, i) => (
               <div
                 key={i}
-                className="flex gap-4 items-center bg-slate-50 p-4 rounded-xl border border-slate-100 group"
+                className="flex gap-3 items-center bg-slate-50 p-3 rounded-xl border border-slate-100 group"
               >
                 <select
                   value={slot.day}
                   onChange={(e) => updateSlot(i, "day", e.target.value)}
-                  className="bg-white border border-slate-200 rounded-lg h-9 px-3 text-xs font-mono focus:ring-1 focus:ring-blue-700 outline-none"
+                  className="bg-white border border-slate-200 rounded-lg h-8 px-2 text-[10px] font-mono focus:ring-1 focus:ring-blue-700 outline-none"
                 >
                   {DAYS.map((d) => (
                     <option key={d} value={d}>
@@ -222,14 +222,14 @@ export function CourseEditor({
                     type="time"
                     value={slot.start}
                     onChange={(e) => updateSlot(i, "start", e.target.value)}
-                    className="h-9 w-32 border-slate-200 bg-white text-xs font-mono"
+                    className="h-8 w-24 border-slate-200 bg-white text-[10px] font-mono px-2"
                   />
-                  <span className="text-slate-300 text-xs">-</span>
+                  <span className="text-slate-300 text-[10px]">-</span>
                   <Input
                     type="time"
                     value={slot.end}
                     onChange={(e) => updateSlot(i, "end", e.target.value)}
-                    className="h-9 w-32 border-slate-200 bg-white text-xs font-mono"
+                    className="h-8 w-24 border-slate-200 bg-white text-[10px] font-mono px-2"
                   />
                 </div>
                 {formData.schedule!.length > 1 && (
@@ -237,9 +237,9 @@ export function CourseEditor({
                     variant="ghost"
                     size="icon"
                     onClick={() => removeSlot(i)}
-                    className="ml-auto h-9 w-9 text-slate-400 hover:text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="ml-auto h-8 w-8 text-slate-400 hover:text-red-500 hover:bg-red-50"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="w-3.5 h-3.5" />
                   </Button>
                 )}
               </div>
@@ -247,20 +247,20 @@ export function CourseEditor({
           </div>
         </div>
 
-        <DialogFooter className="mt-10 pt-6 border-t border-slate-100">
+        <DialogFooter className="mt-8 pt-6 border-t border-slate-100">
           <Button
             variant="ghost"
             onClick={onClose}
-            className="font-mono text-[10px] uppercase tracking-widest text-slate-400"
+            className="font-mono text-[9px] uppercase tracking-widest text-slate-500 h-9"
           >
             Cancel
           </Button>
           <Button
             onClick={handleSave}
             disabled={!formData.code || !formData.name}
-            className="bg-blue-700 hover:bg-blue-800 text-white font-display font-medium px-8 rounded-xl shadow-lg shadow-blue-100"
+            className="bg-blue-700 hover:bg-blue-800 text-white font-display font-medium px-6 rounded-xl shadow-lg h-9 text-xs"
           >
-            {course ? "Sync Changes" : "Deploy Component"}
+            {course ? "Sync Changes" : "Deploy"}
           </Button>
         </DialogFooter>
       </DialogContent>
