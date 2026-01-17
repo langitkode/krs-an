@@ -23,6 +23,7 @@ import {
 import { useAuth } from "@clerk/clerk-react";
 import { Textarea } from "@/components/ui/textarea";
 import Papa from "papaparse";
+import { Input } from "@/components/ui/input";
 import {
   Copy,
   FileSpreadsheet,
@@ -33,6 +34,7 @@ import {
   Trash2,
   Loader2,
   AlertCircle,
+  PlusCircle,
 } from "lucide-react";
 
 export function AdminDashboard() {
@@ -40,6 +42,11 @@ export function AdminDashboard() {
   const masterCourses = useQuery(api.admin.listMasterCourses, {});
   const bulkImport = useMutation(api.admin.bulkImportMaster);
   const clearMaster = useMutation(api.admin.clearMasterData);
+
+  // Curriculum Mutations
+  const addCurriculum = useMutation(api.admin.addCurriculumItem);
+  const removeCurriculum = useMutation(api.admin.removeCurriculumItem);
+
   const { getToken } = useAuth();
 
   const [isImporting, setIsImporting] = useState(false);
@@ -48,13 +55,23 @@ export function AdminDashboard() {
   const [isAiDialogOpen, setIsAiDialogOpen] = useState(false);
   const [scraperMode, setScraperMode] = useState<"ai" | "manual">("manual");
 
+  // Curriculum State
+  const [curriculumProdi, setCurriculumProdi] = useState("INFORMATIKA");
+  const [curriculumSemester, setCurriculumSemester] = useState(2);
+  const [isCurriculumDialogOpen, setIsCurriculumDialogOpen] = useState(false);
+  const [curriculumRawText, setCurriculumRawText] = useState("");
+  const [importProdi, setImportProdi] = useState("INFORMATIKA");
+  const [importSemester, setImportSemester] = useState(2);
+
+  const curriculumData = useQuery(api.admin.listCurriculum, {
+    prodi: curriculumProdi,
+    semester: curriculumSemester,
+  });
+
   const handleManualParse = async () => {
     if (!rawText.trim()) return;
     setIsAiCleaning(true);
     try {
-      // Split by double newline to handle blocks (Data line + Lecturer line)
-      // Some portals use single newline but our sample shows double
-      // Let's split by blocks where a line starts with a number (Code)
       const blocks = rawText.trim().split(/\n\s*\n/);
       const data: any[] = [];
 
@@ -67,14 +84,9 @@ export function AdminDashboard() {
 
         const mainLine = lines[0];
         const lecturer = lines[1] || "-";
-
-        // Split by tabs
         const cols = mainLine.split("\t").map((c) => c.trim());
+        if (cols.length < 6) return;
 
-        if (cols.length < 6) return; // Skip invalid lines
-
-        // Mapping based on: Prodi (0), Kode (1), Nama (2), Kelas (3), SKS (4), Jumlah (5), Jadwal (6), Ruang (7)
-        // If length is 7, it means Prodi is missing.
         let prodi, code, name, className, sks, scheduleRaw, room;
 
         if (cols.length >= 8) {
@@ -86,7 +98,6 @@ export function AdminDashboard() {
           scheduleRaw = cols[6] || "";
           room = cols[7] || "-";
         } else {
-          // Prodi missing
           prodi = "General";
           code = cols[0] || "N/A";
           name = cols[1] || "Untitled";
@@ -148,8 +159,7 @@ export function AdminDashboard() {
         });
       });
 
-      if (data.length === 0)
-        throw new Error("No valid data found. Ensure Tab-separated blocks.");
+      if (data.length === 0) throw new Error("No valid data found.");
 
       await bulkImport({ courses: data });
       toast.success(
@@ -161,6 +171,47 @@ export function AdminDashboard() {
       toast.error("Parsing failed: " + err.message);
     } finally {
       setIsAiCleaning(false);
+    }
+  };
+
+  const handleCurriculumBatchImport = async () => {
+    if (!curriculumRawText.trim()) return;
+    setIsImporting(true);
+    try {
+      const lines = curriculumRawText.trim().split("\n");
+      let count = 0;
+      for (const line of lines) {
+        const cols = line.split("\t").map((c) => c.trim());
+        if (cols.length < 3) continue;
+
+        await addCurriculum({
+          prodi: importProdi,
+          semester: importSemester,
+          term: importSemester % 2 === 0 ? "Even" : "Odd",
+          code: cols[0],
+          name: cols[1],
+          sks: parseInt(cols[2]) || 0,
+        });
+        count++;
+      }
+      toast.success(
+        `Successfully added ${count} items to ${importProdi} Sem ${importSemester}`,
+      );
+      setIsCurriculumDialogOpen(false);
+      setCurriculumRawText("");
+    } catch (err: any) {
+      toast.error("Import failed: " + err.message);
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
+  const handleRemoveCurriculum = async (id: any) => {
+    try {
+      await removeCurriculum({ id });
+      toast.success("Item removed from curriculum");
+    } catch (err) {
+      toast.error("Failed to remove item");
     }
   };
 
@@ -521,18 +572,114 @@ export function AdminDashboard() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="curriculum">
-          <div className="p-20 text-center border-2 border-dashed border-slate-100 rounded-3xl bg-slate-50/30">
-            <BookOpen className="w-12 h-12 text-slate-200 mx-auto mb-4" />
-            <h3 className="font-display font-bold text-slate-400">
-              Curriculum Engine in Final Tuning
-            </h3>
-            <p className="text-slate-300 font-mono text-[10px] uppercase tracking-widest mt-2 leading-relaxed">
-              Defining semester 1-8 logic and odd/even term filtering.
-              <br />
-              Deploy curriculum items directly to map codes to semesters.
-            </p>
-          </div>
+        <TabsContent value="curriculum" className="space-y-6">
+          <Card className="border-slate-100 shadow-sm overflow-hidden rounded-2xl">
+            <CardHeader className="p-8 border-b border-slate-50 bg-slate-50/30">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                <div className="space-y-4 w-full md:w-auto">
+                  <div>
+                    <CardTitle className="font-display italic">
+                      Curriculum Blueprint
+                    </CardTitle>
+                    <CardDescription className="font-mono text-[10px] uppercase tracking-widest mt-1">
+                      Mandatory Course Mapping (Sem 1-8)
+                    </CardDescription>
+                  </div>
+
+                  <div className="flex flex-wrap gap-4">
+                    <div className="space-y-1.5 min-w-[200px]">
+                      <Label className="text-[9px] uppercase font-mono tracking-widest text-slate-400">
+                        Prodi Filter
+                      </Label>
+                      <Input
+                        value={curriculumProdi}
+                        onChange={(e) =>
+                          setCurriculumProdi(e.target.value.toUpperCase())
+                        }
+                        className="h-9 bg-white border-slate-100 rounded-lg text-xs"
+                        placeholder="e.g. INFORMATIKA"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-[9px] uppercase font-mono tracking-widest text-slate-400">
+                        Semester Filter
+                      </Label>
+                      <div className="flex bg-slate-100 p-0.5 rounded-lg border border-slate-200/50">
+                        {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
+                          <button
+                            key={s}
+                            onClick={() => setCurriculumSemester(s)}
+                            className={`w-8 h-8 rounded-md text-[10px] font-mono transition-all ${curriculumSemester === s ? "bg-white text-blue-700 shadow-sm" : "hover:bg-white/50 text-slate-400"}`}
+                          >
+                            {s}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <Button
+                  onClick={() => setIsCurriculumDialogOpen(true)}
+                  className="bg-blue-700 hover:bg-blue-800 text-white rounded-xl px-6 h-12 shadow-lg shadow-blue-100 font-display text-sm"
+                >
+                  <PlusCircle className="w-4 h-4 mr-2" />
+                  Batch Import Curriculum
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-slate-50 border-b border-slate-100 text-[10px] font-mono uppercase tracking-widest text-slate-400">
+                    <tr>
+                      <th className="px-6 py-4 text-left">Code</th>
+                      <th className="px-6 py-4 text-left">Course Name</th>
+                      <th className="px-6 py-4 text-left">SKS</th>
+                      <th className="px-6 py-4 text-left">Term</th>
+                      <th className="px-6 py-4 text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-50 font-sans">
+                    {curriculumData?.map((c: any) => (
+                      <tr
+                        key={c._id}
+                        className="hover:bg-slate-50/50 transition-colors group"
+                      >
+                        <td className="px-6 py-4 font-mono font-bold text-slate-900 group-hover:text-blue-700">
+                          {c.code}
+                        </td>
+                        <td className="px-6 py-4 font-medium">{c.name}</td>
+                        <td className="px-6 py-4 font-mono">{c.sks}</td>
+                        <td className="px-6 py-4">
+                          <span
+                            className={`px-2 py-0.5 rounded-full text-[9px] font-mono uppercase tracking-wider ${c.term === "Odd" ? "bg-amber-50 text-amber-700 border border-amber-100" : "bg-blue-50 text-blue-700 border border-blue-100"}`}
+                          >
+                            {c.term}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleRemoveCurriculum(c._id)}
+                            className="h-8 w-8 text-slate-300 hover:text-red-500 hover:bg-red-50"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {curriculumData?.length === 0 && (
+                  <div className="p-20 text-center text-slate-400 font-mono text-[10px] uppercase tracking-[0.2em]">
+                    No curriculum data found for this session.
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
 
@@ -656,6 +803,116 @@ export function AdminDashboard() {
                     ? "Execute Manual Sync"
                     : "Execute AI Deployment"}
                 </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog
+        open={isCurriculumDialogOpen}
+        onOpenChange={setIsCurriculumDialogOpen}
+      >
+        <DialogContent className="max-w-3xl bg-white rounded-3xl p-8 border-none shadow-2xl">
+          <DialogHeader className="mb-6">
+            <div className="space-y-1">
+              <DialogTitle className="text-2xl font-display font-bold text-slate-900 italic flex items-center gap-3">
+                <BookOpen className="w-6 h-6 text-blue-700" />
+                Curriculum Batch Importer
+              </DialogTitle>
+              <DialogDescription className="text-[11px] font-mono text-slate-400 uppercase tracking-widest pt-2">
+                Define mandatory courses for a specific semester profile.
+              </DialogDescription>
+            </div>
+          </DialogHeader>
+
+          <div className="space-y-6">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-[10px] uppercase font-mono tracking-widest text-slate-400">
+                  Target Prodi
+                </Label>
+                <Input
+                  value={importProdi}
+                  onChange={(e) => setImportProdi(e.target.value.toUpperCase())}
+                  className="bg-slate-50 border-none rounded-xl h-10 text-sm"
+                  placeholder="e.g. INFORMATIKA"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[10px] uppercase font-mono tracking-widest text-slate-400">
+                  Target Semester
+                </Label>
+                <Input
+                  type="number"
+                  min="1"
+                  max="8"
+                  value={importSemester}
+                  onChange={(e) => setImportSemester(parseInt(e.target.value))}
+                  className="bg-slate-50 border-none rounded-xl h-10 text-sm"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-[10px] uppercase font-mono tracking-widest text-slate-400 italic">
+                Course Data Block
+              </Label>
+              <div className="relative group">
+                <Textarea
+                  value={curriculumRawText}
+                  onChange={(e) => setCurriculumRawText(e.target.value)}
+                  placeholder="Paste here: Kode [TAB] Nama [TAB] SKS\nExample:\n123210082	Statistika	3"
+                  className="min-h-[250px] bg-slate-50 border-none rounded-2xl p-6 font-mono text-xs leading-relaxed focus-visible:ring-blue-700 transition-all group-focus-within:bg-white group-focus-within:shadow-inner"
+                />
+                <div className="absolute top-4 right-4">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      const template = "KODE\tNAMA MATKUL\tSKS";
+                      navigator.clipboard.writeText(template);
+                      toast.success("Curriculum template copied");
+                    }}
+                    className="h-7 px-3 text-[9px] font-mono uppercase tracking-widest text-slate-400 hover:text-blue-700 hover:bg-blue-50"
+                  >
+                    <Copy className="w-3 h-3 mr-2" />
+                    Copy Format
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 bg-amber-50 rounded-xl border border-amber-100 flex gap-3 text-amber-700">
+              <AlertCircle className="w-4 h-4 mt-0.5" />
+              <p className="text-[10px] leading-relaxed">
+                <strong>Important:</strong> Pasting items will add them to the
+                selection. If you want to replace existing data, remove the
+                entries from the table first. Total SKS should be verified after
+                import.
+              </p>
+            </div>
+          </div>
+
+          <DialogFooter className="mt-8 pt-6 border-t border-slate-100">
+            <Button
+              variant="ghost"
+              onClick={() => setIsCurriculumDialogOpen(false)}
+              className="font-mono text-[10px] uppercase tracking-widest text-slate-400"
+            >
+              Discard
+            </Button>
+            <Button
+              onClick={handleCurriculumBatchImport}
+              disabled={isImporting || !curriculumRawText.trim()}
+              className="bg-blue-700 hover:bg-blue-800 text-white font-display font-medium px-8 rounded-xl shadow-lg shadow-blue-100 min-w-[200px]"
+            >
+              {isImporting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Syncing Blueprint...
+                </>
+              ) : (
+                "Sync to Blueprint"
               )}
             </Button>
           </DialogFooter>
