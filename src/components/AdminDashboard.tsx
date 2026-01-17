@@ -52,20 +52,52 @@ export function AdminDashboard() {
     if (!rawText.trim()) return;
     setIsAiCleaning(true);
     try {
-      const lines = rawText.split("\n");
+      // Split by double newline or similar to handle blocks (Data line + Lecturer line)
+      const blocks = rawText.trim().split(/\n\s*\n/);
       const data: any[] = [];
 
-      lines.forEach((line) => {
-        if (!line.trim()) return;
+      blocks.forEach((block) => {
+        const lines = block
+          .split("\n")
+          .map((l) => l.trim())
+          .filter((l) => l);
+        if (lines.length < 1) return;
 
-        // Split by tabs (standard for Excel/Sheets copy-paste)
-        const columns = line.split("\t");
+        const mainLine = lines[0];
+        const lecturer = lines[1] || "-";
 
-        // Expected Order: Code, Name, SKS, Prodi, Class, Lecturer, Room, Schedule
-        // Handle cases where columns might be empty but present
-        if (columns.length < 2) return;
+        // Split by tabs and remove empty trailing values
+        const cols = mainLine.split("\t").map((c) => c.trim());
 
-        const scheduleRaw = columns[7]?.trim() || "";
+        if (cols.length < 4) return; // Skip invalid lines
+
+        // Heuristic: If first column is likely a Prodi name (all letters, no digits)
+        let offset = 0;
+        let prodi = "General";
+
+        if (cols[0] && /^[A-Za-z\s]+$/.test(cols[0]) && cols[0].length > 3) {
+          prodi = cols[0];
+          offset = 1;
+        }
+
+        const code = cols[offset + 0] || "N/A";
+        const name = cols[offset + 1] || "Untitled";
+        const className = cols[offset + 2] || "-";
+        const sks = parseInt(cols[offset + 3]) || 0;
+        // Index offset + 4 is usually '0' or capacity
+        const scheduleRaw = cols[offset + 5] || "";
+        const room = cols[offset + 6] || "-";
+
+        const dayMap: Record<string, string> = {
+          senin: "Mon",
+          selasa: "Tue",
+          rabu: "Wed",
+          kamis: "Thu",
+          jumat: "Fri",
+          sabtu: "Sat",
+          minggu: "Sun",
+        };
+
         const scheduleParts = scheduleRaw
           ? scheduleRaw
               .split(";")
@@ -74,7 +106,22 @@ export function AdminDashboard() {
                   .trim()
                   .match(/(\w+)\s+(\d{1,2}:\d{2})-(\d{1,2}:\d{2})/);
                 if (match) {
-                  return { day: match[1], start: match[2], end: match[3] };
+                  let day = match[1].toLowerCase();
+                  for (const [indo, eng] of Object.entries(dayMap)) {
+                    if (day.startsWith(indo)) {
+                      day = eng;
+                      break;
+                    }
+                  }
+                  return {
+                    day:
+                      day.length > 3
+                        ? day.charAt(0).toUpperCase() +
+                          day.slice(1, 3).toLowerCase()
+                        : day,
+                    start: match[2],
+                    end: match[3],
+                  };
                 }
                 return null;
               })
@@ -82,19 +129,19 @@ export function AdminDashboard() {
           : [];
 
         data.push({
-          code: columns[0]?.trim() || "N/A",
-          name: columns[1]?.trim() || "Untitled",
-          sks: parseInt(columns[2]) || 0,
-          prodi: columns[3]?.trim() || "General",
-          class: columns[4]?.trim() || "-",
-          lecturer: columns[5]?.trim() || "-",
-          room: columns[6]?.trim() || "-",
+          code,
+          name,
+          sks,
+          prodi,
+          class: className,
+          lecturer,
+          room,
           schedule: scheduleParts,
         });
       });
 
       if (data.length === 0)
-        throw new Error("No valid data found. Use Tab-separated format.");
+        throw new Error("No valid data found. Ensure Tab-separated blocks.");
 
       await bulkImport({ courses: data });
       toast.success(
