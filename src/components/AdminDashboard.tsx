@@ -246,7 +246,7 @@ export function AdminDashboard() {
 
         <div className="flex flex-col gap-4 w-full max-w-xs">
           <Button
-            className="w-full h-12 bg-slate-900 hover:bg-slate-800 rounded-xl font-display text-sm tracking-wide"
+            className="w-full h-12 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-display text-sm tracking-wide"
             onClick={() => (window.location.href = "/")}
           >
             Return to Planner
@@ -506,7 +506,7 @@ export function AdminDashboard() {
                     <Label htmlFor="master-import">
                       <Button
                         asChild
-                        className="bg-slate-900 hover:bg-slate-800 rounded-xl px-4 font-mono text-[9px] uppercase tracking-widest cursor-pointer shadow-lg shadow-slate-100 h-8"
+                        className="bg-slate-900 hover:bg-slate-800 text-white rounded-xl px-4 font-mono text-[9px] uppercase tracking-widest cursor-pointer shadow-lg shadow-slate-100 h-8"
                       >
                         <span>
                           {isImporting ? (
