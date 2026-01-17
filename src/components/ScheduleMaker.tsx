@@ -97,38 +97,55 @@ export function ScheduleMaker() {
 
   if (step === "upload") {
     return (
-      <Card className="max-w-xl mx-auto border-2 border-dashed">
-        <CardContent className="pt-10 pb-10 text-center">
-          <input
-            type="file"
-            accept=".pdf"
-            className="hidden"
-            id="pdf-upload"
-            onChange={handleFileUpload}
-            disabled={aiMutation.isPending}
-          />
-          <label
-            htmlFor="pdf-upload"
-            className="cursor-pointer group flex flex-col items-center"
-          >
-            <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-4 group-hover:bg-blue-100 transition-colors">
-              {aiMutation.isPending ? (
-                <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
-              ) : (
-                <Upload className="w-8 h-8 text-blue-600" />
-              )}
-            </div>
-            <CardTitle className="mb-2">Upload your KRS PDF</CardTitle>
-            <CardDescription>
-              We'll use AI to extract class times and generate the best
-              combinations for you.
-            </CardDescription>
-            <Badge variant="outline" className="mt-4">
-              {userData?.credits ?? 5} generations left today
-            </Badge>
-          </label>
-        </CardContent>
-      </Card>
+      <div className="max-w-2xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="text-center space-y-2">
+          <h2 className="text-3xl font-bold font-display text-slate-900 tracking-tight">
+            Generate Your Vision
+          </h2>
+          <p className="text-slate-500">
+            Upload your academic PDF and let our AI architect your ideal
+            semester.
+          </p>
+        </div>
+
+        <Card className="border-2 border-dashed border-slate-200 bg-white/50 hover:bg-white hover:border-blue-200 transition-all duration-300">
+          <CardContent className="pt-16 pb-16 text-center">
+            <input
+              type="file"
+              accept=".pdf"
+              className="hidden"
+              id="pdf-upload"
+              onChange={handleFileUpload}
+              disabled={aiMutation.isPending}
+            />
+            <label
+              htmlFor="pdf-upload"
+              className="cursor-pointer group flex flex-col items-center"
+            >
+              <div className="w-20 h-20 bg-slate-50 rounded-2xl flex items-center justify-center mb-6 border border-slate-100 group-hover:bg-blue-50 group-hover:border-blue-100 transition-all">
+                {aiMutation.isPending ? (
+                  <Loader2 className="w-8 h-8 text-blue-700 animate-spin" />
+                ) : (
+                  <Upload className="w-8 h-8 text-slate-400 group-hover:text-blue-700 transition-colors" />
+                )}
+              </div>
+              <CardTitle className="text-xl font-display mb-2">
+                {aiMutation.isPending
+                  ? "Analyzing Documents..."
+                  : "Select Document"}
+              </CardTitle>
+              <CardDescription className="max-w-xs mx-auto mb-6">
+                Drag and drop your KRS PDF here or click to browse your files.
+              </CardDescription>
+              <div className="flex items-center gap-2 bg-slate-900 text-white px-4 py-1.5 rounded-full shadow-lg">
+                <span className="text-[10px] font-mono tracking-widest uppercase">
+                  {userData?.credits ?? 5} TOKENS REMAINING
+                </span>
+              </div>
+            </label>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
@@ -143,50 +160,75 @@ export function ScheduleMaker() {
     );
 
     return (
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h2 className="text-2xl font-bold">Select Courses</h2>
-            <p className="text-gray-500">
-              Pick which courses you want to include in your plan.
+      <div className="space-y-10 animate-in fade-in duration-500">
+        <div className="flex flex-col md:flex-row justify-between items-end gap-6 bg-white p-8 rounded-2xl border border-slate-100 shadow-sm transition-all hover:shadow-md">
+          <div className="space-y-1">
+            <h2 className="text-3xl font-bold font-display text-slate-900 tracking-tight">
+              Curate Your Semester
+            </h2>
+            <p className="text-slate-500">
+              Select the courses you wish to include in your strategy.
             </p>
           </div>
-          <Button onClick={handleGenerate} size="lg" className="gap-2">
-            <Brain className="w-4 h-4" />
-            Generate Plans
+          <Button
+            onClick={handleGenerate}
+            size="xl"
+            className="gap-3 bg-blue-700 hover:bg-blue-800 text-base px-8 h-14 rounded-xl shadow-lg shadow-blue-100 transition-all active:scale-95"
+          >
+            <Brain className="w-5 h-5" />
+            Engineer Schedule
           </Button>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {Object.entries(grouped).map(([code, options]) => (
             <Card
               key={code}
-              className={`cursor-pointer transition-all ${selectedCodes.includes(code) ? "ring-2 ring-blue-500 bg-blue-50/30" : ""}`}
+              className={`cursor-pointer transition-all duration-300 border-2 overflow-hidden group ${
+                selectedCodes.includes(code)
+                  ? "border-blue-700 bg-blue-50/10 shadow-xl shadow-blue-50/50"
+                  : "border-slate-100 hover:border-blue-200 hover:shadow-lg"
+              }`}
               onClick={() => toggleCourse(code)}
             >
-              <CardHeader className="p-4 pb-2">
-                <div className="flex justify-between items-start">
-                  <Badge variant="secondary">{code}</Badge>
-                  {selectedCodes.includes(code) ? (
-                    <CheckCircle2 className="w-5 h-5 text-blue-500" />
-                  ) : (
-                    <div className="w-5 h-5 rounded-full border-2 border-gray-200" />
-                  )}
+              <CardHeader className="p-6 pb-2">
+                <div className="flex justify-between items-start mb-4">
+                  <div className="px-2 py-0.5 bg-slate-100 rounded text-[10px] font-mono text-slate-600 uppercase tracking-tighter">
+                    {code}
+                  </div>
+                  <div
+                    className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
+                      selectedCodes.includes(code)
+                        ? "bg-blue-700 border-blue-700"
+                        : "border-slate-200 group-hover:border-blue-200"
+                    }`}
+                  >
+                    {selectedCodes.includes(code) && (
+                      <CheckCircle2 className="w-3.5 h-3.5 text-white" />
+                    )}
+                  </div>
                 </div>
-                <CardTitle className="text-lg">{options[0].name}</CardTitle>
+                <CardTitle className="text-lg font-display leading-tight group-hover:text-blue-700 transition-colors">
+                  {options[0].name}
+                </CardTitle>
               </CardHeader>
-              <CardContent className="p-4 pt-0">
-                <p className="text-sm text-gray-500">
-                  {options.length} classes available
-                </p>
+              <CardContent className="p-6 pt-0">
+                <div className="flex items-center gap-2 text-xs font-mono text-slate-400 uppercase tracking-widest mt-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
+                  {options.length} Variations
+                </div>
               </CardContent>
             </Card>
           ))}
         </div>
 
-        <div className="flex justify-center">
-          <Button variant="ghost" onClick={() => setStep("upload")}>
-            Back to Upload
+        <div className="flex justify-center pt-8">
+          <Button
+            variant="link"
+            onClick={() => setStep("upload")}
+            className="text-slate-400 hover:text-blue-700 font-mono text-xs uppercase tracking-widest gap-2"
+          >
+            <ChevronLeft className="w-3 h-3" /> Start Over
           </Button>
         </div>
       </div>
@@ -201,65 +243,104 @@ export function ScheduleMaker() {
     );
 
     return (
-      <div className="space-y-6">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div className="flex items-center gap-4">
+      <div className="space-y-10 animate-in fade-in duration-500">
+        <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6 bg-white p-8 rounded-2xl border border-slate-100 shadow-sm">
+          <div className="flex items-center gap-6">
             <Button
               variant="outline"
               size="icon"
               onClick={() => setStep("select")}
+              className="w-12 h-12 rounded-xl border-slate-200 hover:bg-slate-50 hover:text-blue-700"
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="w-5 h-5" />
             </Button>
             <div>
-              <h2 className="text-2xl font-bold">{currentPlan.name}</h2>
-              <Badge variant="outline">{totalSKS} SKS Total</Badge>
+              <div className="flex items-center gap-3 mb-1">
+                <h2 className="text-3xl font-bold font-display text-slate-900">
+                  {currentPlan.name}
+                </h2>
+                <Badge
+                  variant="outline"
+                  className="border-blue-100 text-blue-700 bg-blue-50/50 px-3 font-mono text-[10px] uppercase tracking-widest"
+                >
+                  PROFESSIONAL LOOK
+                </Badge>
+              </div>
+              <p className="text-slate-400 font-mono text-xs tracking-widest uppercase">
+                STRATEGY {currentPlanIndex + 1} OF {plans.length} • {totalSKS}{" "}
+                SKS TOTAL
+              </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 bg-slate-50 p-1.5 rounded-xl border border-slate-100">
             <Button
-              variant="outline"
+              variant="ghost"
               disabled={currentPlanIndex === 0}
               onClick={() => setCurrentPlanIndex((prev) => prev - 1)}
+              className="h-10 px-4 font-mono text-[10px] uppercase tracking-widest"
             >
-              Previous
+              Prev
             </Button>
-            <span className="text-sm font-medium">
-              {currentPlanIndex + 1} of {plans.length}
-            </span>
+            <div className="px-4 py-1 text-xs font-mono font-bold text-slate-400 border-x border-slate-200">
+              {String(currentPlanIndex + 1).padStart(2, "0")}/
+              {String(plans.length).padStart(2, "0")}
+            </div>
             <Button
-              variant="outline"
+              variant="ghost"
               disabled={currentPlanIndex === plans.length - 1}
               onClick={() => setCurrentPlanIndex((prev) => prev + 1)}
+              className="h-10 px-4 font-mono text-[10px] uppercase tracking-widest"
             >
               Next
             </Button>
           </div>
         </div>
 
-        <div className="grid lg:grid-cols-4 gap-6">
-          <div className="lg:col-span-3">
-            <ScheduleGrid courses={currentPlan.courses} />
+        <div className="grid xl:grid-cols-4 gap-8">
+          <div className="xl:col-span-3">
+            <div className="bg-white p-2 rounded-3xl border border-slate-100 shadow-2xl shadow-blue-50/20 overflow-hidden">
+              <ScheduleGrid courses={currentPlan.courses} />
+            </div>
           </div>
-          <div className="space-y-6">
-            <PlanAnalysis
-              plan={currentPlan}
-              apiKey="NOT_NEEDED_BACKEND_HANDLES"
-            />
-            <Card>
-              <CardHeader>
-                <CardTitle>Course List</CardTitle>
+          <div className="space-y-8">
+            <PlanAnalysis plan={currentPlan} />
+
+            <Card className="border-slate-100 shadow-sm overflow-hidden rounded-2xl">
+              <CardHeader className="bg-slate-50/50 border-b border-slate-100">
+                <CardTitle className="text-sm font-display flex items-center justify-between">
+                  <span>Course Inventory</span>
+                  <span className="text-[10px] font-mono text-slate-400">
+                    {currentPlan.courses.length} Items
+                  </span>
+                </CardTitle>
               </CardHeader>
               <CardContent className="p-0">
-                <div className="divide-y text-sm">
+                <div className="divide-y divide-slate-100 text-sm">
                   {currentPlan.courses.map((c, i) => (
-                    <div key={i} className="p-4">
-                      <p className="font-bold">
-                        {c.code} - {c.class}
+                    <div
+                      key={i}
+                      className="p-5 hover:bg-slate-50/50 transition-colors group"
+                    >
+                      <div className="flex justify-between items-start mb-1">
+                        <p className="font-bold text-slate-900 group-hover:text-blue-700 transition-colors">
+                          {c.code}
+                        </p>
+                        <span className="text-[10px] bg-slate-100 px-1.5 py-0.5 rounded text-slate-400 font-mono">
+                          {c.class}
+                        </span>
+                      </div>
+                      <p className="text-slate-500 text-xs leading-relaxed line-clamp-2">
+                        {c.name}
                       </p>
-                      <p className="text-gray-600 truncate">{c.name}</p>
-                      <p className="text-xs text-gray-400 mt-1">{c.lecturer}</p>
+                      <div className="mt-3 flex items-center justify-between">
+                        <span className="text-[10px] font-mono text-slate-300 uppercase truncate pr-4">
+                          {c.lecturer}
+                        </span>
+                        <span className="text-[10px] font-mono text-blue-700 bg-blue-50 px-1 rounded">
+                          {c.sks} SKS
+                        </span>
+                      </div>
                     </div>
                   ))}
                 </div>

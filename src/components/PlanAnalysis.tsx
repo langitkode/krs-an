@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Brain, Loader2, Sparkles } from "lucide-react";
+import { Loader2, Sparkles } from "lucide-react";
 import type { Plan } from "../types";
 import { useAuth } from "@clerk/clerk-react";
 import { Button } from "@/components/ui/button";
@@ -28,49 +28,55 @@ export function PlanAnalysis({ plan }: { plan: Plan; apiKey?: string }) {
       if (!res.ok) throw new Error("Analysis failed");
       const data = await res.json();
       setAnalysis(data.analysis);
-      toast.success("AI Analysis complete!");
+      toast.success("Intelligence report generated.");
     } catch (e: any) {
-      toast.error(e.message || "Failed to analyze plan");
+      toast.error(e.message || "Failed to generate report");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-100 overflow-hidden">
-      <CardHeader className="p-4 pb-2">
+    <Card className="bg-white border-slate-100 shadow-sm overflow-hidden rounded-2xl">
+      <CardHeader className="p-5 pb-3 bg-slate-50/50 border-b border-slate-50">
         <div className="flex justify-between items-center">
-          <div className="flex items-center gap-2 text-blue-800 font-bold">
-            <Sparkles className="w-4 h-4 text-blue-600" />
-            <CardTitle className="text-sm">AI Trade-off Analysis</CardTitle>
+          <div className="flex items-center gap-2 text-slate-900 font-bold">
+            <CardTitle className="text-sm font-display tracking-tight">
+              Strategy Insights
+            </CardTitle>
           </div>
           {!analysis && (
             <Button
               size="sm"
               onClick={analyze}
               disabled={loading}
-              className="h-7 px-3 text-xs bg-blue-600 rounded-full"
+              className="h-8 px-4 text-[10px] font-mono uppercase tracking-widest bg-blue-700 hover:bg-blue-800 rounded-lg shadow-sm"
             >
               {loading ? (
-                <Loader2 className="w-3 h-3 animate-spin mr-1" />
+                <Loader2 className="w-3 h-3 animate-spin" />
               ) : (
-                <Brain className="w-3 h-3 mr-1" />
+                <Sparkles className="w-3 h-3 mr-2" />
               )}
-              {loading ? "Thinking..." : "Analyze"}
+              {loading ? "Processing" : "Generate Report"}
             </Button>
           )}
         </div>
       </CardHeader>
-      <CardContent className="p-4 pt-0">
+      <CardContent className="p-6">
         {analysis ? (
-          <div className="text-sm text-blue-900 leading-relaxed whitespace-pre-wrap animate-in fade-in duration-500">
+          <div className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap animate-in fade-in duration-700 font-sans">
             {analysis}
           </div>
         ) : (
-          <p className="text-xs text-blue-600/70">
-            Click analyze to get AI insights on exam gaps, lunch breaks, and
-            exhaustion risks.
-          </p>
+          <div className="space-y-4">
+            <div className="h-2 w-full bg-slate-50 rounded-full overflow-hidden">
+              <div className="h-full bg-slate-100 w-1/3 animate-[shimmer_2s_infinite]" />
+            </div>
+            <p className="text-[11px] text-slate-400 font-mono uppercase tracking-widest leading-loose">
+              Request an AI assessment to evaluate exhaustion risks, lunch
+              breaks, and academic balance.
+            </p>
+          </div>
         )}
       </CardContent>
     </Card>
