@@ -52,7 +52,9 @@ export function AdminDashboard() {
     if (!rawText.trim()) return;
     setIsAiCleaning(true);
     try {
-      // Split by double newline or similar to handle blocks (Data line + Lecturer line)
+      // Split by double newline to handle blocks (Data line + Lecturer line)
+      // Some portals use single newline but our sample shows double
+      // Let's split by blocks where a line starts with a number (Code)
       const blocks = rawText.trim().split(/\n\s*\n/);
       const data: any[] = [];
 
@@ -66,27 +68,33 @@ export function AdminDashboard() {
         const mainLine = lines[0];
         const lecturer = lines[1] || "-";
 
-        // Split by tabs and remove empty trailing values
+        // Split by tabs
         const cols = mainLine.split("\t").map((c) => c.trim());
 
-        if (cols.length < 4) return; // Skip invalid lines
+        if (cols.length < 6) return; // Skip invalid lines
 
-        // Heuristic: If first column is likely a Prodi name (all letters, no digits)
-        let offset = 0;
-        let prodi = "General";
+        // Mapping based on: Prodi (0), Kode (1), Nama (2), Kelas (3), SKS (4), Jumlah (5), Jadwal (6), Ruang (7)
+        // If length is 7, it means Prodi is missing.
+        let prodi, code, name, className, sks, scheduleRaw, room;
 
-        if (cols[0] && /^[A-Za-z\s]+$/.test(cols[0]) && cols[0].length > 3) {
-          prodi = cols[0];
-          offset = 1;
+        if (cols.length >= 8) {
+          prodi = cols[0] || "General";
+          code = cols[1] || "N/A";
+          name = cols[2] || "Untitled";
+          className = cols[3] || "-";
+          sks = parseInt(cols[4]) || 0;
+          scheduleRaw = cols[6] || "";
+          room = cols[7] || "-";
+        } else {
+          // Prodi missing
+          prodi = "General";
+          code = cols[0] || "N/A";
+          name = cols[1] || "Untitled";
+          className = cols[2] || "-";
+          sks = parseInt(cols[3]) || 0;
+          scheduleRaw = cols[5] || "";
+          room = cols[6] || "-";
         }
-
-        const code = cols[offset + 0] || "N/A";
-        const name = cols[offset + 1] || "Untitled";
-        const className = cols[offset + 2] || "-";
-        const sks = parseInt(cols[offset + 3]) || 0;
-        // Index offset + 4 is usually '0' or capacity
-        const scheduleRaw = cols[offset + 5] || "";
-        const room = cols[offset + 6] || "-";
 
         const dayMap: Record<string, string> = {
           senin: "Mon",
@@ -572,7 +580,7 @@ export function AdminDashboard() {
                 }
                 placeholder={
                   scraperMode === "manual"
-                    ? "Paste spreadsheet rows here (Tab separated)...\nOrder: Code [TAB] Name [TAB] SKS [TAB] Prodi [TAB] Class [TAB] Lecturer [TAB] Room [TAB] Schedule"
+                    ? "Paste spreadsheet rows here (Tab separated)...\nOrder: Prodi [TAB] Kode [TAB] Nama [TAB] Kelas [TAB] SKS [TAB] Jumlah [TAB] Jadwal [TAB] Ruang\n(Nama Dosen di baris baru setelah setiap data)"
                     : "Paste messy schedule text here... AI will analyze and structure it automatically."
                 }
                 className="min-h-[350px] bg-slate-50 border-none rounded-2xl p-6 font-mono text-xs leading-relaxed focus-visible:ring-blue-700 transition-all group-focus-within:bg-white group-focus-within:shadow-inner"
@@ -584,9 +592,9 @@ export function AdminDashboard() {
                     size="sm"
                     onClick={() => {
                       const template =
-                        "CODE\tNAME\tSKS\tPRODI\tCLASS\tLECTURER\tROOM\tMon 07:00-09:00";
+                        "PRODI\tKODE\tNAMA\tKELAS\tSKS\tJUMLAH\tSENIN 07:00-09:00\tRUANG\nNAMA DOSEN";
                       navigator.clipboard.writeText(template);
-                      toast.success("Header template copied to clipboard");
+                      toast.success("Structure template copied to clipboard");
                     }}
                     className="h-7 px-3 text-[9px] font-mono uppercase tracking-widest text-slate-400 hover:text-blue-700 hover:bg-blue-50"
                   >
