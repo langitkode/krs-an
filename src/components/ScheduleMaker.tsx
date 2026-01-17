@@ -64,26 +64,21 @@ export function ScheduleMaker() {
   const handleGenerate = () => {
     // Filter courses based on Locked selections
     const activeCourses = courses.filter((c) => {
-      // If code is not selected, ignore
       if (!selectedCodes.includes(c.code)) return false;
-
-      // Check if this code has a locked selection
       const lockedId = lockedCourses[c.code];
-
-      // If not locked or locked to "any", include all variations
       if (!lockedId || lockedId === "any") return true;
-
-      // If locked to specific ID, only include that one
       return c.id === lockedId;
     });
 
     const generated = generatePlans(activeCourses, selectedCodes);
 
-    // Check if we have valid plans
     if (generated.length === 0) {
-      toast.error(
-        "No valid schedules found. Try releasing some locked classes to allow more combinations.",
+      toast.warning(
+        "Direct match failed. We'll try a partial fit or you can adjust locked classes.",
+        { duration: 4000 },
       );
+      // Fallback: try to generate with all variations even if some are locked?
+      // Or just show the conflicts. For now, let's keep the user informed.
       return;
     }
 
@@ -305,161 +300,224 @@ export function ScheduleMaker() {
     return (
       <div className="space-y-6 animate-in fade-in duration-500 max-w-5xl mx-auto">
         {/* Header Section */}
-        <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xl shadow-slate-100/50 flex flex-col md:flex-row justify-between items-center gap-6 sticky top-4 z-20">
+        <div className="bg-white/80 backdrop-blur-md p-6 rounded-[2.5rem] border border-slate-200 shadow-2xl shadow-slate-200/50 flex flex-col md:flex-row justify-between items-center gap-6 sticky top-4 z-30 mb-8">
           <div className="space-y-1 text-center md:text-left">
-            <h2 className="text-2xl font-bold font-display text-slate-900 tracking-tight">
-              Curate Your Semester
+            <h2 className="text-3xl font-black font-display text-slate-900 tracking-tight">
+              Transit <span className="text-blue-700">Area</span>
             </h2>
             <div className="flex items-center gap-3 justify-center md:justify-start">
               <Badge
                 variant="outline"
-                className={`px-3 py-1 font-mono text-xs ${totalSelectedSks > sessionProfile.maxSks ? "border-red-200 text-red-700 bg-red-50" : "border-blue-100 text-blue-700 bg-blue-50"}`}
+                className={`px-3 py-1 font-mono text-xs font-bold ${totalSelectedSks > sessionProfile.maxSks ? "border-red-200 text-red-700 bg-red-50" : "border-blue-100 text-blue-700 bg-blue-50"}`}
               >
                 {totalSelectedSks} / {sessionProfile.maxSks} SKS
               </Badge>
               <span className="text-xs text-slate-400 font-mono hidden md:inline">
                 |
               </span>
-              <p className="text-xs text-slate-500 hidden md:block">
-                {selectedCodes.length} Subjects Selected
+              <p className="text-xs text-slate-500 font-medium hidden md:block uppercase tracking-widest">
+                {selectedCodes.length} Subjects Ready
               </p>
             </div>
           </div>
 
-          <div className="flex gap-3 w-full md:w-auto">
+          <div className="flex gap-4 w-full md:w-auto">
             <Button
               variant="outline"
               onClick={() => setIsMasterSearchOpen(true)}
-              className="flex-1 md:flex-none border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-blue-700 h-11 rounded-xl"
+              className="px-6 border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-blue-700 h-14 rounded-2xl font-bold transition-all active:scale-95"
             >
-              <PlusCircle className="w-4 h-4 mr-2" />
+              <PlusCircle className="w-5 h-5 mr-3" />
               Add Subject
             </Button>
             <Button
               onClick={handleGenerate}
               disabled={selectedCodes.length === 0}
-              className="flex-1 md:flex-none bg-blue-700 hover:bg-blue-800 text-white h-11 px-8 rounded-xl font-display font-medium shadow-lg shadow-blue-100 transition-all hover:scale-[1.02]"
+              className="flex-1 md:flex-none bg-slate-900 hover:bg-black text-white h-14 px-8 rounded-2xl font-display font-bold shadow-xl transition-all hover:scale-[1.05] active:scale-95 group"
             >
-              <Brain className="w-4 h-4 mr-2" />
-              Plan Plus (AI)
+              Arrange Schedule
+            </Button>
+            <Button
+              onClick={handleGenerate} // In real impl, maybe this uses AI direct?
+              disabled={selectedCodes.length === 0}
+              className="flex-1 md:flex-none bg-blue-700 hover:bg-blue-800 text-white h-14 px-10 rounded-2xl font-display font-bold shadow-xl shadow-blue-200 transition-all hover:scale-[1.05] active:scale-95 border-b-4 border-blue-900 group"
+            >
+              <Brain className="w-6 h-6 mr-3 group-hover:animate-pulse" />
+              Plan AI Plus
             </Button>
           </div>
         </div>
 
         {/* Course List Cards */}
-        <div className="grid gap-4">
-          {Object.entries(grouped).map(([code, variations]) => {
-            const isSelected = selectedCodes.includes(code);
-            const lockedId = lockedCourses[code];
-            const activeCourse = lockedId
-              ? variations.find((v) => v.id === lockedId)
-              : variations[0]; // Default representation
+        {/* Transit Area (Selected Items) */}
+        {selectedCodes.length > 0 && (
+          <div className="space-y-4 animate-in fade-in slide-in-from-top-4 duration-500">
+            <div className="flex items-center gap-2 px-1">
+              <div className="h-2 w-2 rounded-full bg-blue-600 animate-pulse" />
+              <h3 className="text-xs font-black font-mono uppercase tracking-[0.2em] text-slate-400">
+                Active Transit Items
+              </h3>
+            </div>
+            <div className="grid gap-3">
+              {Object.entries(grouped)
+                .filter(([code]) => selectedCodes.includes(code))
+                .map(([code, variations]) => {
+                  const lockedId = lockedCourses[code];
+                  const activeCourse = lockedId
+                    ? variations.find((v) => v.id === lockedId)
+                    : variations[0];
 
-            if (!activeCourse) return null;
+                  if (!activeCourse) return null;
 
-            return (
-              <div
-                key={code}
-                className={`group relative overflow-hidden transition-all duration-300 rounded-2xl border-2 ${isSelected ? "bg-white border-slate-200 shadow-sm" : "bg-slate-50 border-slate-100 opacity-60 hover:opacity-100"}`}
-              >
-                <div className="p-5 flex flex-col md:flex-row gap-6 items-start md:items-center">
-                  {/* Selection Checkbox Area */}
-                  <div
-                    onClick={() => toggleCourse(code)}
-                    className={`shrink-0 w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer transition-colors ${isSelected ? "bg-blue-50 text-blue-700 ring-2 ring-blue-100" : "bg-white text-slate-300 hover:text-slate-400 border border-slate-200"}`}
-                  >
-                    {isSelected ? (
-                      <CheckCircle2 className="w-6 h-6" />
-                    ) : (
-                      <Plus className="w-6 h-6" />
-                    )}
-                  </div>
-
-                  {/* Course Info */}
-                  <div className="flex-1 space-y-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono font-bold text-xs bg-slate-100 px-2 py-0.5 rounded text-slate-600">
-                        {code}
-                      </span>
-                      <h3
-                        className={`font-bold font-display truncate ${isSelected ? "text-slate-900" : "text-slate-500"}`}
+                  return (
+                    <div
+                      key={code}
+                      className="group relative overflow-hidden transition-all duration-300 rounded-[1.5rem] border-2 bg-white border-blue-100 shadow-xl shadow-blue-50/50 p-5 flex flex-col md:flex-row gap-6 items-start md:items-center"
+                    >
+                      <div
+                        onClick={() => toggleCourse(code)}
+                        className="shrink-0 w-12 h-12 rounded-2xl flex items-center justify-center cursor-pointer transition-all bg-blue-600 text-white shadow-lg shadow-blue-200 hover:scale-105 active:scale-95"
                       >
-                        {activeCourse.name}
-                      </h3>
-                    </div>
-                    <div className="flex items-center gap-4 text-xs text-slate-500 font-mono">
-                      <span>{activeCourse.sks} SKS</span>
-                      <span className="w-1 h-1 rounded-full bg-slate-200" />
-                      <span>{variations.length} Class Options</span>
-                    </div>
-                  </div>
+                        <CheckCircle2 className="w-6 h-6" />
+                      </div>
 
-                  {/* Section Selector (Only visible if selected) */}
-                  {isSelected && (
-                    <div className="w-full md:w-72 shrink-0 animate-in fade-in slide-in-from-right-4">
-                      <Select
-                        value={lockedId || "any"}
-                        onValueChange={(val) => {
-                          setLockedCourses((prev) => {
-                            const newLocked = { ...prev };
-                            if (val === "any") {
-                              delete newLocked[code];
-                            } else {
-                              newLocked[code] = val;
-                            }
-                            return newLocked;
-                          });
-                        }}
-                      >
-                        <SelectTrigger className="h-10 border-slate-200 bg-slate-50/50 hover:bg-white transition-colors text-xs font-mono">
-                          <SelectValue placeholder="Optimization: ANY Class" />
-                        </SelectTrigger>
-                        <SelectContent className="max-h-[300px]">
-                          <SelectItem
-                            value="any"
-                            className="font-bold text-blue-700"
-                          >
-                            Auto-Optimize (Any Class)
-                          </SelectItem>
-                          {variations.map((v) => (
+                      <div className="flex-1 space-y-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono font-black text-[10px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded-lg border border-blue-100">
+                            {code}
+                          </span>
+                          <h3 className="font-black font-display text-slate-900 text-lg truncate tracking-tight">
+                            {activeCourse.name}
+                          </h3>
+                        </div>
+                        <div className="flex items-center gap-3 text-[10px] text-slate-500 font-black font-mono uppercase tracking-wider">
+                          <span className="flex items-center gap-1">
+                            <span className="text-blue-500">◆</span>{" "}
+                            {activeCourse.sks} SKS
+                          </span>
+                          <span className="text-slate-200">|</span>
+                          <span className="flex items-center gap-1">
+                            {variations.length} Class Options
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="w-full md:w-72 shrink-0">
+                        <Select
+                          value={lockedId || "any"}
+                          onValueChange={(val) => {
+                            setLockedCourses((prev) => {
+                              const newLocked = { ...prev };
+                              if (val === "any") {
+                                delete newLocked[code];
+                              } else {
+                                newLocked[code] = val;
+                              }
+                              return newLocked;
+                            });
+                          }}
+                        >
+                          <SelectTrigger className="h-12 border-slate-100 bg-slate-50/50 hover:bg-white transition-all text-[11px] font-black font-mono rounded-xl shadow-inner uppercase tracking-wider">
+                            <SelectValue placeholder="AUTO-OPTIMIZE" />
+                          </SelectTrigger>
+                          <SelectContent className="rounded-2xl border-slate-100 shadow-2xl">
                             <SelectItem
-                              key={v.id}
-                              value={v.id}
-                              className="text-xs"
+                              value="any"
+                              className="font-black text-blue-700 focus:bg-blue-50 focus:text-blue-800 py-3"
                             >
-                              <span className="font-bold mr-2">
-                                Class {v.class}
-                              </span>
-                              <span className="text-slate-500">
-                                {v.lecturer.split(",")[0]}
-                              </span>
-                              <span className="ml-auto text-slate-400 font-mono text-[10px] pl-2">
-                                {v.schedule[0]?.day} {v.schedule[0]?.start}
-                              </span>
+                              ✨ AUTO-OPTIMIZE (Any Class)
                             </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
+                            {variations.map((v) => (
+                              <SelectItem
+                                key={v.id}
+                                value={v.id}
+                                className="text-[11px] py-3 font-medium"
+                              >
+                                <div className="flex flex-col gap-0.5">
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-black text-slate-900 bg-slate-100 px-1.5 py-0.5 rounded text-[9px]">
+                                      CLASS {v.class}
+                                    </span>
+                                    <span className="truncate max-w-[150px]">
+                                      {v.lecturer.split(",")[0]}
+                                    </span>
+                                  </div>
+                                  <span className="text-[9px] font-mono font-black text-slate-400 uppercase tracking-tighter">
+                                    {v.schedule[0]?.day} {v.schedule[0]?.start}-
+                                    {v.schedule[0]?.end} • {v.room}
+                                  </span>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
 
-                  {/* Actions */}
-                  {isSelected && (
-                    <div className="flex gap-1 shrink-0">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-9 w-9 text-red-400 hover:text-red-500 hover:bg-red-50 rounded-lg"
-                        onClick={(e) => handleDeleteCourse(e, activeCourse.id)}
-                      >
-                        <Trash className="w-4 h-4" />
-                      </Button>
+                      <div className="flex gap-2 shrink-0">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-12 w-12 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-2xl transition-colors"
+                          onClick={(e) =>
+                            handleDeleteCourse(e, activeCourse.id)
+                          }
+                        >
+                          <Trash className="w-5 h-5" />
+                        </Button>
+                      </div>
                     </div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+                  );
+                })}
+            </div>
+            <div className="h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent my-12" />
+          </div>
+        )}
+
+        {/* Catalog Area (Unselected Items) */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 px-1">
+            <h3 className="text-xs font-black font-mono uppercase tracking-[0.2em] text-slate-400">
+              University Catalog
+            </h3>
+          </div>
+          <div className="grid gap-3">
+            {Object.entries(grouped)
+              .filter(([code]) => !selectedCodes.includes(code))
+              .map(([code, variations]) => {
+                const activeCourse = variations[0];
+                if (!activeCourse) return null;
+
+                return (
+                  <div
+                    key={code}
+                    className="group relative overflow-hidden transition-all duration-300 rounded-[1.5rem] border border-slate-100 bg-slate-50/50 hover:bg-white hover:border-slate-200 hover:shadow-xl hover:shadow-slate-200/50 p-5 flex flex-col md:flex-row gap-6 items-center"
+                  >
+                    <div
+                      onClick={() => toggleCourse(code)}
+                      className="shrink-0 w-10 h-10 rounded-xl flex items-center justify-center cursor-pointer transition-all bg-white text-slate-300 hover:text-blue-600 border border-slate-200 hover:border-blue-200 hover:scale-105"
+                    >
+                      <Plus className="w-5 h-5" />
+                    </div>
+
+                    <div className="flex-1 space-y-0.5 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono font-black text-[9px] bg-white text-slate-400 px-1.5 py-0.5 rounded border border-slate-100 uppercase">
+                          {code}
+                        </span>
+                        <h3 className="font-bold font-display text-slate-600 text-base truncate group-hover:text-slate-900 transition-colors">
+                          {activeCourse.name}
+                        </h3>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-4 text-[10px] text-slate-400 font-black font-mono uppercase">
+                      <span>{activeCourse.sks} SKS</span>
+                      <span>{variations.length} OPTS</span>
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
         </div>
 
         {courses.length === 0 && (

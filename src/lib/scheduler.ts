@@ -122,28 +122,32 @@ export function generatePlans(
   const plans: Plan[] = [];
   let validCount = 0;
 
-  // Simple heuristic sort: prefer fewer combinations loop if needed, but here we iterate all
+  // Sorting combinations: Move those with more subjects to the front (if we ever allow partial)
+  // For now, these are all "full" combinations based on the keys we have.
 
   for (const combo of combinations) {
-    if (validCount >= 6) break; // Limit to 6 for clean UI
+    if (validCount >= 6) break;
 
-    // Check internal conflicts
     const { valid } = checkConflicts(combo);
 
     if (valid) {
-      // Calculate Score
       const stats = calculateScore(combo);
+      const isComplete = keys.length === selectedCodes.length;
 
       plans.push({
         id: crypto.randomUUID(),
-        name: `Plan ${validCount + 1}`,
+        name: isComplete
+          ? `Optimal Plan ${validCount + 1}`
+          : `Partial Plan ${validCount + 1}`,
         courses: combo,
         score: {
-          safe: stats.safe,
+          safe: stats.safe - (isComplete ? 0 : 20),
           risky: stats.risky,
           optimal: stats.optimal,
         },
-        analysis: stats.labels.join(", "),
+        analysis: isComplete
+          ? stats.labels.join(", ")
+          : `Missing ${selectedCodes.length - keys.length} subjects. ${stats.labels.join(", ")}`,
       });
       validCount++;
     }
