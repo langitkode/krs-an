@@ -11,15 +11,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Database,
-  BookOpen,
-  Upload,
-  Trash2,
-  Loader2,
-  AlertCircle,
-  Wand2,
-} from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -31,6 +22,18 @@ import {
 } from "@/components/ui/dialog";
 import { useAuth } from "@clerk/clerk-react";
 import { Textarea } from "@/components/ui/textarea";
+import Papa from "papaparse";
+import {
+  Copy,
+  FileSpreadsheet,
+  Wand2,
+  Database,
+  BookOpen,
+  Upload,
+  Trash2,
+  Loader2,
+  AlertCircle,
+} from "lucide-react";
 
 export function AdminDashboard() {
   const user = useQuery(api.users.getCurrentUser);
@@ -87,10 +90,23 @@ export function AdminDashboard() {
                 <p className="text-[10px] font-mono text-slate-400 uppercase tracking-widest">
                   Architect Identity Token
                 </p>
-                <div className="p-2 bg-white rounded-lg border border-slate-100 break-all">
-                  <code className="text-[9px] text-blue-700 font-mono leading-tight">
-                    {user.tokenIdentifier}
-                  </code>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 p-2 bg-white rounded-lg border border-slate-100 break-all text-left">
+                    <code className="text-[9px] text-blue-700 font-mono leading-tight">
+                      {user.tokenIdentifier}
+                    </code>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 hover:bg-white"
+                    onClick={() => {
+                      navigator.clipboard.writeText(user.tokenIdentifier);
+                      toast.success("Token copied to clipboard");
+                    }}
+                  >
+                    <Copy className="w-3.5 h-3.5 text-slate-400" />
+                  </Button>
                 </div>
               </div>
               <p className="text-[9px] text-slate-400 text-center leading-normal">
@@ -126,6 +142,62 @@ export function AdminDashboard() {
     } finally {
       setIsImporting(false);
     }
+  };
+
+  const handleCsvImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsImporting(true);
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: async (results) => {
+        try {
+          const formattedData = results.data.map((row: any) => {
+            // Process schedule string: "Mon 07:00-09:00; Wed 07:00-09:00"
+            const scheduleRaw = row.schedule || "";
+            const scheduleParts = scheduleRaw
+              .split(";")
+              .map((s: string) => {
+                const match = s
+                  .trim()
+                  .match(/(\w+)\s+(\d{1,2}:\d{2})-(\d{1,2}:\d{2})/);
+                if (match) {
+                  return { day: match[1], start: match[2], end: match[3] };
+                }
+                return null;
+              })
+              .filter(Boolean);
+
+            return {
+              code: row.code,
+              name: row.name,
+              sks: Number(row.sks),
+              prodi: row.prodi,
+              class: row.class,
+              lecturer: row.lecturer,
+              room: row.room,
+              capacity: row.capacity ? Number(row.capacity) : undefined,
+              schedule: scheduleParts,
+            };
+          });
+
+          await bulkImport({ courses: formattedData as any });
+          toast.success(
+            `Successfully imported ${formattedData.length} records from CSV.`,
+          );
+        } catch (err: any) {
+          toast.error("CSV Import failed: " + err.message);
+        } finally {
+          setIsImporting(false);
+        }
+      },
+      error: (err) => {
+        toast.error("CSV Parse failed: " + err.message);
+        setIsImporting(false);
+      },
+    });
   };
 
   const handleAiCleanup = async () => {
@@ -226,8 +298,34 @@ export function AdminDashboard() {
                     className="rounded-xl px-6 font-mono text-[10px] uppercase tracking-widest border-blue-100 text-blue-700 hover:bg-blue-50"
                   >
                     <Wand2 className="w-3.5 h-3.5 mr-2" />
-                    AI Architect Tool
+                    AI Scraper (Experimental)
                   </Button>
+
+                  <div className="relative">
+                    <input
+                      type="file"
+                      accept=".csv"
+                      className="hidden"
+                      id="csv-import"
+                      onChange={handleCsvImport}
+                    />
+                    <Label htmlFor="csv-import">
+                      <Button
+                        asChild
+                        variant="outline"
+                        className="rounded-xl px-6 font-mono text-[10px] uppercase tracking-widest border-slate-200 text-slate-600 hover:bg-slate-50 cursor-pointer"
+                      >
+                        <span>
+                          {isImporting ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin mr-2" />
+                          ) : (
+                            <FileSpreadsheet className="w-3.5 h-3.5 mr-2" />
+                          )}
+                          Standard CSV
+                        </span>
+                      </Button>
+                    </Label>
+                  </div>
 
                   <div className="relative">
                     <input
@@ -248,7 +346,7 @@ export function AdminDashboard() {
                           ) : (
                             <Upload className="w-3.5 h-3.5 mr-2" />
                           )}
-                          Direct Deployment
+                          Global JSON
                         </span>
                       </Button>
                     </Label>
