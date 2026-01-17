@@ -1,28 +1,9 @@
 import { useState } from "react";
-import { useMutation, useQuery } from "convex/react";
+import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
-import { useAuth } from "@clerk/clerk-react";
-import { useMutation as useReactQueryMutation } from "@tanstack/react-query";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  Upload,
-  Loader2,
-  Brain,
-  CheckCircle2,
-  ChevronLeft,
-  Download,
-  FileJson,
-  Edit3,
-  Trash,
-  Plus,
-} from "lucide-react";
+import { Brain, CheckCircle2, ChevronLeft, Trash, Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ScheduleGrid } from "./ScheduleGrid";
 import { generatePlans } from "@/lib/scheduler";
@@ -39,18 +20,17 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Search, GraduationCap, Sparkles, PlusCircle } from "lucide-react";
-import { CourseEditor } from "./CourseEditor";
-import { downloadJSON, parseJSONFile } from "@/lib/data-io";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Search, PlusCircle } from "lucide-react";
 
 export function ScheduleMaker() {
-  const { getToken } = useAuth();
-  const userData = useQuery(api.users.getCurrentUser);
-  const generateServiceToken = useMutation(api.users.generateServiceToken);
-
-  const [step, setStep] = useState<"config" | "upload" | "select" | "view">(
-    "config",
-  );
+  const [step, setStep] = useState<"config" | "select" | "view">("config"); // Removed 'upload' as we removed manual flow
   const [sessionProfile, setSessionProfile] = useState<{
     prodi: string;
     semester: number;
@@ -64,12 +44,12 @@ export function ScheduleMaker() {
   });
   const [courses, setCourses] = useState<Course[]>([]);
   const [selectedCodes, setSelectedCodes] = useState<string[]>([]);
+  const [lockedCourses, setLockedCourses] = useState<Record<string, string>>(
+    {},
+  ); // valid courseId keyed by code
   const [plans, setPlans] = useState<Plan[]>([]);
   const [currentPlanIndex, setCurrentPlanIndex] = useState(0);
 
-  // Manual CRUD state
-  const [isEditorOpen, setIsEditorOpen] = useState(false);
-  const [editingCourse, setEditingCourse] = useState<Course | null>(null);
   const [isMasterSearchOpen, setIsMasterSearchOpen] = useState(false);
 
   // Convex Queries
@@ -81,54 +61,29 @@ export function ScheduleMaker() {
     semester: sessionProfile.semester,
   });
 
-  // AI Backend Mutation
-  const aiMutation = useReactQueryMutation({
-    mutationFn: async (file: File) => {
-      // 1. Check Convex Credits
-      const tokenResult = (await generateServiceToken()) as any;
-      if (!tokenResult.allowed) throw new Error("Daily limit reached");
-
-      // 2. Call FastAPI
-      const clerkToken = await getToken();
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const baseUrl = import.meta.env.VITE_AI_API_URL?.replace(/\/$/, "");
-      const res = await fetch(`${baseUrl}/parse-and-clean`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${clerkToken}` },
-        body: formData,
-      });
-
-      if (!res.ok) throw new Error("Processing failed");
-      return res.json();
-    },
-    onSuccess: (data: Course[]) => {
-      setCourses(data);
-      // Auto-select unique courses
-      const uniqueCodes = Array.from(new Set(data.map((c) => c.code)));
-      setSelectedCodes(uniqueCodes);
-      setStep("select");
-      toast.success("Schedule parsed successfully!");
-    },
-    onError: (err: any) => {
-      toast.error(err.message || "Failed to parse PDF");
-    },
-  });
-
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) aiMutation.mutate(file);
-  };
-
   const handleGenerate = () => {
-    const generated = generatePlans(courses, selectedCodes);
+    // Filter courses based on Locked selections
+    const activeCourses = courses.filter((c) => {
+      // If code is not selected, ignore
+      if (!selectedCodes.includes(c.code)) return false;
+
+      // If code is locked, only allow the specific course ID
+      const lockedId = lockedCourses[c.code];
+      if (lockedId && c.id !== lockedId) return false;
+
+      return true;
+    });
+
+    const generated = generatePlans(activeCourses, selectedCodes);
+
+    // Check if we have valid plans
     if (generated.length === 0) {
       toast.error(
-        "No valid combinations found. Try selecting different classes.",
+        "No valid schedules found. Try releasing some locked classes to allow more combinations.",
       );
       return;
     }
+
     setPlans(generated);
     setCurrentPlanIndex(0);
     setStep("view");
@@ -140,60 +95,10 @@ export function ScheduleMaker() {
     );
   };
 
-  const handleManualInput = () => {
-    setEditingCourse(null);
-    setIsEditorOpen(true);
-  };
-
-  const handleEditCourse = (e: React.MouseEvent, course: Course) => {
-    e.stopPropagation();
-    setEditingCourse(course);
-    setIsEditorOpen(true);
-  };
-
   const handleDeleteCourse = (e: React.MouseEvent, courseId: string) => {
     e.stopPropagation();
     setCourses((prev) => prev.filter((c) => c.id !== courseId));
     toast.success("Academic component removed.");
-  };
-
-  const handleSaveCourse = (course: Course) => {
-    setCourses((prev) => {
-      const exists = prev.find((c) => c.id === course.id);
-      if (exists) {
-        return prev.map((c) => (c.id === course.id ? course : c));
-      }
-      return [...prev, course];
-    });
-
-    // Handle auto-selection for new courses
-    if (!selectedCodes.includes(course.code)) {
-      setSelectedCodes((prev) => [...prev, course.code]);
-    }
-
-    if (step === "upload") setStep("select");
-    toast.success("Strategy component synced.");
-  };
-
-  const handleExportJSON = () => {
-    if (courses.length === 0) return;
-    downloadJSON(courses, `krsan-data-${Date.now()}.json`);
-    toast.success("Strategy data exported.");
-  };
-
-  const handleImportJSON = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    try {
-      const data = await parseJSONFile(file);
-      setCourses(data);
-      const uniqueCodes = Array.from(new Set(data.map((c) => c.code)));
-      setSelectedCodes(uniqueCodes);
-      setStep("select");
-      toast.success("Strategy data imported.");
-    } catch (err: any) {
-      toast.error(err.message);
-    }
   };
 
   const handleAutoLoad = () => {
@@ -217,12 +122,8 @@ export function ScheduleMaker() {
     );
   };
 
-  const handleStartSession = (mode: "master" | "manual") => {
-    if (mode === "master") {
-      handleAutoLoad();
-    } else {
-      setStep("upload");
-    }
+  const handleStartSession = () => {
+    handleAutoLoad();
   };
 
   // Master Search logic
@@ -261,203 +162,118 @@ export function ScheduleMaker() {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6">
-          {/* Master Data Option */}
-          <Card
-            className={`relative group transition-all duration-500 border-2 ${sessionProfile.useMaster ? "border-blue-700 bg-blue-50/10 shadow-xl shadow-blue-50/50" : "border-slate-200 hover:border-blue-200"}`}
-            onClick={() =>
-              setSessionProfile((p) => ({ ...p, useMaster: true }))
-            }
-          >
-            <CardHeader className="p-6 pb-4">
-              <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center mb-4 border border-slate-100 shadow-sm group-hover:scale-110 transition-transform">
-                <GraduationCap
-                  className={`w-6 h-6 ${sessionProfile.useMaster ? "text-blue-700" : "text-slate-400"}`}
-                />
-              </div>
-              <CardTitle className="text-lg font-display mb-1">
-                University Master
-              </CardTitle>
-              <CardDescription className="text-xs text-slate-500 leading-relaxed">
-                Auto-load courses from the university curriculum.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-6 pt-0 space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <Label className="text-[9px] uppercase font-mono tracking-widest text-slate-500">
-                    Prodi
+        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <h1 className="text-4xl font-display font-bold text-slate-900 leading-tight">
+                Academic
+                <br />
+                <span className="text-slate-400 italic">Configuration.</span>
+              </h1>
+              <p className="text-slate-500 max-w-sm leading-relaxed">
+                Define your academic parameters to initialize the intelligent
+                scheduler for <strong>2025/2026</strong>.
+              </p>
+            </div>
+
+            <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xl shadow-slate-100 space-y-6">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label className="text-xs font-mono uppercase tracking-widest text-slate-500">
+                    Study Program (Prodi)
                   </Label>
-                  <Input
+                  <Select
                     value={sessionProfile.prodi}
-                    onChange={(e) =>
-                      setSessionProfile((p) => ({
-                        ...p,
-                        prodi: e.target.value.toUpperCase(),
-                      }))
+                    onValueChange={(val) =>
+                      setSessionProfile({ ...sessionProfile, prodi: val })
                     }
-                    className="h-9 bg-white border-slate-200 text-xs"
-                  />
+                  >
+                    <SelectTrigger className="bg-slate-50 border-slate-200 font-mono text-sm h-10">
+                      <SelectValue placeholder="Select Prodi" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="INFORMATIKA">INFORMATIKA</SelectItem>
+                      <SelectItem value="SISTEM INFORMASI" disabled>
+                        SISTEM INFORMASI (Coming Soon)
+                      </SelectItem>
+                      <SelectItem value="TEKNIK ELEKTRO" disabled>
+                        TEKNIK ELEKTRO (Coming Soon)
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-                <div className="space-y-1.5">
-                  <Label className="text-[9px] uppercase font-mono tracking-widest text-slate-500">
-                    Semester
-                  </Label>
-                  <Input
-                    type="number"
-                    value={sessionProfile.semester}
-                    onChange={(e) =>
-                      setSessionProfile((p) => ({
-                        ...p,
-                        semester: parseInt(e.target.value),
-                      }))
-                    }
-                    className="h-9 bg-white border-slate-200 text-xs"
-                  />
-                </div>
-              </div>
-              <Button
-                onClick={() => handleStartSession("master")}
-                disabled={!sessionProfile.useMaster}
-                className="w-full bg-blue-700 hover:bg-blue-800 text-white rounded-xl h-10 shadow-lg shadow-blue-100/50 text-xs"
-              >
-                Sync University Data
-              </Button>
-            </CardContent>
-          </Card>
 
-          {/* Manual/Upload Option */}
-          <Card
-            className={`relative group transition-all duration-500 border-2 ${!sessionProfile.useMaster ? "border-slate-900 bg-slate-50 shadow-xl shadow-slate-200" : "border-slate-200 hover:border-slate-300"}`}
-            onClick={() =>
-              setSessionProfile((p) => ({ ...p, useMaster: false }))
-            }
-          >
-            <CardHeader className="p-6 pb-4">
-              <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center mb-4 border border-slate-100 shadow-sm group-hover:scale-110 transition-transform">
-                <Sparkles
-                  className={`w-6 h-6 ${!sessionProfile.useMaster ? "text-slate-900" : "text-slate-400"}`}
-                />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-xs font-mono uppercase tracking-widest text-slate-500">
+                      Semester
+                    </Label>
+                    <Select
+                      value={sessionProfile.semester.toString()}
+                      onValueChange={(val) =>
+                        setSessionProfile({
+                          ...sessionProfile,
+                          semester: parseInt(val),
+                        })
+                      }
+                    >
+                      <SelectTrigger className="bg-slate-50 border-slate-200 font-mono text-sm h-10">
+                        <SelectValue placeholder="Sem" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
+                          <SelectItem key={s} value={s.toString()}>
+                            Semester {s}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs font-mono uppercase tracking-widest text-slate-500">
+                      Max SKS
+                    </Label>
+                    <Input
+                      type="number"
+                      value={sessionProfile.maxSks}
+                      onChange={(e) =>
+                        setSessionProfile({
+                          ...sessionProfile,
+                          maxSks: parseInt(e.target.value),
+                        })
+                      }
+                      className="bg-slate-50 border-slate-200 font-mono text-sm h-10"
+                    />
+                  </div>
+                </div>
               </div>
-              <CardTitle className="text-lg font-display mb-1">
-                Custom Architect
-              </CardTitle>
-              <CardDescription className="text-xs text-slate-500 leading-relaxed">
-                Upload your own PDF or start from an empty canvas.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-6 pt-0">
+
               <Button
-                variant="outline"
-                onClick={() => handleStartSession("manual")}
-                disabled={sessionProfile.useMaster}
-                className="w-full border-slate-300 hover:bg-white hover:text-slate-900 rounded-xl h-10 text-xs mt-4"
+                onClick={handleStartSession}
+                className="w-full bg-blue-700 hover:bg-blue-800 text-white h-12 rounded-xl font-display font-medium shadow-lg shadow-blue-100 transition-all hover:scale-[1.02]"
               >
-                Manual Architecture
+                Initialize Session
               </Button>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
+
+          <div className="hidden md:flex flex-col justify-center items-center text-center space-y-6 opacity-50 p-12 bg-slate-50 rounded-3xl border border-slate-100 border-dashed">
+            <Brain className="w-16 h-16 text-slate-300" />
+            <div className="space-y-2 max-w-xs">
+              <h3 className="font-display font-bold text-slate-400">
+                AI Optimization Engine
+              </h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Our algorithms will automatically match your requirements
+                against the university database to find the perfect schedule
+                fit.
+              </p>
+            </div>
+          </div>
         </div>
-
         <p className="text-center text-[9px] font-mono text-slate-400 uppercase tracking-[0.4em] pt-4">
           POWERED BY THE CORE ARCHITECT ENGINE
         </p>
-      </div>
-    );
-  }
-
-  if (step === "upload") {
-    return (
-      <div className="max-w-2xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
-        <div className="text-center space-y-1.5">
-          <h2 className="text-2xl font-bold font-display text-slate-900 tracking-tight">
-            Generate Your Vision
-          </h2>
-          <p className="text-sm text-slate-600">
-            Upload your academic PDF for AI-powered architecture.
-          </p>
-        </div>
-
-        <Card className="border-2 border-dashed border-slate-200 bg-white/50 hover:bg-white hover:border-blue-200 transition-all duration-300">
-          <CardContent className="pt-10 pb-10 text-center">
-            <input
-              type="file"
-              accept=".pdf"
-              className="hidden"
-              id="pdf-upload"
-              onChange={handleFileUpload}
-              disabled={aiMutation.isPending}
-            />
-            <label
-              htmlFor="pdf-upload"
-              className="cursor-pointer group flex flex-col items-center"
-            >
-              <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mb-4 border border-slate-100 group-hover:bg-blue-50 group-hover:border-blue-100 transition-all">
-                {aiMutation.isPending ? (
-                  <Loader2 className="w-6 h-6 text-blue-700 animate-spin" />
-                ) : (
-                  <Upload className="w-6 h-6 text-slate-400 group-hover:text-blue-700 transition-colors" />
-                )}
-              </div>
-              <CardTitle className="text-lg font-display mb-1">
-                {aiMutation.isPending
-                  ? "Analyzing Documents..."
-                  : "Select Document"}
-              </CardTitle>
-              <CardDescription className="max-w-xs mx-auto mb-4 leading-relaxed text-xs text-slate-500">
-                Drag and drop your academic PDF here. Let AI architect your
-                semester.
-              </CardDescription>
-              <div className="flex items-center gap-2 bg-slate-900 text-white px-3 py-1 rounded-full shadow-lg mb-6">
-                <span className="text-[9px] font-mono tracking-widest uppercase">
-                  {userData?.credits ?? 5} TOKENS REMAINING
-                </span>
-              </div>
-            </label>
-
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-6 border-t border-slate-100">
-              <Button
-                variant="ghost"
-                onClick={handleManualInput}
-                className="font-mono text-[9px] uppercase tracking-widest text-slate-500 hover:text-blue-700 transition-colors gap-2 h-8"
-              >
-                <Plus className="w-3 h-3" /> Manual Architecture
-              </Button>
-              <div className="hidden sm:block w-1.5 h-1.5 rounded-full bg-slate-200" />
-              <div className="relative">
-                <input
-                  type="file"
-                  accept=".json"
-                  className="hidden"
-                  id="json-import"
-                  onChange={handleImportJSON}
-                />
-                <label htmlFor="json-import">
-                  <Button
-                    variant="ghost"
-                    asChild
-                    className="font-mono text-[9px] uppercase tracking-widest text-slate-500 hover:text-blue-700 transition-colors gap-2 cursor-pointer h-8"
-                  >
-                    <span>
-                      <FileJson className="w-3 h-3" /> Import Strategy
-                    </span>
-                  </Button>
-                </label>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <p className="text-center text-[9px] font-mono text-slate-400 uppercase tracking-[0.3em]">
-          INTELLIGENT ACADEMIC COMPOSER
-        </p>
-
-        <CourseEditor
-          isOpen={isEditorOpen}
-          onClose={() => setIsEditorOpen(false)}
-          course={editingCourse}
-          onSave={handleSaveCourse}
-        />
       </div>
     );
   }
@@ -474,40 +290,182 @@ export function ScheduleMaker() {
 
     const totalSelectedSks = Object.entries(grouped)
       .filter(([code]) => selectedCodes.includes(code))
-      .reduce((sum, [_, variations]) => sum + (variations[0]?.sks || 0), 0);
+      .reduce((sum, [code, variations]) => {
+        // If locked, use locked course SKS, else use first variation SKS (assume same)
+        const lockedId = lockedCourses[code];
+        const course = lockedId
+          ? variations.find((v) => v.id === lockedId)
+          : variations[0];
+        return sum + (course?.sks || 0);
+      }, 0);
 
     return (
-      <div className="space-y-6 animate-in fade-in duration-500">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm transition-all hover:shadow-md">
+      <div className="space-y-6 animate-in fade-in duration-500 max-w-5xl mx-auto">
+        {/* Header Section */}
+        <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xl shadow-slate-100/50 flex flex-col md:flex-row justify-between items-center gap-6 sticky top-4 z-20">
           <div className="space-y-1 text-center md:text-left">
-            <div className="flex flex-col md:flex-row items-center gap-2">
-              <h2 className="text-2xl font-bold font-display text-slate-900 tracking-tight">
-                Curate Your Semester
-              </h2>
+            <h2 className="text-2xl font-bold font-display text-slate-900 tracking-tight">
+              Curate Your Semester
+            </h2>
+            <div className="flex items-center gap-3 justify-center md:justify-start">
               <Badge
                 variant="outline"
-                className={`px-2 py-0.5 font-mono text-[10px] ${totalSelectedSks > sessionProfile.maxSks ? "border-red-200 text-red-700 bg-red-50" : "border-blue-100 text-blue-700 bg-blue-50"}`}
+                className={`px-3 py-1 font-mono text-xs ${totalSelectedSks > sessionProfile.maxSks ? "border-red-200 text-red-700 bg-red-50" : "border-blue-100 text-blue-700 bg-blue-50"}`}
               >
                 {totalSelectedSks} / {sessionProfile.maxSks} SKS
               </Badge>
+              <span className="text-xs text-slate-400 font-mono hidden md:inline">
+                |
+              </span>
+              <p className="text-xs text-slate-500 hidden md:block">
+                {selectedCodes.length} Subjects Selected
+              </p>
             </div>
-            <p className="text-xs text-slate-600">
-              Select courses to include in your architecture.
+          </div>
+
+          <div className="flex gap-3 w-full md:w-auto">
+            <Button
+              variant="outline"
+              onClick={() => setIsMasterSearchOpen(true)}
+              className="flex-1 md:flex-none border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-blue-700 h-11 rounded-xl"
+            >
+              <PlusCircle className="w-4 h-4 mr-2" />
+              Add Subject
+            </Button>
+            <Button
+              onClick={handleGenerate}
+              disabled={selectedCodes.length === 0}
+              className="flex-1 md:flex-none bg-blue-700 hover:bg-blue-800 text-white h-11 px-8 rounded-xl font-display font-medium shadow-lg shadow-blue-100 transition-all hover:scale-[1.02]"
+            >
+              <Brain className="w-4 h-4 mr-2" />
+              Arrange Schedule
+            </Button>
+          </div>
+        </div>
+
+        {/* Course List Cards */}
+        <div className="grid gap-4">
+          {Object.entries(grouped).map(([code, variations]) => {
+            const isSelected = selectedCodes.includes(code);
+            const lockedId = lockedCourses[code];
+            const activeCourse = lockedId
+              ? variations.find((v) => v.id === lockedId)
+              : variations[0]; // Default representation
+
+            if (!activeCourse) return null;
+
+            return (
+              <div
+                key={code}
+                className={`group relative overflow-hidden transition-all duration-300 rounded-2xl border-2 ${isSelected ? "bg-white border-slate-200 shadow-sm" : "bg-slate-50 border-slate-100 opacity-60 hover:opacity-100"}`}
+              >
+                <div className="p-5 flex flex-col md:flex-row gap-6 items-start md:items-center">
+                  {/* Selection Checkbox Area */}
+                  <div
+                    onClick={() => toggleCourse(code)}
+                    className={`shrink-0 w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer transition-colors ${isSelected ? "bg-blue-50 text-blue-700 ring-2 ring-blue-100" : "bg-white text-slate-300 hover:text-slate-400 border border-slate-200"}`}
+                  >
+                    {isSelected ? (
+                      <CheckCircle2 className="w-6 h-6" />
+                    ) : (
+                      <Plus className="w-6 h-6" />
+                    )}
+                  </div>
+
+                  {/* Course Info */}
+                  <div className="flex-1 space-y-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono font-bold text-xs bg-slate-100 px-2 py-0.5 rounded text-slate-600">
+                        {code}
+                      </span>
+                      <h3
+                        className={`font-bold font-display truncate ${isSelected ? "text-slate-900" : "text-slate-500"}`}
+                      >
+                        {activeCourse.name}
+                      </h3>
+                    </div>
+                    <div className="flex items-center gap-4 text-xs text-slate-500 font-mono">
+                      <span>{activeCourse.sks} SKS</span>
+                      <span className="w-1 h-1 rounded-full bg-slate-200" />
+                      <span>{variations.length} Class Options</span>
+                    </div>
+                  </div>
+
+                  {/* Section Selector (Only visible if selected) */}
+                  {isSelected && (
+                    <div className="w-full md:w-72 shrink-0 animate-in fade-in slide-in-from-right-4">
+                      <Select
+                        value={lockedId || "any"}
+                        onValueChange={(val) => {
+                          setLockedCourses((prev) => {
+                            const newLocked = { ...prev };
+                            if (val === "any") {
+                              delete newLocked[code];
+                            } else {
+                              newLocked[code] = val;
+                            }
+                            return newLocked;
+                          });
+                        }}
+                      >
+                        <SelectTrigger className="h-10 border-slate-200 bg-slate-50/50 hover:bg-white transition-colors text-xs font-mono">
+                          <SelectValue placeholder="Optimization: ANY Class" />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-[300px]">
+                          <SelectItem
+                            value="any"
+                            className="font-bold text-blue-700"
+                          >
+                            Auto-Optimize (Any Class)
+                          </SelectItem>
+                          {variations.map((v) => (
+                            <SelectItem
+                              key={v.id}
+                              value={v.id}
+                              className="text-xs"
+                            >
+                              <span className="font-bold mr-2">
+                                Class {v.class}
+                              </span>
+                              <span className="text-slate-500">
+                                {v.lecturer.split(",")[0]}
+                              </span>
+                              <span className="ml-auto text-slate-400 font-mono text-[10px] pl-2">
+                                {v.schedule[0]?.day} {v.schedule[0]?.start}
+                              </span>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
+                  {/* Actions */}
+                  {isSelected && (
+                    <div className="flex gap-1 shrink-0">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-9 w-9 text-red-400 hover:text-red-500 hover:bg-red-50 rounded-lg"
+                        onClick={(e) => handleDeleteCourse(e, activeCourse.id)}
+                      >
+                        <Trash className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {courses.length === 0 && (
+          <div className="text-center py-20 opacity-50">
+            <p className="font-mono text-xs uppercase tracking-widest text-slate-400">
+              No subjects loaded. Add from Master Catalog.
             </p>
           </div>
-          <Button
-            onClick={handleGenerate}
-            size="lg"
-            disabled={
-              totalSelectedSks > sessionProfile.maxSks ||
-              selectedCodes.length === 0
-            }
-            className="gap-2 bg-blue-700 hover:bg-blue-800 text-sm px-8 h-11 rounded-xl shadow-lg shadow-blue-100/50 transition-all active:scale-95 disabled:opacity-50 w-full md:w-auto"
-          >
-            <Brain className="w-4 h-4" />
-            Arrange Schedule
-          </Button>
-        </div>
+        )}
 
         <Dialog open={isMasterSearchOpen} onOpenChange={setIsMasterSearchOpen}>
           <DialogContent className="max-w-xl bg-white rounded-3xl p-6 border-none shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
@@ -579,128 +537,13 @@ export function ScheduleMaker() {
               <Button
                 variant="ghost"
                 onClick={() => setIsMasterSearchOpen(false)}
-                className="font-mono text-[9px] uppercase tracking-widest h-8"
+                className="font-mono text-[9px] uppercase tracking-widest text-slate-400"
               >
-                Close Catalog
+                Close
               </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
-
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {/* Add from Master Data */}
-          <Card
-            onClick={() => setIsMasterSearchOpen(true)}
-            className="border-2 border-dashed border-blue-200 bg-blue-50/20 hover:bg-white hover:border-blue-400 transition-all duration-300 cursor-pointer flex flex-col items-center justify-center min-h-[130px] group shadow-sm hover:shadow-md"
-          >
-            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center mb-2 border border-blue-100 group-hover:border-blue-300 transition-colors shadow-sm">
-              <PlusCircle className="w-5 h-5 text-blue-500 group-hover:text-blue-700" />
-            </div>
-            <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-blue-600 group-hover:text-blue-900 font-bold text-center px-4">
-              Add Master Data
-            </span>
-          </Card>
-
-          {/* Add Manual Option */}
-          <Card
-            onClick={handleManualInput}
-            className="border-2 border-dashed border-slate-200 bg-slate-50/50 hover:bg-white hover:border-blue-200 transition-all duration-300 cursor-pointer flex flex-col items-center justify-center min-h-[130px] group"
-          >
-            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center mb-2 border border-slate-100 group-hover:border-blue-100 transition-colors shadow-sm">
-              <Plus className="w-4 h-4 text-slate-400 group-hover:text-blue-700" />
-            </div>
-            <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-slate-500 group-hover:text-blue-700">
-              Manual Add
-            </span>
-          </Card>
-
-          {Object.entries(grouped).map(([code, options]) => (
-            <Card
-              key={code}
-              className={`cursor-pointer transition-all duration-300 border-2 overflow-hidden group relative ${
-                selectedCodes.includes(code)
-                  ? "border-blue-700 bg-blue-50/10 shadow-lg shadow-blue-50/50"
-                  : "border-slate-200 hover:border-blue-200 hover:shadow-md"
-              }`}
-              onClick={() => toggleCourse(code)}
-            >
-              <CardHeader className="p-4 pb-1">
-                <div className="flex justify-between items-start mb-2">
-                  <div className="px-1.5 py-0.5 bg-slate-100 rounded text-[9px] font-mono text-slate-600 uppercase">
-                    {code}
-                  </div>
-                  <div
-                    className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
-                      selectedCodes.includes(code)
-                        ? "bg-blue-700 border-blue-700"
-                        : "border-slate-300 group-hover:border-blue-300"
-                    }`}
-                  >
-                    {selectedCodes.includes(code) && (
-                      <CheckCircle2 className="w-3 text-white" />
-                    )}
-                  </div>
-                </div>
-                <CardTitle className="text-sm font-display leading-tight group-hover:text-blue-700 transition-colors mb-2 pr-10">
-                  {options[0].name}
-                </CardTitle>
-
-                {/* Edit/Delete Overlays */}
-                <div className="absolute top-10 right-3 flex flex-col gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-7 w-7 rounded-md border-slate-200 hover:text-blue-700 bg-white/90 backdrop-blur shadow-sm"
-                    onClick={(e) => handleEditCourse(e, options[0])}
-                  >
-                    <Edit3 className="w-3 h-3" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-7 w-7 rounded-md border-slate-200 hover:text-red-500 hover:bg-red-50 bg-white/90 backdrop-blur shadow-sm"
-                    onClick={(e) => handleDeleteCourse(e, options[0].id)}
-                  >
-                    <Trash className="w-3 h-3" />
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="p-4 pt-0">
-                <div className="flex items-center gap-1.5 text-[10px] font-mono text-slate-500 uppercase tracking-widest mt-1">
-                  <span
-                    className={`w-1.5 h-1.5 rounded-full ${selectedCodes.includes(code) ? "bg-blue-500 animate-pulse" : "bg-slate-300"}`}
-                  />
-                  {options.length} Variations
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        <div className="flex flex-col sm:flex-row justify-between items-center pt-6 border-t border-slate-100 gap-4">
-          <Button
-            variant="link"
-            onClick={() => setStep("config")}
-            className="text-slate-500 hover:text-blue-700 font-mono text-[10px] uppercase tracking-widest gap-2"
-          >
-            <ChevronLeft className="w-3 h-3" /> Back to Profile
-          </Button>
-
-          <Button
-            variant="outline"
-            onClick={handleExportJSON}
-            className="gap-2 font-mono text-[9px] uppercase tracking-widest border-slate-200 hover:bg-slate-50 hover:text-blue-700 h-9 px-5 rounded-xl"
-          >
-            <Download className="w-3 h-3" /> Export Strategy
-          </Button>
-        </div>
-
-        <CourseEditor
-          isOpen={isEditorOpen}
-          onClose={() => setIsEditorOpen(false)}
-          course={editingCourse}
-          onSave={handleSaveCourse}
-        />
       </div>
     );
   }
