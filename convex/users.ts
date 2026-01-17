@@ -1,4 +1,5 @@
 import { mutation, query } from "./_generated/server";
+import { v } from "convex/values";
 
 // Helper to get current user
 export const getCurrentUser = query({
@@ -14,7 +15,7 @@ export const getCurrentUser = query({
         q.eq("tokenIdentifier", identity.tokenIdentifier),
       )
       .unique();
-    return user;
+    return user ? { ...user, isAdmin: !!user.isAdmin } : null;
   },
 });
 
@@ -88,5 +89,21 @@ export const generateServiceToken = mutation({
     // Simpler: Frontend calls ensureUser/generateServiceToken. If success, proceeds to call Backend service.
 
     return { allowed: true, remaining: user.credits - 1 };
+  },
+});
+
+// For initial development: promote first user or specific token to admin
+export const makeAdmin = mutation({
+  args: { tokenIdentifier: v.string() },
+  handler: async (ctx, args) => {
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_token", (q) =>
+        q.eq("tokenIdentifier", args.tokenIdentifier),
+      )
+      .unique();
+    if (user) {
+      await ctx.db.patch(user._id, { isAdmin: true });
+    }
   },
 });

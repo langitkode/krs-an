@@ -9,10 +9,12 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { LogOut, CalendarRange } from "lucide-react";
+import { LogOut, CalendarRange, Shield } from "lucide-react";
 import { ScheduleMaker } from "./components/ScheduleMaker";
+import { AdminDashboard } from "./components/AdminDashboard";
 import { Toaster } from "@/components/ui/sonner";
 import { useEffect } from "react";
+import { Routes, Route, Link } from "react-router-dom";
 
 function App() {
   const { isSignedIn, user } = useUser();
@@ -73,13 +75,30 @@ function App() {
       <Toaster position="top-center" />
       <header className="sticky top-0 z-50 w-full border-b bg-white/90 backdrop-blur-md">
         <div className="container flex h-16 max-w-6xl mx-auto items-center justify-between px-4">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-blue-700 rounded flex items-center justify-center">
-              <CalendarRange className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-2xl font-bold tracking-tight text-slate-900 font-display">
-              KRSan
-            </span>
+          <div className="flex items-center gap-6">
+            <Link
+              to="/"
+              className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+            >
+              <div className="w-8 h-8 bg-blue-700 rounded flex items-center justify-center">
+                <CalendarRange className="w-5 h-5 text-white" />
+              </div>
+              <span className="text-2xl font-bold tracking-tight text-slate-900 font-display">
+                KRSan
+              </span>
+            </Link>
+
+            {userData?.isAdmin && (
+              <Link
+                to="/admin"
+                className="flex items-center gap-2 px-3 py-1 bg-slate-900 text-white rounded-full hover:bg-slate-800 transition-colors"
+              >
+                <Shield className="w-3.5 h-3.5" />
+                <span className="text-[10px] font-mono uppercase tracking-widest pt-0.5">
+                  Core Architect
+                </span>
+              </Link>
+            )}
           </div>
 
           <div className="flex items-center gap-6">
@@ -122,7 +141,10 @@ function App() {
       </header>
 
       <main className="container max-w-6xl mx-auto px-4 py-12">
-        <ScheduleMaker />
+        <Routes>
+          <Route path="/" element={<ScheduleMaker />} />
+          <Route path="/admin" element={<AdminDashboard />} />
+        </Routes>
       </main>
 
       <footer className="py-10 border-t bg-white">

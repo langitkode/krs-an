@@ -6,6 +6,7 @@ export default defineSchema({
     tokenIdentifier: v.string(), // Clerk ID
     credits: v.number(), // Remaining generation credits
     lastResetDate: v.string(), // ISO date for daily reset
+    isAdmin: v.optional(v.boolean()),
   }).index("by_token", ["tokenIdentifier"]),
 
   plans: defineTable({
@@ -14,6 +15,37 @@ export default defineSchema({
     data: v.string(), // JSON string of the plan
     createdAt: v.number(),
   }).index("by_user", ["userId"]),
+
+  // Every single available class from the university
+  master_courses: defineTable({
+    code: v.string(),
+    name: v.string(),
+    sks: v.number(),
+    prodi: v.string(),
+    class: v.string(),
+    lecturer: v.string(),
+    room: v.string(),
+    capacity: v.optional(v.number()),
+    schedule: v.array(
+      v.object({
+        day: v.string(),
+        start: v.string(),
+        end: v.string(),
+      }),
+    ),
+  })
+    .index("by_code", ["code"])
+    .index("by_prodi", ["prodi"]),
+
+  // Curriculum definition (mandatory courses per semester)
+  curriculum: defineTable({
+    prodi: v.string(),
+    semester: v.number(), // 1-8
+    term: v.string(), // "odd" | "even"
+    code: v.string(),
+    name: v.string(),
+    sks: v.number(),
+  }).index("by_prodi_semester", ["prodi", "semester"]),
 
   usage_logs: defineTable({
     userId: v.id("users"),
