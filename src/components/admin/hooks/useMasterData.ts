@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { usePaginatedQuery } from "convex/react";
+import { useState, useEffect } from "react";
+import { usePaginatedQuery, useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 
 const ITEMS_PER_PAGE = 20;
@@ -7,29 +7,56 @@ const ITEMS_PER_PAGE = 20;
 export function useMasterData() {
   const [prodiFilter, setProdiFilter] = useState("all");
   const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
 
   const { results, status, loadMore, isLoading } = usePaginatedQuery(
     api.admin.getPaginatedMasterCourses,
     {
       prodi: prodiFilter,
-      search: search, // Note: Search is currenty handled by basic filtering on backend or needs index
+      search: search,
     },
     { initialNumItems: ITEMS_PER_PAGE },
   );
 
-  // Client-side search filtering (Hybrid approach)
-  // Since we prioritized pagination performance, we load paginated data.
-  // BUT, if the user searches, we ideally want to search the WHOLE DB or use a search index.
-  // The current backend simplistic implementation just paginates.
-  // IF search is active, the backend SHOULD ideally filter first then paginate.
-  // Our backend update assumes basic filtering.
+  const totalCount = useQuery(api.admin.getMasterCoursesCount, {
+    prodi: prodiFilter,
+    search: search,
+  });
 
-  // For strict "search" across all data without a search index, we might need a separate
-  // "searchMasterCourses" query that is different from the paginated list.
-  // However, for optimization, let's rely on the backend's args.
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [prodiFilter, search]);
+
+  // Calculate pagination
+  const totalPages = Math.ceil((totalCount ?? 0) / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const displayedCourses = results.slice(startIndex, endIndex);
+
+  // Navigation functions
+  const goToPage = (page: number) => {
+    const requiredItems = page * ITEMS_PER_PAGE;
+    if (requiredItems > results.length && status === "CanLoadMore") {
+      loadMore(requiredItems - results.length);
+    }
+    setCurrentPage(page);
+  };
+
+  const nextPage = () => {
+    if (currentPage < totalPages || status === "CanLoadMore") {
+      goToPage(currentPage + 1);
+    }
+  };
+
+  const prevPage = () => {
+    if (currentPage > 1) {
+      goToPage(currentPage - 1);
+    }
+  };
 
   return {
-    courses: results,
+    courses: displayedCourses,
     search,
     setSearch,
     prodiFilter,
@@ -38,5 +65,13 @@ export function useMasterData() {
     loadMore: (numItems: number) => loadMore(numItems),
     isLoading,
     totalLoaded: results.length,
+    // Pagination exports
+    currentPage,
+    totalPages,
+    goToPage,
+    nextPage,
+    prevPage,
+    canGoNext: currentPage < totalPages || status === "CanLoadMore",
+    canGoPrev: currentPage > 1,
   };
 }

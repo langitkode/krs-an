@@ -16,6 +16,12 @@ export function PlanAnalysis({ plan }: { plan: Plan; apiKey?: string }) {
     try {
       const clerkToken = await getToken();
       const baseUrl = import.meta.env.VITE_AI_API_URL?.replace(/\/$/, "");
+
+      // SECURITY FIX: Validate HTTPS protocol
+      if (baseUrl && !baseUrl.startsWith("https://")) {
+        throw new Error("AI API must use HTTPS protocol");
+      }
+
       const res = await fetch(`${baseUrl}/analyze-plan`, {
         method: "POST",
         headers: {
@@ -50,14 +56,14 @@ export function PlanAnalysis({ plan }: { plan: Plan; apiKey?: string }) {
               size="sm"
               onClick={analyze}
               disabled={loading}
-              className="h-8 px-4 text-[10px] font-mono uppercase tracking-widest bg-blue-700 hover:bg-blue-800 rounded-lg shadow-sm"
+              className="h-8 px-4 text-[10px] font-mono uppercase tracking-widest bg-blue-700 hover:bg-blue-800 text-white rounded-lg shadow-sm"
             >
               {loading ? (
                 <Loader2 className="w-3 h-3 animate-spin" />
               ) : (
                 <Sparkles className="w-3 h-3 mr-2" />
               )}
-              {loading ? "Processing" : "Generate Report"}
+              {loading ? "Processing" : "Generate AI Analysis"}
             </Button>
           )}
         </div>

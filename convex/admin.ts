@@ -20,6 +20,13 @@ async function checkAdmin(ctx: any) {
   return user;
 }
 
+export const pingAdmin = query({
+  args: {},
+  handler: async () => {
+    return "Architecture Core Online";
+  },
+});
+
 // Master Schedule Operations
 export const getPaginatedMasterCourses = query({
   args: {
@@ -37,6 +44,35 @@ export const getPaginatedMasterCourses = query({
 
     // Standard pagination without prodi filter
     return await ctx.db.query("master_courses").paginate(args.paginationOpts);
+  },
+});
+
+export const getMasterCoursesCount = query({
+  args: {
+    prodi: v.optional(v.string()),
+    search: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    // Simplified count for diagnostic purposes and search support
+    let items;
+    if (args.prodi && args.prodi !== "all") {
+      items = await ctx.db
+        .query("master_courses")
+        .withIndex("by_prodi", (q) => q.eq("prodi", args.prodi!))
+        .collect();
+    } else {
+      items = await ctx.db.query("master_courses").collect();
+    }
+
+    if (args.search) {
+      const s = args.search.toLowerCase();
+      items = items.filter(
+        (c) =>
+          c.code.toLowerCase().includes(s) || c.name.toLowerCase().includes(s),
+      );
+    }
+
+    return items.length;
   },
 });
 

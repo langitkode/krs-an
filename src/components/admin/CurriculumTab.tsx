@@ -6,6 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Card,
   CardHeader,
   CardTitle,
@@ -58,12 +65,20 @@ export function CurriculumTab({ onOpenImport }: CurriculumTabProps) {
                 <Label className="text-[8px] uppercase font-mono tracking-widest text-slate-500">
                   Prodi Filter
                 </Label>
-                <Input
-                  value={prodi}
-                  onChange={(e) => setProdi(e.target.value.toUpperCase())}
-                  className="h-8 w-32 rounded-lg font-mono text-[9px] uppercase border-slate-200"
-                  placeholder="e.g. INF"
-                />
+                <Select value={prodi} onValueChange={setProdi}>
+                  <SelectTrigger className="h-8 w-40 rounded-lg font-mono text-[9px] uppercase border-slate-200">
+                    <SelectValue placeholder="Select Prodi" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="INFORMATIKA">INFORMATIKA</SelectItem>
+                    <SelectItem value="SISTEM INFORMASI">
+                      SISTEM INFORMASI
+                    </SelectItem>
+                    <SelectItem value="TEKNIK ELEKTRO">
+                      TEKNIK ELEKTRO
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-1">

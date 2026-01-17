@@ -35,3 +35,10 @@ export interface UserPreferences {
   excludedDays: DayOfWeek[];
   preferredLecturers: string[];
 }
+
+export interface ArchivedPlan {
+  _id: string;
+  name: string;
+  data: Plan;
+  createdAt: number;
+}

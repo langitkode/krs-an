@@ -1,4 +1,4 @@
-import { SignInButton, SignOutButton, useUser } from "@clerk/clerk-react";
+import { SignInButton, useUser } from "@clerk/clerk-react";
 import { useQuery, useMutation, useConvexAuth } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { Button } from "@/components/ui/button";
@@ -9,21 +9,26 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { LogOut, CalendarRange, Shield } from "lucide-react";
 import { ScheduleMaker } from "./components/ScheduleMaker";
 import { AdminDashboard } from "./components/AdminDashboard";
 import { Toaster } from "@/components/ui/sonner";
-import { useEffect } from "react";
-import { Routes, Route, Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Routes, Route } from "react-router-dom";
+import { Navbar } from "./components/layout/Navbar";
 
 function App() {
-  const { isSignedIn, user } = useUser();
+  const { isSignedIn } = useUser();
   const { isAuthenticated } = useConvexAuth();
   const userData = useQuery(
     api.users.getCurrentUser,
     isAuthenticated ? {} : "skip",
   );
   const ensureUser = useMutation(api.users.ensureUser);
+
+  // State shared with Navbar for global navigation
+  const [makerStep, setMakerStep] = useState<
+    "config" | "select" | "view" | "archive"
+  >("config");
 
   // Sync user to Convex
   useEffect(() => {
@@ -36,13 +41,14 @@ function App() {
     return (
       <div className="min-h-screen w-full flex flex-col items-center justify-center bg-slate-50 p-4 font-sans">
         <Toaster position="top-center" />
-        <div className="mb-12 text-center space-y-4">
-          <div className="w-20 h-20 bg-blue-700 rounded-xl flex items-center justify-center mx-auto mb-6 shadow-xl shadow-blue-100 border-4 border-white">
-            <CalendarRange className="w-10 h-10 text-white" />
+        <div className="mb-12 text-center space-y-6">
+          <div className="w-48 h-48 bg-white/50 backdrop-blur rounded-3xl overflow-hidden flex items-center justify-center mx-auto mb-8 shadow-2xl transition-transform hover:scale-105 border border-white/20">
+            <img
+              src="/assets/logo.webp"
+              alt="KRSan Logo"
+              className="w-full h-full object-contain p-4"
+            />
           </div>
-          <h1 className="text-5xl font-bold tracking-tight text-slate-900 font-display">
-            KRSan
-          </h1>
           <p className="text-slate-500 max-w-sm mx-auto text-lg leading-relaxed">
             Professional schedule planning for university students. Optimized by
             AI for an elegant academic experience.
@@ -60,7 +66,7 @@ function App() {
           </CardHeader>
           <CardContent className="pb-8">
             <SignInButton mode="modal">
-              <Button className="w-full h-12 text-base font-medium bg-blue-700 hover:bg-blue-800 transition-all font-sans rounded-lg shadow-lg shadow-blue-200">
+              <Button className="w-full h-12 text-base font-medium bg-blue-700 hover:bg-blue-800 text-white transition-all font-sans rounded-lg shadow-lg shadow-blue-200">
                 Continue with Clerk
               </Button>
             </SignInButton>
@@ -73,76 +79,25 @@ function App() {
   return (
     <div className="min-h-screen bg-slate-50/30 font-sans">
       <Toaster position="top-center" />
-      <header className="sticky top-0 z-50 w-full border-b bg-white/90 backdrop-blur-md">
-        <div className="container flex h-16 max-w-6xl mx-auto items-center justify-between px-4">
-          <div className="flex items-center gap-6">
-            <Link
-              to="/"
-              className="flex items-center gap-3 hover:opacity-80 transition-opacity"
-            >
-              <div className="w-8 h-8 bg-blue-700 rounded flex items-center justify-center">
-                <CalendarRange className="w-5 h-5 text-white" />
-              </div>
-              <span className="text-2xl font-bold tracking-tight text-slate-900 font-display">
-                KRSan
-              </span>
-            </Link>
 
-            {userData?.isAdmin && (
-              <Link
-                to="/admin"
-                className="flex items-center gap-2 px-3 py-1 bg-slate-900 text-white rounded-full hover:bg-slate-800 transition-colors"
-              >
-                <Shield className="w-3.5 h-3.5" />
-                <span className="text-[10px] font-mono uppercase tracking-widest pt-0.5">
-                  Core Architect
-                </span>
-              </Link>
-            )}
-          </div>
-
-          <div className="flex items-center gap-6">
-            <div className="hidden sm:flex flex-col items-end gap-0.5">
-              <span className="text-sm font-semibold text-slate-900">
-                {user?.fullName}
-              </span>
-              <div className="flex items-center gap-2">
-                <div className="h-1.5 w-24 bg-slate-100 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-blue-700 rounded-full"
-                    style={{
-                      width: `${((userData?.credits ?? 0) / 5) * 100}%`,
-                    }}
-                  />
-                </div>
-                <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest">
-                  {userData?.credits ?? 0}/5 Tokens
-                </span>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3 pl-4 border-l border-slate-100">
-              <img
-                src={user?.imageUrl}
-                className="w-8 h-8 rounded-full border border-slate-200 shadow-sm"
-              />
-              <SignOutButton>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 hover:bg-slate-100 hover:text-slate-900 rounded-full"
-                >
-                  <LogOut className="w-4 h-4" />
-                </Button>
-              </SignOutButton>
-            </div>
-          </div>
-        </div>
-      </header>
+      <Navbar
+        userData={userData as any}
+        step={makerStep}
+        setStep={setMakerStep}
+      />
 
       <main className="container max-w-6xl mx-auto px-4 py-12">
         <Routes>
-          <Route path="/" element={<ScheduleMaker />} />
+          <Route
+            path="/"
+            element={
+              <ScheduleMaker
+                externalStep={makerStep}
+                onStepChange={setMakerStep}
+                userData={userData as any}
+              />
+            }
+          />
           <Route path="/admin" element={<AdminDashboard />} />
         </Routes>
       </main>
@@ -150,13 +105,14 @@ function App() {
       <footer className="py-10 border-t bg-white">
         <div className="container max-w-6xl mx-auto px-4 divide-y divide-slate-100">
           <div className="pb-8 flex flex-col md:flex-row justify-between items-center gap-4">
-            <div className="flex items-center gap-2 grayscale hover:grayscale-0 transition-all opacity-50 hover:opacity-100">
-              <div className="w-6 h-6 bg-slate-900 rounded flex items-center justify-center">
-                <CalendarRange className="w-3.5 h-3.5 text-white" />
+            <div className="flex items-center grayscale hover:grayscale-0 transition-all opacity-70 hover:opacity-100">
+              <div className="h-8 w-20 overflow-hidden flex items-center justify-center">
+                <img
+                  src="/assets/logo.webp"
+                  alt="KRSan"
+                  className="h-full w-full object-contain"
+                />
               </div>
-              <span className="text-lg font-bold font-display text-slate-900">
-                KRSan
-              </span>
             </div>
             <p className="text-xs text-slate-400 font-mono tracking-tighter">
               ELEGANT PLANNING • AI DRIVEN • ACADEMIC TOOL

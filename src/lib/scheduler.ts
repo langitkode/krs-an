@@ -58,100 +58,129 @@ function calculateScore(courses: Course[]): {
   return { safe, risky, optimal, labels };
 }
 
+/**
+ * Shuffle helper for randomized sampling
+ */
+function shuffle<T>(array: T[]): T[] {
+  const newArray = [...array];
+  for (let i = newArray.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+  }
+  return newArray;
+}
+
+/**
+ * Check if a daily load exceeds a threshold
+ */
+function checkDailySksLimit(courses: Course[], limit: number = 8): boolean {
+  const daySks: Record<string, number> = {};
+  courses.forEach((c) => {
+    c.schedule.forEach((s) => {
+      daySks[s.day] = (daySks[s.day] || 0) + (c.sks || 0);
+    });
+  });
+  return Object.values(daySks).every((sks) => sks <= limit);
+}
+
 export function generatePlans(
   allCourses: Course[],
   selectedCodes: string[],
+  limit: number = 12,
 ): Plan[] {
-  // 1. Group by code
+  // 1. Group by code and Shuffle
   const groups: Record<string, Course[]> = {};
-
-  // Filter only relevant courses first
   const relevantCourses = allCourses.filter((c) =>
     selectedCodes.includes(c.code),
   );
 
   if (relevantCourses.length === 0) return [];
 
+  // Important: Use selectedCodes order to pick groups
   selectedCodes.forEach((code) => {
-    // Exact match on code (watch out for case sensitivity? assumption: normalized)
     const options = relevantCourses.filter((c) => c.code === code);
     if (options.length > 0) {
-      groups[code] = options;
+      groups[code] = shuffle(options); // SHUFFLE for random sampling
     }
   });
 
   const keys = Object.keys(groups);
+  const foundPlans: Course[][] = [];
+  const maxSearchCandidates = limit * 4; // Find enough valid schedules to pick from
 
-  // Strict for now.
-  if (keys.length !== selectedCodes.length) {
-    console.warn("Some selected codes have no available classes.");
-  }
+  // 2. Backtracking Search
+  function backtrack(index: number, currentCombo: Course[]) {
+    if (foundPlans.length >= maxSearchCandidates) return;
 
-  // 2. Cartesian Product (Iterative)
-  let combinations: Course[][] = [[]];
-
-  for (const key of keys) {
-    const options = groups[key];
-    const newCombinations: Course[][] = [];
-
-    // Safety break if combinations explode
-    if (combinations.length * options.length > 20000) {
-      // If we can't add another course without exploding, just stop and keep what we have
-      // but warn the user. Actually, better to just limit the search space per course.
-      console.warn("Combinations space too large, limiting options for", key);
-      const limitedOptions = options.slice(
-        0,
-        Math.floor(20000 / combinations.length),
-      );
-      for (const combo of combinations) {
-        for (const option of limitedOptions) {
-          newCombinations.push([...combo, option]);
-        }
-      }
-    } else {
-      for (const combo of combinations) {
-        for (const option of options) {
-          newCombinations.push([...combo, option]);
-        }
-      }
+    // Base case: Full plan found
+    if (index === keys.length) {
+      foundPlans.push([...currentCombo]);
+      return;
     }
-    combinations = newCombinations;
+
+    const currentKey = keys[index];
+    const options = groups[currentKey];
+
+    for (const option of options) {
+      // Early Pruning: Conflict Check
+      const { valid } = checkConflicts([...currentCombo, option]);
+      if (!valid) continue;
+
+      // Optional: Add branch for Daily Load Heuristic (8 SKS)
+      // We still want to find plans even if they exceed 8 SKS, but we prefer those that don't.
+      // For now, let's just use it in the final scoring.
+
+      backtrack(index + 1, [...currentCombo, option]);
+
+      if (foundPlans.length >= maxSearchCandidates) break;
+    }
   }
 
-  // 3. Filter conflicts and create Plans
-  const plans: Plan[] = [];
-  let validCount = 0;
+  // Start search
+  backtrack(0, []);
 
-  // Sorting combinations: Move those with more subjects to the front (if we ever allow partial)
-  // For now, these are all "full" combinations based on the keys we have.
+  // 3. Scoring and Sorting
+  // We prioritize:
+  // 1. Daily SKS <= 8
+  // 2. High Analysis Score
+  const scoredPlans = foundPlans.map((combo) => {
+    const stats = calculateScore(combo);
+    const passesDailyHeuristic = checkDailySksLimit(combo, 8);
 
-  for (const combo of combinations) {
-    if (validCount >= 6) break;
+    // Heuristic boost
+    const finalSafe = stats.safe + (passesDailyHeuristic ? 15 : 0);
 
-    const { valid } = checkConflicts(combo);
+    return {
+      combo,
+      stats,
+      passesDailyHeuristic,
+      totalScore: finalSafe + stats.optimal - stats.risky,
+    };
+  });
 
-    if (valid) {
-      const stats = calculateScore(combo);
+  // Take top limit
+  return scoredPlans
+    .sort((a, b) => b.totalScore - a.totalScore)
+    .slice(0, limit)
+    .map((item, idx) => {
       const isComplete = keys.length === selectedCodes.length;
+      const labels = [...item.stats.labels];
+      if (item.passesDailyHeuristic) labels.push("Balanced daily SKS (<8)");
 
-      plans.push({
+      return {
         id: crypto.randomUUID(),
         name: isComplete
-          ? `Optimal Plan ${validCount + 1}`
-          : `Partial Plan ${validCount + 1}`,
-        courses: combo,
+          ? `Optimal Plan ${idx + 1}`
+          : `Partial Plan ${idx + 1}`,
+        courses: item.combo,
         score: {
-          safe: stats.safe - (isComplete ? 0 : 20),
-          risky: stats.risky,
-          optimal: stats.optimal,
+          safe: item.stats.safe,
+          risky: item.stats.risky,
+          optimal: item.stats.optimal,
         },
         analysis: isComplete
-          ? stats.labels.join(", ")
-          : `Missing ${selectedCodes.length - keys.length} subjects. ${stats.labels.join(", ")}`,
-      });
-      validCount++;
-    }
-  }
-
-  return plans;
+          ? labels.join(", ")
+          : `Missing ${selectedCodes.length - keys.length} subjects. ${labels.join(", ")}`,
+      };
+    });
 }

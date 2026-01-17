@@ -21,6 +21,9 @@ import { CurriculumImportDialog } from "./admin/dialogs/CurriculumImportDialog";
 export function AdminDashboard() {
   const user = useQuery(api.users.getCurrentUser);
   const clearMaster = useMutation(api.admin.clearMasterData);
+  const adminPing = useQuery(api.admin.pingAdmin);
+
+  console.log("DEBUG: Admin Ping Status:", adminPing);
 
   const [isAiDialogOpen, setIsAiDialogOpen] = useState(false);
   const [isCurriculumDialogOpen, setIsCurriculumDialogOpen] = useState(false);

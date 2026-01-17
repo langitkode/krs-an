@@ -27,7 +27,11 @@ export function IntelligenceScraperDialog({
   const { getToken } = useAuth();
   const convex = useConvex(); // Access to imperative Convex calls
   const bulkImport = useMutation(api.admin.bulkImportMaster);
-  const saveCache = useMutation((api as any).ai.saveCache);
+  // Safe access to ai.saveCache if it exists, otherwise use bulkImport as a valid mutation reference
+  // (unlikely to be called if ai.saveCache is missing, but keeps hook valid)
+  const saveCache = useMutation(
+    (api as any).ai?.saveCache || api.admin.bulkImportMaster,
+  );
 
   const [scraperMode, setScraperMode] = useState<"ai" | "manual">("manual");
   const [rawText, setRawText] = useState("");
@@ -153,9 +157,10 @@ export function IntelligenceScraperDialog({
     try {
       // 1. Check Cache
       const hash = await computeHash(rawText.trim());
-      const cachedResponse = await convex.query((api as any).ai.checkCache, {
-        hash,
-      });
+      const checkCacheFunc = (api as any).ai?.checkCache;
+      const cachedResponse = checkCacheFunc
+        ? await convex.query(checkCacheFunc, { hash })
+        : null;
 
       let data;
 

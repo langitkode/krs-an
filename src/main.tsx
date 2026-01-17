@@ -8,13 +8,18 @@ import { ConvexReactClient } from "convex/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter } from "react-router-dom";
 
-// You need to replace these with your actual keys from env
-const convex = new ConvexReactClient(
-  (import.meta.env.VITE_CONVEX_URL as string) ||
-    "https://nice-kudu-123.convex.cloud",
-); // Placeholder
-const PUBLISHABLE_KEY =
-  import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || "pk_test_placeholder";
+// SECURITY: Enforce proper environment configuration
+const CONVEX_URL = import.meta.env.VITE_CONVEX_URL as string;
+const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY as string;
+
+// Validate required environment variables
+if (!CONVEX_URL || !PUBLISHABLE_KEY) {
+  throw new Error(
+    "Missing required environment variables. Please configure VITE_CONVEX_URL and VITE_CLERK_PUBLISHABLE_KEY",
+  );
+}
+
+const convex = new ConvexReactClient(CONVEX_URL);
 
 const queryClient = new QueryClient();
 

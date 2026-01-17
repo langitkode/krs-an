@@ -7,6 +7,7 @@ import { Course } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Pagination } from "@/components/ui/Pagination";
 import {
   Card,
   CardHeader,
@@ -45,9 +46,16 @@ export function MasterDataTab({ onOpenScraper }: MasterDataTabProps) {
     prodiFilter,
     setProdiFilter,
     status,
-    loadMore,
     isLoading,
     totalLoaded,
+    // Pagination
+    currentPage,
+    totalPages,
+    goToPage,
+    nextPage,
+    prevPage,
+    canGoNext,
+    canGoPrev,
   } = useMasterData();
 
   const updateMaster = useMutation(api.admin.updateMasterCourse);
@@ -341,29 +349,16 @@ export function MasterDataTab({ onOpenScraper }: MasterDataTabProps) {
             )}
           </div>
 
-          {/* Infinite Scroll / Load More Control */}
-          <div className="p-4 border-t border-slate-100 bg-slate-50/30 flex justify-center">
-            {status === "CanLoadMore" && (
-              <Button
-                variant="outline"
-                onClick={() => loadMore(20)}
-                className="rounded-xl border-slate-200 text-slate-600 font-mono text-[10px] uppercase tracking-widest hover:bg-white hover:border-blue-300 hover:text-blue-700 transition-all"
-              >
-                Load More Components
-              </Button>
-            )}
-            {status === "LoadingMore" && (
-              <div className="flex items-center gap-2 text-slate-400 font-mono text-[10px] uppercase tracking-widest">
-                <Loader2 className="w-3 h-3 animate-spin" /> Fetching more
-                data...
-              </div>
-            )}
-            {status === "Exhausted" && courses.length > 0 && (
-              <div className="text-slate-300 font-mono text-[9px] uppercase tracking-widest">
-                End of Database
-              </div>
-            )}
-          </div>
+          {/* Numbered Pagination */}
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={goToPage}
+            onNext={nextPage}
+            onPrev={prevPage}
+            canGoNext={canGoNext}
+            canGoPrev={canGoPrev}
+          />
         </CardContent>
       </Card>
 

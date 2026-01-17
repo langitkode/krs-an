@@ -1,5 +1,23 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { logAudit } from "./audit";
+
+// Import checkAdmin helper from admin module
+async function checkAdmin(ctx: any) {
+  const identity = await ctx.auth.getUserIdentity();
+  if (!identity) throw new Error("Unauthorized");
+
+  const user = await ctx.db
+    .query("users")
+    .withIndex("by_token", (q: any) =>
+      q.eq("tokenIdentifier", identity.tokenIdentifier),
+    )
+    .unique();
+
+  if (!user || !user.isAdmin)
+    throw new Error("Forbidden: Admin access required");
+  return user;
+}
 
 // Helper to get current user
 export const getCurrentUser = query({
@@ -101,9 +119,13 @@ export const generateServiceToken = mutation({
 });
 
 // For initial development: promote first user or specific token to admin
+// SECURITY: This endpoint is now protected - only existing admins can promote others
 export const makeAdmin = mutation({
   args: { tokenIdentifier: v.string() },
   handler: async (ctx, args) => {
+    // CRITICAL SECURITY FIX: Require admin authorization
+    await checkAdmin(ctx);
+
     const user = await ctx.db
       .query("users")
       .withIndex("by_token", (q) =>
@@ -112,6 +134,13 @@ export const makeAdmin = mutation({
       .unique();
     if (user) {
       await ctx.db.patch(user._id, { isAdmin: true });
+
+      // Log admin promotion for audit trail
+      await logAudit(ctx, {
+        user: (await ctx.auth.getUserIdentity())!.tokenIdentifier,
+        action: "promote_admin",
+        details: `Promoted user ${args.tokenIdentifier} to admin`,
+      });
     }
   },
 });
