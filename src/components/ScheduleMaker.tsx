@@ -70,9 +70,9 @@ export function ScheduleMaker({
 
   const [planLimit, setPlanLimit] = useState(userData?.planLimit || 12);
 
-  // Sync planLimit if userData changes (e.g. after refresh or mutation)
+  // Sync planLimit if userData changes
   useEffect(() => {
-    if (userData?.planLimit) {
+    if (userData?.planLimit && userData.planLimit !== planLimit) {
       setPlanLimit(userData.planLimit);
     }
   }, [userData?.planLimit]);
@@ -229,7 +229,8 @@ export function ScheduleMaker({
   };
 
   const handleGenerate = async (tokenized: boolean = false) => {
-    let currentLimit = planLimit;
+    // Source of truth: state (might have immediate local updates) or DB prop
+    let currentLimit = Math.max(planLimit, userData?.planLimit || 12);
 
     if (tokenized) {
       if (!userData || userData.credits <= 0) {
@@ -239,7 +240,7 @@ export function ScheduleMaker({
       try {
         await consumeTokenMutation({ type: "expand" });
         toast.success("Consumed 1 token for +12 expansion.");
-        currentLimit += 12;
+        currentLimit = (userData?.planLimit || planLimit) + 12;
         setPlanLimit(currentLimit);
       } catch (err: any) {
         toast.error("Failed to consume token: " + err.message);
@@ -503,7 +504,9 @@ export function ScheduleMaker({
                 onSavePlan={handleSavePlan}
                 isSaving={isSaving}
                 onExpand={
-                  viewSource === "live" ? () => handleGenerate(true) : undefined
+                  viewSource === "live" && planLimit < 36
+                    ? () => handleGenerate(true)
+                    : undefined
                 }
                 onShuffle={
                   viewSource === "live"

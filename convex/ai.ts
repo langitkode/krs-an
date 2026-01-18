@@ -131,7 +131,7 @@ REQUIREMENTS:
 2. **FALLBACK:** If mathematically impossible to include all subjects without conflicts or exceeding SKS, you may drop **UP TO TWO (2)** subjects.
 3. No time conflicts allowed.
 4. Balanced load (≤8 SKS/day).
-5. 5 DISTINCT VARIATIONS (different days, times, or lecturers).
+5. 3 DISTINCT VARIATIONS (different days, times, or lecturers).
 
 THIN OUTPUT FORMAT (JSON ONLY):
 {
@@ -174,7 +174,7 @@ Return ONLY valid JSON.`;
 
       const savedPlanIds: string[] = [];
 
-      for (let i = 0; i < Math.min(aiPlans.length, 5); i++) {
+      for (let i = 0; i < Math.min(aiPlans.length, 3); i++) {
         const aiPlan = aiPlans[i];
 
         // Reconstruct courses from IDs
