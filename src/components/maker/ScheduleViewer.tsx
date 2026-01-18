@@ -7,7 +7,6 @@ import {
   Bookmark,
   Sparkles,
   RefreshCw,
-  HelpCircle,
 } from "lucide-react";
 import { ScheduleGrid } from "../ScheduleGrid";
 import { HelpTooltip } from "../ui/HelpTooltip";
@@ -108,7 +107,7 @@ export function ScheduleViewer({
       </div>
 
       {/* Unified Floating Controller */}
-      <div className="flex items-center justify-center no-print sticky top-20 z-10 w-full px-2">
+      <div className="flex items-center justify-center no-print sticky top-20 z-50 w-full px-2">
         <div className="inline-flex flex-wrap items-center justify-center gap-1 md:gap-2 bg-white/95 backdrop-blur-sm border border-slate-200/80 p-1.5 md:p-2 rounded-[2rem] shadow-xl shadow-blue-900/5 max-w-full overflow-hidden">
           {/* Save Button */}
           <Button
