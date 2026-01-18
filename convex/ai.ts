@@ -114,7 +114,7 @@ export const smartGenerate = action({
 DATA (Minified JSON):
 ${JSON.stringify(optimizedCourses, null, 2)}
 
-SELECTED CODES (Users wants ALL of these):
+SELECTED CODES (User wants ALL of these):
 ${args.selectedCodes.join(", ")}
 
 USER PREFERENCES:
@@ -123,92 +123,67 @@ USER PREFERENCES:
 - Note: ${args.preferences.customInstructions || "None"}
 
 REQUIREMENTS:
-1. **CRITICAL:** Try your hardest to include **ALL** selected codes.
-2. **FALLBACK:** If and ONLY IF it is mathematically impossible to avoid conflicts, you may drop **AT MOST ONE** (1) subject. Minimize SKS loss.
+1. **CRITICAL:** Aim for **ALL** selected codes in every plan.
+2. **FALLBACK:** If mathematically impossible, you may drop **AT MOST ONE** (1) subject.
 3. No time conflicts allowed.
 4. Balanced load (≤8 SKS/day).
-5. Minimize early morning (<08:00).
-6. Respect 'Avoid Days' if possible.
-7. 5 DISTINCT VARIATIONS.
+5. 5 DISTINCT VARIATIONS.
 
-OUTPUT FORMAT (JSON ONLY):
+THIN OUTPUT FORMAT (JSON ONLY - USE IDS ONLY TO SAVE TOKENS):
 {
   "plans": [
     {
-      "name": "Plan 1: [Briefly explain strategy & if any course was dropped]",
-      "courses": [ // Reconstruct full objects based on IDs
-        {
-          "id": "exact-id-from-input",
-          "code": "CODE",
-          "name": "NAME",
-          "sks": 3,
-          "class": "A",
-          "lecturer": "Name",
-          "room": "Room", // Optional if not in input
-          "schedule": [{"day": "Monday", "start": "08:00", "end": "10:00"}] // Parse back from compact string
-        }
-      ]
+      "name": "Strategy Name (e.g., 'Plan A: Early Morning Focus')",
+      "courseIds": ["id1", "id2", "id3"] // IDs from the input data provided above
     }
   ]
 }
-
 Return ONLY valid JSON.`;
 
     try {
       const completion = await groq.chat.completions.create({
-        messages: [
-          {
-            role: "user",
-            content: prompt,
-          },
-        ],
+        messages: [{ role: "user", content: prompt }],
         model: "llama-3.1-8b-instant",
         response_format: { type: "json_object" },
-        temperature: 0.7,
-        max_tokens: 4096,
+        temperature: 0.3, // Lower temperature for better logic
+        max_tokens: 2048, // Reduced since output is thin
       });
 
       const responseText = completion.choices[0]?.message?.content || "{}";
+      const aiResponse = JSON.parse(responseText);
+      const aiPlans = aiResponse.plans || [];
 
-      // Parse AI response with robust fallback
-      let aiResponse;
-      try {
-        // Step 1: Try direct parse
-        aiResponse = JSON.parse(responseText);
-      } catch (e) {
-        // Step 2: Try regex extraction if AI added markdown or text
-        const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          try {
-            aiResponse = JSON.parse(jsonMatch[0]);
-          } catch (e2) {
-            throw new Error("AI returned malformed JSON structure.");
-          }
-        } else {
-          throw new Error("AI failed to provide a JSON response.");
-        }
-      }
-
-      const plans = aiResponse.plans || [];
-      if (plans.length === 0) {
+      if (aiPlans.length === 0) {
         throw new Error("AI generated no valid plans");
       }
 
-      // 6. SUCCESS! Now consume token and save plans
-      await ctx.runMutation(api.users.generateServiceToken, {});
+      // 6. SERVER-SIDE RECONSTRUCTION
+      // Map IDs back to full objects to ensure data integrity and save tokens
+      const courseMap = new Map();
+      args.courses.forEach((c: any) => courseMap.set(c.id, c));
 
+      // 7. SUCCESS! Consume token and save plans
+      await ctx.runMutation(api.users.generateServiceToken, {});
       const savedPlanIds: string[] = [];
 
-      for (let i = 0; i < Math.min(plans.length, 5); i++) {
-        const plan = plans[i];
+      for (let i = 0; i < Math.min(aiPlans.length, 5); i++) {
+        const aiPlan = aiPlans[i];
+
+        // Reconstruct courses from IDs
+        const fullCourses = (aiPlan.courseIds || [])
+          .map((id: string) => courseMap.get(id))
+          .filter(Boolean);
+
+        if (fullCourses.length === 0) continue;
+
         const planId = await ctx.runMutation(api.plans.savePlan, {
-          name: plan.name || `AI Plan ${i + 1}`,
+          name: aiPlan.name || `AI Plan ${i + 1}`,
           data: JSON.stringify({
             id: crypto.randomUUID(),
-            name: plan.name || `AI Plan ${i + 1}`,
-            courses: plan.courses,
-            score: { safe: 70, risky: 10, optimal: 20 },
-            analysis: "AI-generated schedule",
+            name: aiPlan.name || `AI Plan ${i + 1}`,
+            courses: fullCourses,
+            score: { safe: 80, risky: 5, optimal: 15 },
+            analysis: "AI-optimized schedule with server-side reconstruction",
           }),
           isSmartGenerated: true,
           generatedBy: "ai",
