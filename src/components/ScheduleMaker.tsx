@@ -274,13 +274,15 @@ export function ScheduleMaker({
           ),
         );
 
-        const newPlans = generated.filter((p) => {
-          const key = p.courses
-            .map((c) => c.id)
-            .sort()
-            .join(",");
-          return !existingComboKeys.has(key);
-        });
+        const newPlans = generated
+          .filter((p) => {
+            const key = p.courses
+              .map((c) => c.id)
+              .sort()
+              .join(",");
+            return !existingComboKeys.has(key);
+          })
+          .slice(0, 12); // Only add the increment of 12
 
         if (newPlans.length === 0) {
           toast.info(

@@ -7,8 +7,10 @@ import {
   Bookmark,
   Sparkles,
   RefreshCw,
+  HelpCircle,
 } from "lucide-react";
 import { ScheduleGrid } from "../ScheduleGrid";
+import { HelpTooltip } from "../ui/HelpTooltip";
 import type { Plan } from "@/types";
 
 interface ScheduleViewerProps {
@@ -137,10 +139,16 @@ export function ScheduleViewer({
             </Button>
 
             <div className="flex flex-col items-center px-2 md:px-4 min-w-[70px] md:min-w-[100px]">
-              <span className="text-[10px] md:text-[11px] font-mono font-bold text-slate-900 tracking-tighter leading-none">
-                {String(currentPlanIndex + 1).padStart(2, "0")} /{" "}
-                {String(plans.length).padStart(2, "0")}
-              </span>
+              <div className="flex items-center">
+                <span className="text-[10px] md:text-[11px] font-mono font-bold text-slate-900 tracking-tighter leading-none">
+                  {String(currentPlanIndex + 1).padStart(2, "0")} /{" "}
+                  {String(plans.length).padStart(2, "0")}
+                </span>
+                <HelpTooltip
+                  titleKey="help.slider_title"
+                  descKey="help.slider_desc"
+                />
+              </div>
               <div className="flex gap-1 mt-1.5">
                 {Array.from({ length: Math.min(plans.length, 6) }).map(
                   (_, i) => (
@@ -182,11 +190,15 @@ export function ScheduleViewer({
                   className={`w-3.5 h-3.5 mr-2 ${isGenerating ? "animate-spin" : ""}`}
                 />
                 Shuffle
+                <HelpTooltip
+                  titleKey="help.shuffle_title"
+                  descKey="help.shuffle_desc"
+                />
               </Button>
             </>
           )}
 
-          {plans.length < planLimit && onExpand && (
+          {planLimit < 36 && onExpand && (
             <>
               <div className="hidden sm:block w-px h-6 bg-slate-200" />
               <Button

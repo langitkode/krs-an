@@ -100,6 +100,12 @@ const translations: Record<Language, Record<string, string>> = {
       "KRSan dibuat untuk mendemokrasikan optimasi jadwal. Kami percaya bahwa teknologi AI seharusnya membantu hal-hal administratif yang membosankan sehingga mahasiswa bisa lebih fokus pada pencapaian akademik yang sebenarnya.",
     "about.quote":
       "'KRSan bukan hanya alat pembuat jadwal, tapi manifestasi dari rasa empati terhadap perjuangan ratusan ribu mahasiswa setiap semesternya.'",
+    "help.shuffle_title": "Macro Adjustment (Shuffle)",
+    "help.shuffle_desc":
+      "Gunakan Shuffle untuk merombak total kombinasi jadwal secara acak. Ini adalah penyesuaian skala besar untuk menemukan struktur jadwal yang benar-benar berbeda.",
+    "help.slider_title": "Micro Adjustment (Slider)",
+    "help.slider_desc":
+      "Gunakan penggeser untuk melihat variasi detail dari struktur jadwal yang sudah ada. Ini adalah penyesuaian skala kecil untuk membandingkan pilihan kelas secara spesifik.",
   },
   EN: {
     "nav.architect": "Architect",
@@ -191,6 +197,12 @@ const translations: Record<Language, Record<string, string>> = {
       "KRSan was created to democratize schedule optimization. We believe that AI technology should help with tedious administrative tasks so that students can focus more on actual academic achievement.",
     "about.quote":
       "'KRSan is not just a scheduling tool, but a manifestation of empathy towards the struggles of hundreds of thousands of students every semester.'",
+    "help.shuffle_title": "Macro Adjustment (Shuffle)",
+    "help.shuffle_desc":
+      "Use Shuffle to completely reorganize the schedule combination randomly. This is a large-scale adjustment to find a completely different schedule structure.",
+    "help.slider_title": "Micro Adjustment (Slider)",
+    "help.slider_desc":
+      "Use the slider to see detailed variations of the existing schedule structure. This is a small-scale adjustment to compare specific class options.",
   },
 };
 
