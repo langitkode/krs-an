@@ -271,13 +271,31 @@ export function MasterDataTab({ onOpenScraper }: MasterDataTabProps) {
                 <SelectTrigger className="h-10 rounded-xl border-slate-200">
                   <SelectValue placeholder="All Prodi" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Prodi</SelectItem>
-                  <SelectItem value="INFORMATIKA">INFORMATIKA</SelectItem>
-                  <SelectItem value="SISTEM INFORMASI">
-                    SISTEM INFORMASI
+                <SelectContent className="rounded-xl border-slate-100 shadow-xl max-h-[300px]">
+                  <SelectItem value="all" className="text-[10px] font-bold">
+                    All Prodi
                   </SelectItem>
-                  <SelectItem value="TEKNIK ELEKTRO">TEKNIK ELEKTRO</SelectItem>
+                  {[
+                    "INFORMATIKA",
+                    "SISTEM INFORMASI",
+                    "TEKNIK INDUSTRI",
+                    "TEKNIK KIMIA",
+                    "TEKNIK LINGKUNGAN",
+                    "TEKNIK PERTAMBANGAN",
+                    "TEKNIK GEOLOGI",
+                    "MANAJEMEN",
+                    "AKUNTANSI",
+                    "EKONOMI PEMBANGUNAN",
+                    "ILMU KOMUNIKASI",
+                    "HUBUNGAN INTERNASIONAL",
+                    "ADMINISTRASI BISNIS",
+                  ]
+                    .sort()
+                    .map((p) => (
+                      <SelectItem key={p} value={p} className="text-[10px]">
+                        {p}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>

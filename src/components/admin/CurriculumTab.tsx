@@ -66,17 +66,31 @@ export function CurriculumTab({ onOpenImport }: CurriculumTabProps) {
                   Prodi Filter
                 </Label>
                 <Select value={prodi} onValueChange={setProdi}>
-                  <SelectTrigger className="h-8 w-40 rounded-lg font-mono text-[9px] uppercase border-slate-200">
+                  <SelectTrigger className="h-8 w-44 rounded-lg font-mono text-[9px] uppercase border-slate-200">
                     <SelectValue placeholder="Select Prodi" />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="INFORMATIKA">INFORMATIKA</SelectItem>
-                    <SelectItem value="SISTEM INFORMASI">
-                      SISTEM INFORMASI
-                    </SelectItem>
-                    <SelectItem value="TEKNIK ELEKTRO">
-                      TEKNIK ELEKTRO
-                    </SelectItem>
+                  <SelectContent className="rounded-xl border-slate-100 shadow-xl max-h-[300px]">
+                    {[
+                      "INFORMATIKA",
+                      "SISTEM INFORMASI",
+                      "TEKNIK INDUSTRI",
+                      "TEKNIK KIMIA",
+                      "TEKNIK LINGKUNGAN",
+                      "TEKNIK PERTAMBANGAN",
+                      "TEKNIK GEOLOGI",
+                      "MANAJEMEN",
+                      "AKUNTANSI",
+                      "EKONOMI PEMBANGUNAN",
+                      "ILMU KOMUNIKASI",
+                      "HUBUNGAN INTERNASIONAL",
+                      "ADMINISTRASI BISNIS",
+                    ]
+                      .sort()
+                      .map((p) => (
+                        <SelectItem key={p} value={p} className="text-[10px]">
+                          {p}
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -100,17 +114,25 @@ export function CurriculumTab({ onOpenImport }: CurriculumTabProps) {
                 <Label className="text-[8px] uppercase font-mono tracking-widest text-slate-500">
                   Semester Filter
                 </Label>
-                <div className="flex bg-slate-100 p-0.5 rounded-lg border border-slate-200/50">
-                  {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
-                    <button
-                      key={s}
-                      onClick={() => setSemester(s)}
-                      className={`w-7 h-7 rounded text-[9px] font-mono transition-all ${semester === s ? "bg-white text-blue-700 shadow-sm font-bold" : "hover:bg-white/50 text-slate-500"}`}
-                    >
-                      {s}
-                    </button>
-                  ))}
-                </div>
+                <Select
+                  value={semester.toString()}
+                  onValueChange={(val) => setSemester(parseInt(val))}
+                >
+                  <SelectTrigger className="h-8 w-28 rounded-lg font-mono text-[9px] uppercase border-slate-200">
+                    <SelectValue placeholder="Semester" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl border-slate-100 shadow-xl">
+                    {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
+                      <SelectItem
+                        key={s}
+                        value={s.toString()}
+                        className="text-[10px]"
+                      >
+                        SEMESTER {s}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>

@@ -11,9 +11,15 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { BookOpen, Copy, Loader2, AlertCircle } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 
 interface CurriculumImportDialogProps {
@@ -31,6 +37,22 @@ export function CurriculumImportDialog({
   const [importSemester, setImportSemester] = useState(2);
   const [curriculumRawText, setCurriculumRawText] = useState("");
   const [isImporting, setIsImporting] = useState(false);
+
+  const prodis = [
+    "INFORMATIKA",
+    "SISTEM INFORMASI",
+    "TEKNIK INDUSTRI",
+    "TEKNIK KIMIA",
+    "TEKNIK LINGKUNGAN",
+    "TEKNIK PERTAMBANGAN",
+    "TEKNIK GEOLOGI",
+    "MANAJEMEN",
+    "AKUNTANSI",
+    "EKONOMI PEMBANGUNAN",
+    "ILMU KOMUNIKASI",
+    "HUBUNGAN INTERNASIONAL",
+    "ADMINISTRASI BISNIS",
+  ].sort();
 
   const handleCurriculumBatchImport = async () => {
     if (!curriculumRawText.trim()) return;
@@ -66,7 +88,7 @@ export function CurriculumImportDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-3xl bg-white rounded-3xl p-8 border-none shadow-2xl">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-white rounded-3xl p-8 border-none shadow-2xl custom-scrollbar">
         <DialogHeader className="mb-6">
           <div className="space-y-1">
             <DialogTitle className="text-2xl font-display font-bold text-slate-900 italic flex items-center gap-3">
@@ -85,25 +107,42 @@ export function CurriculumImportDialog({
               <Label className="text-[10px] uppercase font-mono tracking-widest text-slate-400">
                 Target Prodi
               </Label>
-              <Input
-                value={importProdi}
-                onChange={(e) => setImportProdi(e.target.value.toUpperCase())}
-                className="bg-slate-50 border-none rounded-xl h-10 text-sm"
-                placeholder="e.g. INFORMATIKA"
-              />
+              <Select value={importProdi} onValueChange={setImportProdi}>
+                <SelectTrigger className="bg-slate-50 border-none rounded-xl h-10 text-xs">
+                  <SelectValue placeholder="Select Prodi" />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl border-slate-100 shadow-xl">
+                  {prodis.map((p) => (
+                    <SelectItem key={p} value={p} className="text-xs font-mono">
+                      {p}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
               <Label className="text-[10px] uppercase font-mono tracking-widest text-slate-400">
                 Target Semester
               </Label>
-              <Input
-                type="number"
-                min="1"
-                max="8"
-                value={importSemester}
-                onChange={(e) => setImportSemester(parseInt(e.target.value))}
-                className="bg-slate-50 border-none rounded-xl h-10 text-sm"
-              />
+              <Select
+                value={importSemester.toString()}
+                onValueChange={(val) => setImportSemester(parseInt(val))}
+              >
+                <SelectTrigger className="bg-slate-50 border-none rounded-xl h-10 text-xs">
+                  <SelectValue placeholder="Select Semester" />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl border-slate-100 shadow-xl">
+                  {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
+                    <SelectItem
+                      key={s}
+                      value={s.toString()}
+                      className="text-xs font-mono"
+                    >
+                      SEMESTER {s}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
