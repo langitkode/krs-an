@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { generatePlans } from "@/lib/scheduler";
@@ -24,6 +24,7 @@ interface ScheduleMakerProps {
     credits: number;
     isAdmin: boolean;
     lastSmartGenerateTime?: number;
+    planLimit?: number;
   };
 }
 
@@ -67,7 +68,14 @@ export function ScheduleMaker({
   const [activeShareId, setActiveShareId] = useState<string | null>(null);
   const [activeSharePlanName, setActiveSharePlanName] = useState("");
 
-  const [planLimit, setPlanLimit] = useState(12);
+  const [planLimit, setPlanLimit] = useState(userData?.planLimit || 12);
+
+  // Sync planLimit if userData changes (e.g. after refresh or mutation)
+  useEffect(() => {
+    if (userData?.planLimit) {
+      setPlanLimit(userData.planLimit);
+    }
+  }, [userData?.planLimit]);
 
   // Convex Queries
   const allMasterCourses = useQuery(api.admin.listMasterCourses, {
@@ -229,7 +237,7 @@ export function ScheduleMaker({
         return;
       }
       try {
-        await consumeTokenMutation();
+        await consumeTokenMutation({ type: "expand" });
         toast.success("Consumed 1 token for +12 expansion.");
         currentLimit += 12;
         setPlanLimit(currentLimit);

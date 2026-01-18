@@ -40,6 +40,7 @@ export const getCurrentUser = query({
       isAdmin: !!user?.isAdmin,
       credits: user?.credits ?? 0,
       lastSmartGenerateTime: user?.lastSmartGenerateTime,
+      planLimit: user?.planLimit ?? 12,
     };
   },
 });
@@ -63,7 +64,11 @@ export const ensureUser = mutation({
       // Check for daily reset
       const today = new Date().toISOString().split("T")[0];
       if (user.lastResetDate !== today) {
-        await ctx.db.patch(user._id, { credits: 5, lastResetDate: today });
+        await ctx.db.patch(user._id, {
+          credits: 5,
+          lastResetDate: today,
+          // Removed planLimit reset to make expansions permanent
+        });
       }
       return user._id;
     }
@@ -75,6 +80,7 @@ export const ensureUser = mutation({
       credits: 5, // Daily limit
       lastResetDate: new Date().toISOString().split("T")[0],
       isAdmin: firstUser, // First user is architect
+      planLimit: 12,
     });
 
     return userId;
@@ -82,8 +88,8 @@ export const ensureUser = mutation({
 });
 
 export const generateServiceToken = mutation({
-  args: {},
-  handler: async (ctx) => {
+  args: { type: v.optional(v.string()) },
+  handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new Error("Unauthorized");
 
@@ -101,22 +107,23 @@ export const generateServiceToken = mutation({
     }
 
     // Deduct credit
-    await ctx.db.patch(user._id, {
+    const update: any = {
       credits: user.credits - 1,
       lastSmartGenerateTime: Date.now(),
-    });
+    };
+
+    // If expanding, increment the database limit
+    if (args.type === "expand") {
+      update.planLimit = (user.planLimit ?? 12) + 12;
+    }
+
+    await ctx.db.patch(user._id, update);
+
     await ctx.db.insert("usage_logs", {
       userId: user._id,
-      type: "generate_plan",
+      type: args.type || "generate_plan",
       timestamp: Date.now(),
     });
-
-    // Return a "signed" token for the backend (Simple implementation: just the user ID + secret for now)
-    // In prod, use JWT. For MVP, we'll send the Clerk Token to backend and verify there.
-    // Actually, let's just return success and let frontend call backend with Clerk Token.
-    // Wait, backend needs to know if credits were deducted?
-    // Architecture Refinement: Frontend calls Backend -> Backend calls *Convex Action* to check/deduct credits?
-    // Simpler: Frontend calls ensureUser/generateServiceToken. If success, proceeds to call Backend service.
 
     return { allowed: true, remaining: user.credits - 1 };
   },

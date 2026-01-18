@@ -8,6 +8,7 @@ export default defineSchema({
     lastResetDate: v.string(), // ISO date for daily reset
     isAdmin: v.optional(v.boolean()),
     lastSmartGenerateTime: v.optional(v.number()), // Timestamp of last AI usage
+    planLimit: v.optional(v.number()), // Persistence for expanded generation limit
   }).index("by_token", ["tokenIdentifier"]),
 
   plans: defineTable({
