@@ -3,6 +3,7 @@ import { api } from "./_generated/api";
 import { v } from "convex/values";
 import Groq from "groq-sdk";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import MD5 from "crypto-js/md5";
 
 export const checkCache = query({
   args: { hash: v.string() },
@@ -149,27 +150,60 @@ Return ONLY valid JSON.`;
     let aiResponseText: string | null | undefined;
     const modelToUse = args.model || "groq";
 
-    if (modelToUse === "gemini") {
-      throw new Error(
-        "Gemini is currently unavailable. Please use Groq (Ultra Fast) instead.",
-      );
-    } else {
-      // 5b. Call Groq API
-      const groq = new Groq({
-        apiKey: process.env.GROQ_API_KEY,
-      });
+    // Hash the input to check cache
+    const hashInput = JSON.stringify({
+      optimizedCourses,
+      selectedCodes: args.selectedCodes,
+      maxSks: args.maxSks,
+      preferences: args.preferences,
+      model: modelToUse,
+    });
+    const cacheHash = MD5(hashInput).toString();
 
-      const completion = await groq.chat.completions.create({
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: prompt },
-        ],
-        model: "llama-3.3-70b-versatile", // Upgraded to latest 70B for better reasoning
-        response_format: { type: "json_object" },
-        temperature: 0.6,
-        max_tokens: 2048,
-      });
-      aiResponseText = completion.choices[0]?.message?.content;
+    // 4. Check Cache
+    const cachedResponse = await ctx.runQuery(api.ai.checkCache, {
+      hash: cacheHash,
+    });
+
+    if (cachedResponse) {
+      aiResponseText = JSON.stringify(cachedResponse);
+      console.log("Serving from AI Cache (Hash: " + cacheHash + ")");
+    } else {
+      if (modelToUse === "gemini") {
+        throw new Error(
+          "Gemini is currently unavailable. Please use Groq (Ultra Fast) instead.",
+        );
+      } else {
+        // 5b. Call Groq API
+        const groq = new Groq({
+          apiKey: process.env.GROQ_API_KEY,
+        });
+
+        const completion = await groq.chat.completions.create({
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: prompt },
+          ],
+          model: "llama-3.3-70b-versatile",
+          response_format: { type: "json_object" },
+          temperature: 0.6,
+          max_tokens: 2048,
+        });
+        aiResponseText = completion.choices[0]?.message?.content;
+
+        // Save successful search to cache
+        if (aiResponseText) {
+          try {
+            const parsed = JSON.parse(aiResponseText);
+            await ctx.runMutation(api.ai.saveCache, {
+              hash: cacheHash,
+              response: parsed,
+            });
+          } catch (e) {
+            console.error("Failed to parse and cache AI response", e);
+          }
+        }
+      }
     }
 
     try {
