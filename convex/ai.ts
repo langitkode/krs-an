@@ -152,12 +152,13 @@ Return ONLY valid JSON.`;
     if (modelToUse === "gemini") {
       // 5a. Call Gemini API
       const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-      const model = genAI.getGenerativeModel({
-        model: "gemini-1.5-flash", // Using Flash for speed/cost
-        generationConfig: {
-          responseMimeType: "application/json",
-        },
-      });
+      const model = genAI.getGenerativeModel(
+        {
+          model: "gemini-2.0-flash-exp",
+          generationConfig: { responseMimeType: "application/json" },
+        }, // Matching UI promise
+        { apiVersion: "v1beta" }, // Required for experimental models
+      );
 
       const result = await model.generateContent(
         `${systemPrompt}\n\n${prompt}`,
