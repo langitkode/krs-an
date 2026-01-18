@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "convex/react";
+import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { generatePlans } from "@/lib/scheduler";
 import type { Course, Plan, ArchivedPlan } from "@/types";
@@ -10,6 +10,7 @@ import { ScheduleConfig } from "./maker/ScheduleConfig";
 import { ScheduleSelector } from "./maker/ScheduleSelector";
 import { ScheduleViewer } from "./maker/ScheduleViewer";
 import { ScheduleArchive } from "./maker/ScheduleArchive";
+import { SmartGenerateDialog } from "./maker/SmartGenerateDialog";
 import { MasterCatalogDialog } from "./maker/MasterCatalogDialog";
 
 interface ScheduleMakerProps {
@@ -49,12 +50,16 @@ export function ScheduleMaker({
 
   const [courses, setCourses] = useState<Course[]>([]);
   const [selectedCodes, setSelectedCodes] = useState<string[]>([]);
-  const [lockedCourses, setLockedCourses] = useState<Record<string, string>>(
+  const [lockedCourses, setLockedCourses] = useState<Record<string, string[]>>(
     {},
   );
   const [plans, setPlans] = useState<Plan[]>([]);
   const [currentPlanIndex, setCurrentPlanIndex] = useState(0);
+  const [viewSource, setViewSource] = useState<"live" | "archive">("live");
   const [isMasterSearchOpen, setIsMasterSearchOpen] = useState(false);
+  const [isSmartDialogOpen, setIsSmartDialogOpen] = useState(false);
+
+  const [planLimit, setPlanLimit] = useState(12);
 
   // Convex Queries
   const allMasterCourses = useQuery(api.admin.listMasterCourses, {
@@ -101,14 +106,64 @@ export function ScheduleMaker({
     }
   };
 
-  const handleImportArchived = (plan: Plan) => {
-    setPlans([plan]);
-    setCurrentPlanIndex(0);
+  const handleImportArchived = (allPlans: Plan[], index: number) => {
+    setPlans(allPlans);
+    setCurrentPlanIndex(index);
+    setViewSource("archive");
     setStep("view");
-    toast.info(`Loaded ${plan.name} from archive.`);
+    toast.info(`Imported ${allPlans.length} plans to grid viewer.`);
+  };
+
+  const [isSmartGenerating, setIsSmartGenerating] = useState(false);
+  const renamePlanMutation = useMutation(api.plans.renamePlan);
+
+  const handleRenameArchived = async (planId: string, newName: string) => {
+    try {
+      await renamePlanMutation({ planId: planId as any, newName });
+      toast.success("Plan renamed successfully!");
+    } catch (err: any) {
+      toast.error("Failed to rename plan: " + err.message);
+    }
+  };
+
+  const smartGenerateAction = useAction(api.ai.smartGenerate);
+
+  const onInitSmartGenerate = () => {
+    if (!userData || userData.credits <= 0) {
+      toast.error("You need 1 token for Smart Generate");
+      return;
+    }
+    setIsSmartDialogOpen(true);
+  };
+
+  const handleRunSmartGenerate = async (preferences: any) => {
+    if (isSmartGenerating) return;
+
+    setIsSmartGenerating(true);
+    try {
+      const result = await smartGenerateAction({
+        courses: courses as any,
+        selectedCodes,
+        preferences,
+      });
+
+      if (result.success) {
+        toast.success(
+          `AI generated ${result.count} optimized schedules! Check Archive.`,
+        );
+        setIsSmartDialogOpen(false);
+        setStep("archive");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Smart Generate failed");
+    } finally {
+      setIsSmartGenerating(false);
+    }
   };
 
   const handleGenerate = async (tokenized: boolean = false) => {
+    let currentLimit = planLimit;
+
     if (tokenized) {
       if (!userData || userData.credits <= 0) {
         toast.error("Daily limit reached. Come back tomorrow!");
@@ -117,6 +172,8 @@ export function ScheduleMaker({
       try {
         await consumeTokenMutation();
         toast.success("Consumed 1 token for +12 expansion.");
+        currentLimit += 12;
+        setPlanLimit(currentLimit);
       } catch (err: any) {
         toast.error("Failed to consume token: " + err.message);
         return;
@@ -127,14 +184,18 @@ export function ScheduleMaker({
     try {
       const activeCourses = courses.filter((c) => {
         if (!selectedCodes.includes(c.code)) return false;
-        const lockedId = lockedCourses[c.code];
-        if (!lockedId || lockedId === "any") return true;
-        return c.id === lockedId;
+        const lockedIds = lockedCourses[c.code];
+        // If no specific classes are locked (empty or undefined), allow all variations (Auto-Optimize)
+        if (!lockedIds || lockedIds.length === 0) return true;
+        // Otherwise, only allow if the course ID is in the locked list
+        return lockedIds.includes(c.id);
       });
 
-      const currentPlanCount = plans.length;
-      const limit = tokenized ? currentPlanCount + 12 : 12;
-      const generated = generatePlans(activeCourses, selectedCodes, limit);
+      const generated = generatePlans(
+        activeCourses,
+        selectedCodes,
+        currentLimit,
+      );
 
       if (generated.length === 0) {
         toast.error(
@@ -175,6 +236,7 @@ export function ScheduleMaker({
       } else {
         setPlans(generated);
         setCurrentPlanIndex(0);
+        setViewSource("live");
         setStep("view");
       }
     } finally {
@@ -209,6 +271,7 @@ export function ScheduleMaker({
     setCourses(coursesWithIds as any);
     setSelectedCodes(Array.from(mandatoryCodes));
     setStep("select");
+    setPlanLimit(12);
     toast.success(
       `${mandatoryCodes.size} academic components loaded from curriculum.`,
     );
@@ -304,8 +367,10 @@ export function ScheduleMaker({
             handleDeleteCourse={handleDeleteCourse}
             onAddSubject={() => setIsMasterSearchOpen(true)}
             onGenerate={handleGenerate}
+            onSmartGenerate={onInitSmartGenerate}
             onBack={() => setStep("config")}
             isGenerating={isGenerating}
+            isSmartGenerating={isSmartGenerating}
           />
         )}
 
@@ -314,10 +379,14 @@ export function ScheduleMaker({
             plans={plans}
             currentPlanIndex={currentPlanIndex}
             setCurrentPlanIndex={setCurrentPlanIndex}
-            onBack={() => setStep("select")}
+            onBack={() =>
+              setStep(viewSource === "archive" ? "archive" : "select")
+            }
             onSavePlan={handleSavePlan}
             isSaving={isSaving}
-            onExpand={() => handleGenerate(true)}
+            onExpand={
+              viewSource === "live" ? () => handleGenerate(true) : undefined
+            }
             isGenerating={isGenerating}
             userData={userData as any}
           />
@@ -328,6 +397,7 @@ export function ScheduleMaker({
             archived={archived}
             onImport={handleImportArchived}
             onDelete={handleDeleteArchived}
+            onRename={handleRenameArchived}
           />
         )}
       </div>
@@ -337,6 +407,15 @@ export function ScheduleMaker({
         onOpenChange={setIsMasterSearchOpen}
         allMasterCourses={allMasterCourses}
         onAddCourse={handleAddMasterCourse}
+      />
+
+      <SmartGenerateDialog
+        isOpen={isSmartDialogOpen}
+        onOpenChange={setIsSmartDialogOpen}
+        courses={courses}
+        selectedCodes={selectedCodes}
+        onGenerate={handleRunSmartGenerate}
+        isGenerating={isSmartGenerating}
       />
     </div>
   );

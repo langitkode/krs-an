@@ -183,17 +183,17 @@ export function MasterDataTab({ onOpenScraper }: MasterDataTabProps) {
   return (
     <div className="space-y-4">
       <Card className="border-slate-200 shadow-sm overflow-hidden rounded-2xl">
-        <CardHeader className="p-5 border-b border-slate-100 bg-slate-50/30">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+        <CardHeader className="p-4 md:p-5 border-b border-slate-100 bg-slate-50/30">
+          <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
             <div>
               <CardTitle className="text-xl font-display">
                 Master Data Repository
               </CardTitle>
-              <CardDescription className="font-mono text-[9px] uppercase tracking-widest mt-0.5">
+              <CardDescription className="font-mono text-[9px] uppercase tracking-widest mt-0.5 break-words">
                 Global Component Database ({totalLoaded} loaded)
               </CardDescription>
             </div>
-            <div className="flex flex-wrap gap-2 justify-center">
+            <div className="flex flex-wrap gap-2 w-full xl:w-auto justify-start xl:justify-end">
               <Button
                 variant="outline"
                 onClick={onOpenScraper}

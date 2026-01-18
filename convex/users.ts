@@ -100,7 +100,10 @@ export const generateServiceToken = mutation({
     }
 
     // Deduct credit
-    await ctx.db.patch(user._id, { credits: user.credits - 1 });
+    await ctx.db.patch(user._id, {
+      credits: user.credits - 1,
+      lastSmartGenerateTime: Date.now(),
+    });
     await ctx.db.insert("usage_logs", {
       userId: user._id,
       type: "generate_plan",

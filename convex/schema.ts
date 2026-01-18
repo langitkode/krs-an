@@ -7,6 +7,7 @@ export default defineSchema({
     credits: v.number(), // Remaining generation credits
     lastResetDate: v.string(), // ISO date for daily reset
     isAdmin: v.optional(v.boolean()),
+    lastSmartGenerateTime: v.optional(v.number()), // Timestamp of last AI usage
   }).index("by_token", ["tokenIdentifier"]),
 
   plans: defineTable({
@@ -14,7 +15,11 @@ export default defineSchema({
     name: v.string(),
     data: v.string(), // JSON string of the plan
     createdAt: v.number(),
-  }).index("by_user", ["userId"]),
+    isSmartGenerated: v.optional(v.boolean()),
+    generatedBy: v.optional(v.string()), // "ai" | "manual"
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_type", ["userId", "generatedBy"]),
 
   // Every single available class from the university
   master_courses: defineTable({

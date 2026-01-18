@@ -9,6 +9,8 @@
     "Liberation Mono", "Courier New", monospace;
 
   --color-primary: #1d4ed8; /* blue-700 */
+  --background: 0 0% 100%;
+  --foreground: 222.2 84% 4.9%;
 }
 
 html,
@@ -16,7 +18,7 @@ body,
 #root {
   height: 100%;
   font-family: var(--font-sans);
-  background-color: var(--color-slate-50);
+  background-color: #f8fafc; /* slate-50 */
 }
 
 h1,

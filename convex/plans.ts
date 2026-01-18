@@ -8,6 +8,8 @@ export const savePlan = mutation({
   args: {
     name: v.string(),
     data: v.string(), // JSON string of the plan
+    isSmartGenerated: v.optional(v.boolean()),
+    generatedBy: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
@@ -27,6 +29,8 @@ export const savePlan = mutation({
       name: args.name,
       data: args.data,
       createdAt: Date.now(),
+      isSmartGenerated: args.isSmartGenerated,
+      generatedBy: args.generatedBy,
     });
 
     return planId;
@@ -99,5 +103,32 @@ export const deletePlan = mutation({
     }
 
     await ctx.db.delete(args.planId);
+  },
+});
+
+/**
+ * Rename an archived plan
+ */
+export const renamePlan = mutation({
+  args: { planId: v.id("plans"), newName: v.string() },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Unauthorized");
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_token", (q) =>
+        q.eq("tokenIdentifier", identity.tokenIdentifier),
+      )
+      .unique();
+
+    if (!user) throw new Error("User not found");
+
+    const plan = await ctx.db.get(args.planId);
+    if (!plan || plan.userId !== user._id) {
+      throw new Error("Plan not found or unauthorized");
+    }
+
+    await ctx.db.patch(args.planId, { name: args.newName });
   },
 });

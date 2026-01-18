@@ -13,7 +13,7 @@ export function ScheduleGrid({ courses }: { courses: Course[] }) {
     <div className="bg-slate-50/50 rounded-xl overflow-hidden border border-slate-200 shadow-inner p-1 h-full max-h-[80vh] flex flex-col">
       <div className="bg-white rounded-lg border border-slate-100 shadow-2xl shadow-blue-50/50 flex-1 overflow-auto custom-scrollbar relative">
         <div
-          className="grid grid-cols-[60px_repeat(6,1fr)] min-w-[700px]"
+          className="grid grid-cols-[50px_repeat(6,minmax(100px,1fr))] md:grid-cols-[60px_repeat(6,1fr)] min-w-[700px] md:min-w-0"
           style={{ gridTemplateRows: `auto repeat(${slots}, 1.5rem)` }}
         >
           {/* Header */}

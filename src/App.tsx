@@ -15,6 +15,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { useEffect, useState } from "react";
 import { Routes, Route } from "react-router-dom";
 import { Navbar } from "./components/layout/Navbar";
+import { Footer } from "./components/layout/Footer";
 
 function App() {
   const { isSignedIn } = useUser();
@@ -29,6 +30,16 @@ function App() {
   const [makerStep, setMakerStep] = useState<
     "config" | "select" | "view" | "archive"
   >("config");
+  const [lastArchitectStep, setLastArchitectStep] = useState<
+    "config" | "select" | "view"
+  >("config");
+
+  const handleStepChange = (step: "config" | "select" | "view" | "archive") => {
+    setMakerStep(step);
+    if (step !== "archive") {
+      setLastArchitectStep(step);
+    }
+  };
 
   // Sync user to Convex
   useEffect(() => {
@@ -83,7 +94,8 @@ function App() {
       <Navbar
         userData={userData as any}
         step={makerStep}
-        setStep={setMakerStep}
+        setStep={handleStepChange}
+        onRestoreArchitect={() => setMakerStep(lastArchitectStep)}
       />
 
       <main className="container max-w-6xl mx-auto px-4 py-12">
@@ -93,7 +105,7 @@ function App() {
             element={
               <ScheduleMaker
                 externalStep={makerStep}
-                onStepChange={setMakerStep}
+                onStepChange={handleStepChange}
                 userData={userData as any}
               />
             }
@@ -102,27 +114,7 @@ function App() {
         </Routes>
       </main>
 
-      <footer className="py-10 border-t bg-white">
-        <div className="container max-w-6xl mx-auto px-4 divide-y divide-slate-100">
-          <div className="pb-8 flex flex-col md:flex-row justify-between items-center gap-4">
-            <div className="flex items-center grayscale hover:grayscale-0 transition-all opacity-70 hover:opacity-100">
-              <div className="h-8 w-20 overflow-hidden flex items-center justify-center">
-                <img
-                  src="/assets/logo.webp"
-                  alt="KRSan"
-                  className="h-full w-full object-contain"
-                />
-              </div>
-            </div>
-            <p className="text-xs text-slate-400 font-mono tracking-tighter">
-              ELEGANT PLANNING • AI DRIVEN • ACADEMIC TOOL
-            </p>
-          </div>
-          <div className="pt-8 text-center text-[10px] text-slate-300 font-mono tracking-widest uppercase">
-            © 2026 KRSan Production • All Rights Reserved
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

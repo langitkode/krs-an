@@ -60,84 +60,119 @@ export function ScheduleViewer({
       `,
         }}
       />
-      <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-white/90 backdrop-blur-md p-5 rounded-2xl border border-slate-200 shadow-sm no-print">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-4 md:p-5 rounded-2xl border border-slate-200 shadow-sm no-print">
+        <div className="flex items-center gap-4 min-w-0 flex-1">
           <Button
             variant="outline"
             size="icon"
             onClick={onBack}
-            className="w-10 h-10 rounded-xl border-slate-200 hover:bg-slate-50 hover:text-blue-700"
+            className="w-10 h-10 shrink-0 rounded-xl border-slate-200 hover:bg-slate-50 hover:text-blue-700"
           >
             <ChevronLeft className="w-4 h-4" />
           </Button>
-          <div>
-            <div className="flex items-center gap-3 mb-0.5">
-              <h2 className="text-2xl font-bold font-display text-slate-900">
-                {currentPlan.name}
-              </h2>
-              <Badge
-                variant="outline"
-                className="border-blue-100 text-blue-700 bg-blue-50/50 px-2 font-mono text-[9px] uppercase tracking-widest"
-              >
-                PRECISE FIT
-              </Badge>
-            </div>
-            <p className="text-slate-500 font-mono text-[9px] tracking-widest uppercase">
-              PLAN {currentPlanIndex + 1} OF {plans.length} • {totalSKS} SKS
-              TOTAL
+          <div className="min-w-0 flex-1">
+            <h2 className="text-xl md:text-2xl font-bold font-display text-slate-900 truncate pr-4">
+              {currentPlan.name}
+            </h2>
+            <p className="text-slate-500 font-mono text-[9px] tracking-widest uppercase truncate mt-0.5">
+              PLAN {currentPlanIndex + 1} OF {plans.length} • OPTIMIZED BY AI
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5 bg-slate-50 p-1 rounded-xl border border-slate-200">
+        {/* Right-aligned Total SKS Column - Stable */}
+        <div className="flex items-center gap-3 pl-4 md:border-l border-slate-100 h-10 shrink-0">
+          <div className="text-right min-w-[100px]">
+            <p className="text-[8px] font-mono text-slate-400 uppercase tracking-tighter leading-none mb-1">
+              TOTAL ACCUMULATION
+            </p>
+            <div className="flex items-baseline gap-1 justify-end">
+              <span className="text-2xl md:text-3xl font-display font-black text-blue-600 leading-none">
+                {totalSKS}
+              </span>
+              <span className="text-[10px] font-bold text-slate-400">SKS</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Unified Floating Controller */}
+      <div className="flex items-center justify-center no-print sticky top-20 z-10">
+        <div className="inline-flex items-center gap-2 bg-white border border-slate-200/80 p-2 rounded-3xl shadow-xl shadow-blue-900/5">
+          {/* Save Button */}
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
             onClick={() => onSavePlan(currentPlan)}
             disabled={isSaving}
-            className="h-8 px-3 font-display text-[10px] font-bold border-slate-200 bg-white hover:bg-blue-50 hover:text-blue-700 transition-all shadow-sm"
+            className="h-10 px-4 font-display text-[11px] font-bold text-slate-700 hover:bg-slate-100 hover:text-blue-700 rounded-2xl transition-all"
           >
             <Bookmark
-              className={`w-3.5 h-3.5 mr-1.5 ${isSaving ? "animate-pulse" : ""}`}
+              className={`w-4 h-4 mr-2 ${isSaving ? "animate-pulse" : ""}`}
             />
             {isSaving ? "Saving..." : "Save"}
           </Button>
-          <div className="w-px h-8 bg-slate-200 mx-1" />
-          <Button
-            variant="ghost"
-            disabled={currentPlanIndex === 0}
-            onClick={() => setCurrentPlanIndex((prev: number) => prev - 1)}
-            className="h-8 px-2 font-mono text-[10px] uppercase tracking-widest text-slate-600"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </Button>
-          <div className="px-3 py-1 text-[10px] font-mono font-bold text-slate-500 border-x border-slate-200">
-            {String(currentPlanIndex + 1).padStart(2, "0")}/
-            {String(plans.length).padStart(2, "0")}
+
+          <div className="w-px h-6 bg-slate-200" />
+
+          {/* Slider Core */}
+          <div className="flex items-center gap-2 px-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              disabled={currentPlanIndex === 0}
+              onClick={() => setCurrentPlanIndex((prev: number) => prev - 1)}
+              className="h-9 w-9 rounded-xl text-slate-500 hover:bg-slate-100 hover:text-slate-900 disabled:opacity-20 transition-all"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </Button>
+
+            <div className="flex flex-col items-center px-4 min-w-[100px]">
+              <span className="text-[11px] font-mono font-bold text-slate-900 tracking-tighter leading-none">
+                {String(currentPlanIndex + 1).padStart(2, "0")} /{" "}
+                {String(plans.length).padStart(2, "0")}
+              </span>
+              <div className="flex gap-1 mt-1.5">
+                {Array.from({ length: Math.min(plans.length, 10) }).map(
+                  (_, i) => (
+                    <div
+                      key={i}
+                      className={`h-1 w-2 rounded-full transition-all duration-300 ${
+                        i === currentPlanIndex % 10
+                          ? "bg-blue-600 w-5"
+                          : "bg-slate-200"
+                      }`}
+                    />
+                  ),
+                )}
+              </div>
+            </div>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              disabled={currentPlanIndex === plans.length - 1}
+              onClick={() => setCurrentPlanIndex((prev: number) => prev + 1)}
+              className="h-9 w-9 rounded-xl text-slate-500 hover:bg-slate-100 hover:text-slate-900 disabled:opacity-20 transition-all"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </Button>
           </div>
-          <Button
-            variant="ghost"
-            disabled={currentPlanIndex === plans.length - 1}
-            onClick={() => setCurrentPlanIndex((prev: number) => prev + 1)}
-            className="h-8 px-2 font-mono text-[10px] uppercase tracking-widest text-slate-600"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </Button>
 
           {plans.length < 24 && onExpand && (
             <>
-              <div className="w-px h-8 bg-slate-200 mx-1" />
+              <div className="w-px h-6 bg-slate-200" />
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={onExpand}
                 disabled={isGenerating || (userData?.credits ?? 0) <= 0}
-                className="h-8 px-3 font-display text-[10px] font-bold text-blue-600 hover:bg-blue-50 transition-all rounded-lg disabled:opacity-50"
+                className="h-10 px-4 font-display text-[11px] font-bold text-blue-600 hover:bg-blue-50 transition-all rounded-2xl disabled:opacity-50"
               >
                 <Sparkles
-                  className={`w-3.5 h-3.5 mr-1.5 ${isGenerating ? "animate-spin" : ""}`}
+                  className={`w-4 h-4 mr-2 ${isGenerating ? "animate-spin" : ""}`}
                 />
-                {isGenerating ? "Expanding..." : "Expand (+12)"}
+                {isGenerating ? "Reasoning..." : "Expand"}
               </Button>
             </>
           )}
@@ -145,7 +180,7 @@ export function ScheduleViewer({
       </div>
 
       <div id="printable-area" className="flex flex-col gap-6">
-        <div className="bg-white p-1 rounded-2xl border border-slate-200 shadow-xl shadow-blue-50/20">
+        <div className="bg-white p-1 rounded-2xl border border-slate-200 shadow-xl shadow-blue-50/20 w-full overflow-hidden">
           <ScheduleGrid courses={currentPlan.courses} />
         </div>
 

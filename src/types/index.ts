@@ -41,4 +41,6 @@ export interface ArchivedPlan {
   name: string;
   data: Plan;
   createdAt: number;
+  isSmartGenerated?: boolean;
+  generatedBy?: string;
 }

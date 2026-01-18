@@ -1,7 +1,19 @@
 import { SignInButton, SignOutButton, useUser } from "@clerk/clerk-react";
 import { Link } from "react-router-dom";
-import { History, LogOut, Shield, Sparkles } from "lucide-react";
+import {
+  History,
+  LogOut,
+  Shield,
+  Sparkles,
+  User,
+  Database,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 interface NavbarProps {
   userData?: {
@@ -10,9 +22,15 @@ interface NavbarProps {
   };
   step: "config" | "select" | "view" | "archive";
   setStep: (step: "config" | "select" | "view" | "archive") => void;
+  onRestoreArchitect?: () => void;
 }
 
-export function Navbar({ userData, step, setStep }: NavbarProps) {
+export function Navbar({
+  userData,
+  step,
+  setStep,
+  onRestoreArchitect,
+}: NavbarProps) {
   const { isSignedIn, user } = useUser();
   const isArchitect = step === "config" || step === "select" || step === "view";
   const isArchive = step === "archive";
@@ -53,7 +71,9 @@ export function Navbar({ userData, step, setStep }: NavbarProps) {
           <Button
             variant={isArchitect ? "secondary" : "ghost"}
             size="sm"
-            onClick={() => setStep("config")}
+            onClick={() =>
+              onRestoreArchitect ? onRestoreArchitect() : setStep("config")
+            }
             className={`h-8 rounded-[10px] font-display font-medium px-4 text-xs transition-all ${
               isArchitect
                 ? "bg-white shadow-sm ring-1 ring-slate-200 text-blue-700"
@@ -79,21 +99,8 @@ export function Navbar({ userData, step, setStep }: NavbarProps) {
         </div>
 
         {/* User Stats & Profile */}
+        {/* User Profile Popover */}
         <div className="flex items-center gap-4">
-          <div className="hidden md:flex flex-col items-end">
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest">
-                {userData?.credits ?? 0}/5 Tokens
-              </span>
-              <div className="h-1 w-12 bg-slate-100 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-blue-700 transition-all duration-500"
-                  style={{ width: `${((userData?.credits ?? 0) / 5) * 100}%` }}
-                />
-              </div>
-            </div>
-          </div>
-
           {!isSignedIn ? (
             <SignInButton mode="modal">
               <Button
@@ -104,22 +111,84 @@ export function Navbar({ userData, step, setStep }: NavbarProps) {
               </Button>
             </SignInButton>
           ) : (
-            <div className="flex items-center gap-2 pl-3 border-l border-slate-100">
-              <img
-                src={user.imageUrl}
-                className="w-7 h-7 rounded-full border border-slate-200 shadow-sm transition-transform hover:scale-110 active:scale-95 cursor-pointer"
-                alt="Profile"
-              />
-              <SignOutButton>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg"
-                >
-                  <LogOut className="w-3.5 h-3.5" />
-                </Button>
-              </SignOutButton>
-            </div>
+            <Popover>
+              <PopoverTrigger asChild>
+                <div className="relative group cursor-pointer">
+                  <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-tilt pointer-events-none"></div>
+                  <img
+                    src={user?.imageUrl}
+                    className="relative w-8 h-8 rounded-full border-2 border-white object-cover"
+                    alt="Profile"
+                  />
+                </div>
+              </PopoverTrigger>
+              <PopoverContent
+                className="w-72 p-0 mr-4 mt-2 bg-white"
+                align="end"
+              >
+                <div className="p-4 bg-slate-50/50 border-b border-slate-100">
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={user?.imageUrl}
+                      className="w-10 h-10 rounded-full border border-slate-200"
+                      alt={user?.fullName || "User"}
+                    />
+                    <div className="space-y-0.5">
+                      <p className="font-bold text-sm text-slate-900 leading-none">
+                        {user?.fullName}
+                      </p>
+                      <p className="text-xs text-slate-500 font-mono truncate max-w-[170px]">
+                        {user?.primaryEmailAddress?.emailAddress}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-4 space-y-4">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-semibold text-slate-700 flex items-center gap-1.5">
+                        <Database className="w-3.5 h-3.5 text-blue-600" />
+                        Service Tokens
+                      </span>
+                      <span className="font-mono text-slate-500">
+                        {userData?.credits ?? 0}/5 Used
+                      </span>
+                    </div>
+                    <div>
+                      <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full transition-all duration-500 ${
+                            (userData?.credits ?? 0) >= 5
+                              ? "bg-red-500"
+                              : "bg-blue-600"
+                          }`}
+                          style={{
+                            width: `${Math.min(((userData?.credits ?? 0) / 5) * 100, 100)}%`,
+                          }}
+                        />
+                      </div>
+                      <p className="text-[10px] text-slate-400 mt-1.5 leading-relaxed">
+                        Tokens reset daily. Use them to expand schedule limits
+                        beyond standard caps.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-2 border-t border-slate-100 bg-slate-50/50">
+                  <SignOutButton>
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50 h-9"
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Sign Out
+                    </Button>
+                  </SignOutButton>
+                </div>
+              </PopoverContent>
+            </Popover>
           )}
         </div>
       </div>

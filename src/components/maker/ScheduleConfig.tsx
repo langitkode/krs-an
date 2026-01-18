@@ -29,25 +29,25 @@ export function ScheduleConfig({
   onStart,
 }: ScheduleConfigProps) {
   return (
-    <div className="max-w-6xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="grid lg:grid-cols-12 gap-12 items-start">
+    <div className="max-w-6xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700 px-4 md:px-6">
+      <div className="flex flex-col lg:grid lg:grid-cols-12 gap-8 lg:gap-12 items-start">
         {/* Left Column: Context & Identity */}
-        <div className="lg:col-span-5 space-y-8 py-4">
-          <div className="space-y-4">
-            <Badge className="bg-blue-600/10 text-blue-700 hover:bg-blue-600/15 border-blue-200/50 px-3 py-1 rounded-full font-mono text-[10px] tracking-widest uppercase">
+        <div className="lg:col-span-5 space-y-6 md:space-y-8 py-2 md:py-4">
+          <div className="space-y-3 md:space-y-4">
+            <Badge className="bg-blue-600/10 text-blue-700 hover:bg-blue-600/15 border-blue-200/50 px-2 py-0.5 md:px-3 md:py-1 rounded-full font-mono text-[9px] md:text-[10px] tracking-widest uppercase truncate max-w-full">
               Academic Year 2025/2026
             </Badge>
-            <h2 className="text-5xl font-bold font-display text-slate-900 tracking-tight leading-[1.1]">
-              Architect Your <br />
-              <span className="text-blue-700">Semester.</span>
+            <h2 className="text-3xl md:text-5xl font-bold font-display text-slate-900 tracking-tight leading-tight break-words max-w-full">
+              Architect Your <br className="hidden md:block" />
+              <span className="text-blue-700 block md:inline">Semester.</span>
             </h2>
-            <p className="text-slate-600 max-w-sm leading-relaxed text-base">
+            <p className="text-slate-600 max-w-sm leading-relaxed text-sm md:text-base">
               Establish your academic parameters to initialize the intelligent
               scheduler for the upcoming term.
             </p>
           </div>
 
-          <div className="relative overflow-hidden bg-slate-900 text-white py-2 rounded-2xl shadow-lg border border-slate-800">
+          <div className="relative overflow-hidden bg-slate-900 text-white py-2 rounded-2xl shadow-lg border border-slate-800 max-w-[90vw] md:max-w-full mx-auto">
             <div className="flex animate-marquee items-center gap-8 whitespace-nowrap">
               <div className="flex items-center gap-3 px-4">
                 <Brain className="w-4 h-4 text-blue-400" />
