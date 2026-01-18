@@ -114,7 +114,10 @@ export const bulkImportMaster = mutation({
   handler: async (ctx, args) => {
     const user = await checkAdmin(ctx);
 
-    const inputs = args.courses;
+    const inputs = args.courses.map((c) => ({
+      ...c,
+      prodi: c.prodi.toUpperCase().trim().replace(/\.$/, ""),
+    }));
     const results = await Promise.all(
       inputs.map(async (course) => {
         // Check for existing course to prevent duplicates (basic check by code + class)
@@ -209,6 +212,15 @@ export const deleteMasterCourse = mutation({
   },
 });
 
+export const batchDeleteMaster = mutation({
+  args: { ids: v.array(v.id("master_courses")) },
+  handler: async (ctx, args) => {
+    await checkAdmin(ctx);
+    await Promise.all(args.ids.map((id) => ctx.db.delete(id)));
+    return { success: true, count: args.ids.length };
+  },
+});
+
 // Curriculum Operations
 export const listCurriculum = query({
   args: { prodi: v.string(), semester: v.optional(v.number()) },
@@ -248,5 +260,33 @@ export const removeCurriculumItem = mutation({
   handler: async (ctx, args) => {
     await checkAdmin(ctx);
     await ctx.db.delete(args.id);
+  },
+});
+
+export const fixProdiFormatting = mutation({
+  args: {},
+  handler: async (ctx) => {
+    await checkAdmin(ctx);
+    const masterItems = await ctx.db.query("master_courses").collect();
+    const curriculumItems = await ctx.db.query("curriculum").collect();
+
+    let count = 0;
+    for (const item of masterItems) {
+      const normalized = item.prodi.toUpperCase().trim().replace(/\.$/, "");
+      if (item.prodi !== normalized) {
+        await ctx.db.patch(item._id, { prodi: normalized });
+        count++;
+      }
+    }
+
+    for (const item of curriculumItems) {
+      const normalized = item.prodi.toUpperCase().trim().replace(/\.$/, "");
+      if (item.prodi !== normalized) {
+        await ctx.db.patch(item._id, { prodi: normalized });
+        count++;
+      }
+    }
+
+    return { success: true, fixedCount: count };
   },
 });

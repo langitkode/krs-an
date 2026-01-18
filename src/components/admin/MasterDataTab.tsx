@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Pagination } from "@/components/ui/Pagination";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Card,
   CardHeader,
@@ -61,10 +62,15 @@ export function MasterDataTab({ onOpenScraper }: MasterDataTabProps) {
   const updateMaster = useMutation(api.admin.updateMasterCourse);
   const deleteMaster = useMutation(api.admin.deleteMasterCourse);
   const bulkImport = useMutation(api.admin.bulkImportMaster);
+  const batchDelete = useMutation(api.admin.batchDeleteMaster);
 
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
   const [isImporting, setIsImporting] = useState(false);
+  const [isFixing, setIsFixing] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+  const fixProdi = useMutation(api.admin.fixProdiFormatting);
 
   // CRUD Handlers
   const handleEditMaster = (course: any) => {
@@ -180,6 +186,49 @@ export function MasterDataTab({ onOpenScraper }: MasterDataTabProps) {
     });
   };
 
+  const handleFixProdi = async () => {
+    setIsFixing(true);
+    try {
+      const result = await fixProdi();
+      toast.success(`Fixed ${result.fixedCount} formatting issues.`);
+    } catch (err: any) {
+      toast.error("Fix failed: " + err.message);
+    } finally {
+      setIsFixing(false);
+    }
+  };
+
+  const handleBatchDelete = async () => {
+    if (selectedIds.length === 0) return;
+    if (
+      !confirm(`Are you sure you want to delete ${selectedIds.length} items?`)
+    ) {
+      return;
+    }
+
+    try {
+      await batchDelete({ ids: selectedIds as any });
+      toast.success(`Successfully deleted ${selectedIds.length} items.`);
+      setSelectedIds([]);
+    } catch (err: any) {
+      toast.error("Batch delete failed: " + err.message);
+    }
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.length === courses?.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(courses?.map((c: any) => c._id) || []);
+    }
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
+    );
+  };
+
   return (
     <div className="space-y-4">
       <Card className="border-slate-200 shadow-sm overflow-hidden rounded-2xl">
@@ -194,6 +243,33 @@ export function MasterDataTab({ onOpenScraper }: MasterDataTabProps) {
               </CardDescription>
             </div>
             <div className="flex flex-wrap gap-2 w-full xl:w-auto justify-start xl:justify-end">
+              {selectedIds.length > 0 && (
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleBatchDelete}
+                  className="rounded-xl px-4 font-mono text-[9px] uppercase tracking-widest h-8"
+                >
+                  <Trash2 className="w-3 h-3 mr-2" />
+                  Delete ({selectedIds.length})
+                </Button>
+              )}
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleFixProdi}
+                disabled={isFixing}
+                className="rounded-xl px-4 font-mono text-[9px] uppercase tracking-widest border-emerald-200 text-emerald-700 hover:bg-emerald-50 h-8"
+              >
+                {isFixing ? (
+                  <Loader2 className="w-3 h-3 animate-spin mr-2" />
+                ) : (
+                  <Wand2 className="w-3 h-3 mr-2" />
+                )}
+                Fix Format
+              </Button>
+
               <Button
                 variant="outline"
                 onClick={onOpenScraper}
@@ -306,6 +382,16 @@ export function MasterDataTab({ onOpenScraper }: MasterDataTabProps) {
             <table className="w-full text-xs">
               <thead className="bg-slate-50 border-b border-slate-200 text-[9px] font-mono uppercase tracking-widest text-slate-500">
                 <tr>
+                  <th className="px-4 py-3 text-left w-10">
+                    <Checkbox
+                      checked={
+                        courses &&
+                        courses.length > 0 &&
+                        selectedIds.length === courses.length
+                      }
+                      onCheckedChange={toggleSelectAll}
+                    />
+                  </th>
                   <th className="px-4 py-3 text-left">Code</th>
                   <th className="px-4 py-3 text-left">Course Name</th>
                   <th className="px-4 py-3 text-left">Class</th>
@@ -319,8 +405,14 @@ export function MasterDataTab({ onOpenScraper }: MasterDataTabProps) {
                 {(courses || []).map((c: any) => (
                   <tr
                     key={c._id}
-                    className="hover:bg-slate-50/50 transition-colors group"
+                    className={`hover:bg-slate-50/50 transition-colors group ${selectedIds.includes(c._id) ? "bg-blue-50/30" : ""}`}
                   >
+                    <td className="px-4 py-2.5">
+                      <Checkbox
+                        checked={selectedIds.includes(c._id)}
+                        onCheckedChange={() => toggleSelect(c._id)}
+                      />
+                    </td>
                     <td className="px-4 py-2.5 font-mono font-bold text-blue-900">
                       {c.code}
                     </td>

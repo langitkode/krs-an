@@ -242,7 +242,7 @@ function AboutDialog() {
           <div className="bg-blue-600 p-8 text-white relative overflow-hidden text-left">
             <div className="relative z-10">
               <DialogTitle className="text-3xl font-display font-black mb-2">
-                Filosofi KRSan
+                {t("about.title")}
               </DialogTitle>
               <DialogDescription className="text-blue-100 text-sm font-medium italic opacity-80">
                 "Simplicity in Complexity"
@@ -260,15 +260,9 @@ function AboutDialog() {
               <span className="w-6 h-6 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-xs">
                 01
               </span>
-              Latar Belakang
+              {t("about.background_title")}
             </h3>
-            <p>
-              Masa pengisian KRS (Kartu Rencana Studi) seringkali menjadi momen
-              paling menegangkan bagi mahasiswa. Antara mengejar kuota kelas,
-              menghindari jadwal yang bentrok, hingga mencari dosen idaman,
-              mahasiswa dipaksa menjadi "optimizer" manual dalam waktu yang
-              singkat.
-            </p>
+            <p>{t("about.background_desc")}</p>
           </div>
 
           <div className="space-y-3">
@@ -276,25 +270,16 @@ function AboutDialog() {
               <span className="w-6 h-6 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-xs">
                 02
               </span>
-              Misi Kami
+              {t("about.mission_title")}
             </h3>
-            <p>
-              KRSan dibuat untuk mendemokrasikan optimasi jadwal. Kami percaya
-              bahwa teknologi AI seharusnya membantu hal-hal administratif yang
-              membosankan sehingga mahasiswa bisa lebih fokus pada pencapaian
-              akademik yang sebenarnya.
-            </p>
+            <p>{t("about.mission_desc")}</p>
           </div>
 
           <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex items-start gap-3">
             <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-sm shrink-0">
               <Heart className="w-4 h-4 text-red-500 fill-red-500" />
             </div>
-            <p className="text-xs italic text-slate-500">
-              "KRSan bukan hanya alat pembuat jadwal, tapi manifestasi dari rasa
-              empati terhadap perjuangan ratusan ribu mahasiswa setiap
-              semesternya."
-            </p>
+            <p className="text-xs italic text-slate-500">{t("about.quote")}</p>
           </div>
 
           <div className="pt-6 border-t border-slate-100 space-y-3">

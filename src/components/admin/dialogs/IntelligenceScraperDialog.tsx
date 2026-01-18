@@ -128,7 +128,7 @@ export function IntelligenceScraperDialog({
           code,
           name,
           sks,
-          prodi,
+          prodi: (prodi || "General").toUpperCase().trim().replace(/\.$/, ""),
           class: className,
           lecturer,
           room,
