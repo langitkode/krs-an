@@ -1,7 +1,13 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChevronLeft, ChevronRight, Bookmark, Sparkles } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Bookmark,
+  Sparkles,
+  RefreshCw,
+} from "lucide-react";
 import { ScheduleGrid } from "../ScheduleGrid";
 import type { Plan } from "@/types";
 
@@ -13,6 +19,8 @@ interface ScheduleViewerProps {
   onSavePlan: (plan: Plan) => void;
   isSaving: boolean;
   onExpand?: () => void;
+  onShuffle?: () => void;
+  planLimit: number;
   isGenerating?: boolean;
   userData?: { credits: number };
 }
@@ -25,6 +33,8 @@ export function ScheduleViewer({
   onSavePlan,
   isSaving,
   onExpand,
+  onShuffle,
+  planLimit,
   isGenerating,
   userData,
 }: ScheduleViewerProps) {
@@ -96,15 +106,15 @@ export function ScheduleViewer({
       </div>
 
       {/* Unified Floating Controller */}
-      <div className="flex items-center justify-center no-print sticky top-20 z-10">
-        <div className="inline-flex items-center gap-2 bg-white border border-slate-200/80 p-2 rounded-3xl shadow-xl shadow-blue-900/5">
+      <div className="flex items-center justify-center no-print sticky top-20 z-10 w-full px-2">
+        <div className="inline-flex flex-wrap items-center justify-center gap-1 md:gap-2 bg-white/95 backdrop-blur-sm border border-slate-200/80 p-1.5 md:p-2 rounded-[2rem] shadow-xl shadow-blue-900/5 max-w-full overflow-hidden">
           {/* Save Button */}
           <Button
             variant="ghost"
             size="sm"
             onClick={() => onSavePlan(currentPlan)}
             disabled={isSaving}
-            className="h-10 px-4 font-display text-[11px] font-bold text-slate-700 hover:bg-slate-100 hover:text-blue-700 rounded-2xl transition-all"
+            className="h-9 md:h-10 px-2 md:px-4 font-display text-[10px] md:text-[11px] font-bold text-slate-700 hover:bg-slate-100 hover:text-blue-700 rounded-2xl transition-all"
           >
             <Bookmark
               className={`w-4 h-4 mr-2 ${isSaving ? "animate-pulse" : ""}`}
@@ -112,7 +122,7 @@ export function ScheduleViewer({
             {isSaving ? "Saving..." : "Save"}
           </Button>
 
-          <div className="w-px h-6 bg-slate-200" />
+          <div className="hidden sm:block w-px h-6 bg-slate-200" />
 
           {/* Slider Core */}
           <div className="flex items-center gap-2 px-2">
@@ -126,18 +136,18 @@ export function ScheduleViewer({
               <ChevronLeft className="w-5 h-5" />
             </Button>
 
-            <div className="flex flex-col items-center px-4 min-w-[100px]">
-              <span className="text-[11px] font-mono font-bold text-slate-900 tracking-tighter leading-none">
+            <div className="flex flex-col items-center px-2 md:px-4 min-w-[70px] md:min-w-[100px]">
+              <span className="text-[10px] md:text-[11px] font-mono font-bold text-slate-900 tracking-tighter leading-none">
                 {String(currentPlanIndex + 1).padStart(2, "0")} /{" "}
                 {String(plans.length).padStart(2, "0")}
               </span>
               <div className="flex gap-1 mt-1.5">
-                {Array.from({ length: Math.min(plans.length, 10) }).map(
+                {Array.from({ length: Math.min(plans.length, 6) }).map(
                   (_, i) => (
                     <div
                       key={i}
-                      className={`h-1 w-2 rounded-full transition-all duration-300 ${
-                        i === currentPlanIndex % 10
+                      className={`h-1 w-1 md:w-2 rounded-full transition-all duration-300 ${
+                        i === currentPlanIndex % 6
                           ? "bg-blue-600 w-5"
                           : "bg-slate-200"
                       }`}
@@ -158,20 +168,38 @@ export function ScheduleViewer({
             </Button>
           </div>
 
-          {plans.length < 24 && onExpand && (
+          {onShuffle && (
             <>
-              <div className="w-px h-6 bg-slate-200" />
+              <div className="hidden sm:block w-px h-6 bg-slate-200" />
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onShuffle}
+                disabled={isGenerating}
+                className="h-9 md:h-10 px-2 md:px-4 font-display text-[10px] md:text-[11px] font-bold text-slate-700 hover:bg-slate-100 hover:text-blue-700 rounded-2xl transition-all"
+              >
+                <RefreshCw
+                  className={`w-3.5 h-3.5 mr-2 ${isGenerating ? "animate-spin" : ""}`}
+                />
+                Shuffle
+              </Button>
+            </>
+          )}
+
+          {plans.length < planLimit && onExpand && (
+            <>
+              <div className="hidden sm:block w-px h-6 bg-slate-200" />
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={onExpand}
                 disabled={isGenerating || (userData?.credits ?? 0) <= 0}
-                className="h-10 px-4 font-display text-[11px] font-bold text-blue-600 hover:bg-blue-50 transition-all rounded-2xl disabled:opacity-50"
+                className="h-9 md:h-10 px-2 md:px-4 font-display text-[10px] md:text-[11px] font-bold text-blue-600 hover:bg-blue-50 transition-all rounded-2xl disabled:opacity-50"
               >
                 <Sparkles
                   className={`w-4 h-4 mr-2 ${isGenerating ? "animate-spin" : ""}`}
                 />
-                {isGenerating ? "Reasoning..." : "Expand"}
+                {isGenerating ? "Generating..." : "Expand Limit (+12)"}
               </Button>
             </>
           )}

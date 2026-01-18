@@ -495,6 +495,12 @@ export function ScheduleMaker({
                 onExpand={
                   viewSource === "live" ? () => handleGenerate(true) : undefined
                 }
+                onShuffle={
+                  viewSource === "live"
+                    ? () => handleGenerate(false)
+                    : undefined
+                }
+                planLimit={planLimit}
                 isGenerating={isGenerating}
                 userData={userData as any}
               />
