@@ -130,7 +130,7 @@ export function ScheduleViewer({
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
+    <div className="flex flex-col h-[calc(100vh-140px)] gap-6 animate-in fade-in duration-500 overflow-hidden">
       <style
         dangerouslySetInnerHTML={{
           __html: `
@@ -317,15 +317,13 @@ export function ScheduleViewer({
 
       <div
         id="printable-area"
-        className="grid grid-cols-1 lg:grid-cols-[1.2fr_380px] gap-8 items-start mb-12"
+        className="grid grid-cols-1 lg:grid-cols-[1.2fr_380px] gap-8 items-stretch flex-1 min-h-0"
       >
-        <div className="w-full">
-          <div className="bg-white p-2 rounded-3xl border border-slate-200 shadow-xl shadow-blue-900/5 overflow-hidden">
-            <ScheduleGrid courses={currentPlan.courses} />
-          </div>
+        <div className="w-full bg-white p-2 rounded-3xl border border-slate-200 shadow-xl shadow-blue-900/5 overflow-auto custom-scrollbar">
+          <ScheduleGrid courses={currentPlan.courses} />
         </div>
 
-        <div className="w-full shrink-0 lg:sticky lg:top-36 h-full">
+        <div className="w-full shrink-0 flex flex-col min-h-0">
           <Card className="border-slate-200 shadow-xl shadow-blue-900/5 overflow-hidden rounded-[2.5rem] flex flex-col h-full bg-white/80 backdrop-blur-sm border-2">
             <CardHeader className="bg-slate-50/50 py-3 border-b border-slate-200 flex flex-row items-center justify-between">
               <CardTitle className="text-xs font-display flex items-center gap-2">
@@ -370,7 +368,7 @@ export function ScheduleViewer({
                 </Button>
               </div>
             </CardHeader>
-            <CardContent className="p-0 overflow-y-auto max-h-[calc(100vh-320px)] custom-scrollbar">
+            <CardContent className="p-0 flex-1 overflow-y-auto custom-scrollbar">
               <div className="divide-y divide-slate-100/80 text-[11px]">
                 {uniqueCodes.map((code) => {
                   const variations = groupedVariations[code] || [];
