@@ -199,12 +199,16 @@ export function ScheduleMaker({
     setMaxDailySks(preferences.maxDailySks);
 
     try {
+      // Destructure model out to keep the preferences object clean,
+      // though backend now accepts it for backward compatibility.
+      const { model, ...cleanPrefs } = preferences;
+
       const result = await smartGenerateAction({
         courses: courses as any,
         selectedCodes,
         maxSks: sessionProfile.maxSks,
-        preferences,
-        model: preferences.model,
+        preferences: cleanPrefs as any, // Cast to any to avoid strict type mismatch during data transition
+        model: model,
       });
 
       // Persist the choice

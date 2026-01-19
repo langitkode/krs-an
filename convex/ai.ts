@@ -47,6 +47,7 @@ export const smartGenerate = action({
       preferredDaysOff: v.array(v.string()),
       customInstructions: v.string(),
       maxDailySks: v.optional(v.number()),
+      model: v.optional(v.string()),
     }),
     model: v.optional(v.string()), // "groq" | "gemini"
   },
