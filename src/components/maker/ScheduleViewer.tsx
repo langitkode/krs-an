@@ -36,6 +36,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 import { useMemo, useState } from "react";
 import { HelpTooltip } from "../ui/HelpTooltip";
@@ -165,51 +172,39 @@ export function ScheduleViewer({
               <h4 className="font-bold text-slate-500 text-[11px] leading-tight line-clamp-2 mb-3">
                 {sampleCourse?.name || "Unknown Course"}
               </h4>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full h-8 text-[10px] font-black uppercase tracking-widest border-2 border-dashed border-slate-200 text-slate-400 hover:border-blue-400 hover:text-blue-600 rounded-xl bg-white shadow-sm"
-                  >
-                    Select Class
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent
-                  className="w-[280px] p-0 bg-white shadow-2xl rounded-2xl border-none max-h-[300px] overflow-hidden flex flex-col"
-                  align="end"
-                  onOpenAutoFocus={(e) => e.preventDefault()}
-                >
-                  <Command className="rounded-2xl h-full flex flex-col">
-                    <CommandList className="flex-1 overflow-y-auto px-1.5 py-1 custom-scrollbar scroll-smooth">
-                      <CommandGroup>
-                        {variations.map((v) => (
-                          <CommandItem
-                            key={v.id}
-                            value={v.id}
-                            onSelect={() => handleUpdateCourse(code, v)}
-                            className="rounded-xl px-3 py-2 cursor-pointer aria-selected:bg-blue-50"
-                          >
-                            <div className="flex flex-col min-w-0">
-                              <span className="font-bold text-[11px] text-slate-900">
-                                Class {v.class}
-                              </span>
-                              <span className="text-slate-500 text-[9px] font-medium truncate italic text-wrap">
-                                {v.lecturer}
-                              </span>
-                              <span className="text-blue-600 text-[8px] font-mono font-bold mt-0.5">
-                                {v.schedule
-                                  .map((s: any) => `${s.day} ${s.start}`)
-                                  .join(", ")}
-                              </span>
-                            </div>
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
+              <Select
+                onValueChange={(value) => {
+                  const variation = variations.find((v) => v.id === value);
+                  if (variation) handleUpdateCourse(code, variation);
+                }}
+              >
+                <SelectTrigger className="w-full h-8 text-[10px] font-black uppercase tracking-widest border-2 border-dashed border-slate-200 text-slate-400 hover:border-blue-400 hover:text-blue-600 rounded-xl bg-white shadow-sm">
+                  <SelectValue placeholder="Select Class" />
+                </SelectTrigger>
+                <SelectContent className="rounded-2xl border-none shadow-2xl">
+                  {variations.map((v) => (
+                    <SelectItem
+                      key={v.id}
+                      value={v.id}
+                      className="rounded-xl px-3 py-2 cursor-pointer focus:bg-blue-50"
+                    >
+                      <div className="flex flex-col min-w-0">
+                        <span className="font-bold text-[11px] text-slate-900">
+                          Class {v.class}
+                        </span>
+                        <span className="text-slate-500 text-[9px] font-medium truncate italic">
+                          {v.lecturer}
+                        </span>
+                        <span className="text-blue-600 text-[8px] font-mono font-bold mt-0.5">
+                          {v.schedule
+                            .map((s: any) => `${s.day} ${s.start}`)
+                            .join(", ")}
+                        </span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           );
         }
@@ -256,66 +251,42 @@ export function ScheduleViewer({
                 <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">
                   Class Selection:
                 </span>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-7 text-[10px] font-bold px-3 border-slate-200 bg-white hover:bg-slate-50 rounded-lg"
-                    >
-                      Class {c.class}
-                      <ChevronsUpDown className="ml-1.5 h-3 w-3 opacity-50" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent
-                    className="w-[240px] p-0 bg-white shadow-2xl rounded-2xl border-none max-h-[300px] overflow-hidden flex flex-col"
-                    align="end"
-                    onOpenAutoFocus={(e) => e.preventDefault()}
-                  >
-                    <Command className="rounded-2xl h-full flex flex-col">
-                      <CommandEmpty>No variations found.</CommandEmpty>
-                      <CommandList className="flex-1 overflow-y-auto px-1.5 py-1 custom-scrollbar scroll-smooth">
-                        <CommandGroup>
-                          {variations.map((v) => (
-                            <CommandItem
-                              key={v.id}
-                              value={v.id}
-                              onSelect={() => handleUpdateCourse(c.code, v)}
-                              className="rounded-xl px-3 py-2 cursor-pointer aria-selected:bg-blue-50"
-                            >
-                              <div className="flex items-start gap-2 w-full">
-                                <div
-                                  className={`mt-0.5 shrink-0 w-4 h-4 rounded-full flex items-center justify-center border ${
-                                    v.id === c.id
-                                      ? "bg-blue-600 border-blue-600 text-white"
-                                      : "border-slate-200"
-                                  }`}
-                                >
-                                  {v.id === c.id && (
-                                    <Check className="h-2.5 w-2.5" />
-                                  )}
-                                </div>
-                                <div className="flex flex-col min-w-0">
-                                  <span className="font-bold text-[11px] text-slate-900">
-                                    Class {v.class}
-                                  </span>
-                                  <span className="text-slate-500 text-[9px] font-medium truncate text-wrap">
-                                    {v.lecturer}
-                                  </span>
-                                  <span className="text-blue-600 text-[8px] font-mono font-bold mt-0.5">
-                                    {v.schedule
-                                      .map((s: any) => `${s.day} ${s.start}`)
-                                      .join(", ")}
-                                  </span>
-                                </div>
-                              </div>
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
+                <Select
+                  value={c.id}
+                  onValueChange={(value) => {
+                    const variation = variations.find((v) => v.id === value);
+                    if (variation) handleUpdateCourse(c.code, variation);
+                  }}
+                >
+                  <SelectTrigger className="h-7 text-[10px] font-bold px-3 border-slate-200 bg-white hover:bg-slate-50 rounded-lg w-auto min-w-[100px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-2xl border-none shadow-2xl">
+                    {variations.map((v) => (
+                      <SelectItem
+                        key={v.id}
+                        value={v.id}
+                        className="rounded-xl px-3 py-2 cursor-pointer focus:bg-blue-50"
+                      >
+                        <div className="flex items-start gap-2 w-full">
+                          <div className="flex flex-col min-w-0">
+                            <span className="font-bold text-[11px] text-slate-900">
+                              Class {v.class}
+                            </span>
+                            <span className="text-slate-500 text-[9px] font-medium truncate">
+                              {v.lecturer}
+                            </span>
+                            <span className="text-blue-600 text-[8px] font-mono font-bold mt-0.5">
+                              {v.schedule
+                                .map((s: any) => `${s.day} ${s.start}`)
+                                .join(", ")}
+                            </span>
+                          </div>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             )}
           </div>

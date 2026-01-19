@@ -20,12 +20,12 @@ import {
 } from "@/components/ui/popover";
 import { HelpTooltip } from "@/components/ui/HelpTooltip";
 import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import type { Course } from "@/types";
 
 interface ScheduleSelectorProps {
@@ -345,107 +345,83 @@ export function ScheduleSelector({
 
                     {isSelected && (
                       <div className="w-full animate-in fade-in slide-in-from-top-1">
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button
-                              variant="outline"
-                              role="combobox"
-                              className="w-full justify-between h-7 md:h-8 border-slate-200 bg-slate-50/50 hover:bg-white text-[10px] md:text-xs font-mono px-2 rounded-lg"
+                        <Select
+                          value={
+                            lockedIds && lockedIds.length > 0 ? "locked" : "all"
+                          }
+                          onValueChange={(value) => {
+                            if (value === "all") {
+                              setLockedCourses((prev: any) => {
+                                const newLocked = { ...prev };
+                                delete newLocked[code];
+                                return newLocked;
+                              });
+                            }
+                          }}
+                        >
+                          <SelectTrigger className="w-full justify-between h-7 md:h-8 border-slate-200 bg-slate-50/50 hover:bg-white text-[10px] md:text-xs font-mono px-2 rounded-lg">
+                            <SelectValue>
+                              {lockedIds && lockedIds.length > 0
+                                ? lockedIds.length === 1
+                                  ? `Class ${variations.find((v) => v.id === lockedIds[0])?.class}`
+                                  : `${lockedIds.length} Classes`
+                                : "Auto-Optimize (All)"}
+                            </SelectValue>
+                          </SelectTrigger>
+                          <SelectContent className="rounded-2xl border-none shadow-2xl">
+                            <SelectItem
+                              value="all"
+                              className="text-xs font-bold text-blue-700 rounded-lg focus:bg-blue-50"
                             >
-                              <span className="truncate">
-                                {lockedIds && lockedIds.length > 0
-                                  ? lockedIds.length === 1
-                                    ? `Class ${variations.find((v) => v.id === lockedIds[0])?.class}`
-                                    : `${lockedIds.length} Classes`
-                                  : "Auto-Optimize (All)"}
-                              </span>
-                              <ChevronsUpDown className="ml-2 h-3 w-3 shrink-0 opacity-50" />
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent
-                            className="w-[200px] md:w-[300px] p-0 bg-white shadow-2xl rounded-2xl border-none max-h-[300px] overflow-hidden flex flex-col"
-                            align="start"
-                            onOpenAutoFocus={(e) => e.preventDefault()}
-                          >
-                            <Command className="flex-1 overflow-hidden flex flex-col">
-                              <CommandEmpty>No class found.</CommandEmpty>
-                              <CommandList className="flex-1 overflow-y-auto px-1 py-1 custom-scrollbar">
-                                <CommandGroup>
-                                  <CommandItem
-                                    value="all"
-                                    onSelect={() => {
-                                      setLockedCourses((prev: any) => {
-                                        const newLocked = { ...prev };
-                                        delete newLocked[code];
-                                        return newLocked;
-                                      });
-                                    }}
-                                    className="text-xs font-bold text-blue-700 rounded-lg"
+                              Auto-Optimize (Any Class)
+                            </SelectItem>
+                            {variations.map((v) => {
+                              const isChecked = currentLocked?.includes(v.id);
+                              return (
+                                <div
+                                  key={v.id}
+                                  className="flex items-center px-2 hover:bg-slate-50 cursor-pointer"
+                                  onClick={() => {
+                                    setLockedCourses((prev: any) => {
+                                      const newLocked = { ...prev };
+                                      const current = newLocked[code] || [];
+                                      if (current.includes(v.id)) {
+                                        newLocked[code] = current.filter(
+                                          (id: string) => id !== v.id,
+                                        );
+                                        if (newLocked[code].length === 0)
+                                          delete newLocked[code];
+                                      } else {
+                                        newLocked[code] = [...current, v.id];
+                                      }
+                                      return newLocked;
+                                    });
+                                  }}
+                                >
+                                  <div
+                                    className={`mr-2 flex h-3 w-3 items-center justify-center rounded-sm border border-primary shrink-0 ${isChecked ? "bg-primary text-primary-foreground" : "opacity-50"}`}
                                   >
-                                    <div
-                                      className={`mr-2 flex h-3 w-3 items-center justify-center rounded-sm border border-primary ${!currentLocked || currentLocked.length === 0 ? "bg-primary text-primary-foreground" : "opacity-50 [&_svg]:invisible"}`}
-                                    >
-                                      <Check className="h-3 w-3" />
+                                    {isChecked && <Check className="h-3 w-3" />}
+                                  </div>
+                                  <div className="flex flex-col w-full min-w-0 py-2">
+                                    <div className="flex items-center justify-between w-full">
+                                      <span className="font-bold text-xs">
+                                        Class {v.class}
+                                      </span>
+                                      <span className="text-[9px] text-slate-400 font-mono">
+                                        {v.schedule[0]?.day}{" "}
+                                        {v.schedule[0]?.start}
+                                      </span>
                                     </div>
-                                    Auto-Optimize (Any Class)
-                                  </CommandItem>
-                                  {variations.map((v) => {
-                                    const isChecked = currentLocked?.includes(
-                                      v.id,
-                                    );
-                                    return (
-                                      <CommandItem
-                                        key={v.id}
-                                        value={v.id}
-                                        onSelect={() => {
-                                          setLockedCourses((prev: any) => {
-                                            const newLocked = { ...prev };
-                                            const current =
-                                              newLocked[code] || [];
-                                            if (current.includes(v.id)) {
-                                              newLocked[code] = current.filter(
-                                                (id: string) => id !== v.id,
-                                              );
-                                              if (newLocked[code].length === 0)
-                                                delete newLocked[code];
-                                            } else {
-                                              newLocked[code] = [
-                                                ...current,
-                                                v.id,
-                                              ];
-                                            }
-                                            return newLocked;
-                                          });
-                                        }}
-                                        className="text-xs rounded-lg"
-                                      >
-                                        <div
-                                          className={`mr-2 flex h-3 w-3 items-center justify-center rounded-sm border border-primary ${isChecked ? "bg-primary text-primary-foreground" : "opacity-50 [&_svg]:invisible"}`}
-                                        >
-                                          <Check className="h-3 w-3" />
-                                        </div>
-                                        <div className="flex flex-col w-full min-w-0">
-                                          <div className="flex items-center justify-between w-full">
-                                            <span className="font-bold">
-                                              Class {v.class}
-                                            </span>
-                                            <span className="text-[9px] text-slate-400 font-mono">
-                                              {v.schedule[0]?.day}{" "}
-                                              {v.schedule[0]?.start}
-                                            </span>
-                                          </div>
-                                          <span className="text-slate-500 text-[10px] truncate w-full block">
-                                            {v.lecturer.split(",")[0]}
-                                          </span>
-                                        </div>
-                                      </CommandItem>
-                                    );
-                                  })}
-                                </CommandGroup>
-                              </CommandList>
-                            </Command>
-                          </PopoverContent>
-                        </Popover>
+                                    <span className="text-slate-500 text-[10px] truncate w-full block">
+                                      {v.lecturer.split(",")[0]}
+                                    </span>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </SelectContent>
+                        </Select>
                       </div>
                     )}
                   </div>
