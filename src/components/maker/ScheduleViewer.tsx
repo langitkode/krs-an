@@ -282,14 +282,14 @@ export function ScheduleViewer({
         id="printable-area"
         className="flex flex-col lg:flex-row gap-6 items-start"
       >
-        <div className="flex-1 w-full lg:sticky lg:top-36">
+        <div className="flex-1 w-full">
           <div className="bg-white p-2 rounded-3xl border border-slate-200 shadow-xl shadow-blue-900/5 overflow-hidden">
             <ScheduleGrid courses={currentPlan.courses} />
           </div>
         </div>
 
-        <div className="w-full lg:w-96 shrink-0 lg:sticky lg:top-36 self-stretch">
-          <Card className="border-slate-200 shadow-sm overflow-hidden rounded-3xl flex flex-col h-full max-h-[calc(100vh-160px)]">
+        <div className="w-full lg:w-96 shrink-0 self-stretch">
+          <Card className="border-slate-200 shadow-sm overflow-hidden rounded-3xl flex flex-col h-full bg-slate-50/30">
             <CardHeader className="bg-slate-50/50 py-3 border-b border-slate-200 flex flex-row items-center justify-between">
               <CardTitle className="text-xs font-display flex items-center gap-2">
                 <span>Course Inventory</span>
@@ -311,8 +311,8 @@ export function ScheduleViewer({
                 </Button>
               </div>
             </CardHeader>
-            <CardContent className="p-0 overflow-y-auto max-h-[400px]">
-              <div className="divide-y divide-slate-100 text-[11px]">
+            <CardContent className="p-0">
+              <div className="divide-y divide-slate-100/80 text-[11px]">
                 {currentPlan.courses.map((c, i) => {
                   const variations = groupedVariations[c.code] || [];
                   const isConflicted = conflictMessages.some(
@@ -433,27 +433,36 @@ export function ScheduleViewer({
               </div>
             </CardContent>
           </Card>
-
-          {/* Conflict Banner - Desktop/Visual Feedback */}
-          {!valid && isManualEdit && (
-            <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-2xl flex items-start gap-4">
-              <AlertTriangle className="w-5 h-5 text-red-600 mt-0.5 shrink-0" />
-              <div className="space-y-1">
-                <p className="text-sm font-bold text-red-900">
-                  Conflict Detected
-                </p>
-                <ul className="list-disc list-inside">
-                  {conflictMessages.map((m, i) => (
-                    <li key={i} className="text-xs text-red-700">
-                      {m}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          )}
         </div>
       </div>
+
+      {/* Conflict Banner - Full Width at Bottom */}
+      {!valid && isManualEdit && (
+        <div className="p-5 bg-red-50 border-2 border-red-100 rounded-3xl flex flex-col md:flex-row items-center gap-6 animate-in slide-in-from-bottom-5 duration-500 shadow-lg shadow-red-900/5">
+          <div className="w-12 h-12 bg-red-100 rounded-2xl flex items-center justify-center shrink-0">
+            <AlertTriangle className="w-6 h-6 text-red-600" />
+          </div>
+          <div className="flex-1 min-w-0 text-center md:text-left">
+            <h3 className="text-sm font-black text-red-900 uppercase tracking-tight mb-1">
+              Configuration Conflict Detected
+            </h3>
+            <div className="flex flex-wrap gap-x-4 gap-y-1 justify-center md:justify-start">
+              {conflictMessages.map((m, i) => (
+                <div
+                  key={i}
+                  className="flex items-center gap-1.5 text-[10px] text-red-700 font-bold bg-white/50 px-2 py-0.5 rounded-lg border border-red-100/50"
+                >
+                  <span className="w-1 h-1 bg-red-400 rounded-full" />
+                  {m}
+                </div>
+              ))}
+            </div>
+          </div>
+          <p className="text-[10px] font-mono text-red-400/80 uppercase font-black tracking-widest">
+            Fix conflicts to save
+          </p>
+        </div>
+      )}
     </div>
   );
 }
