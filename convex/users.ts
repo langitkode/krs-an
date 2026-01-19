@@ -85,12 +85,15 @@ export const ensureUser = mutation({
       .unique();
 
     if (user !== null) {
-      // Check for daily reset
-      const today = new Date().toISOString().split("T")[0];
-      if (user.lastResetDate !== today) {
+      // Check for daily reset (WIB: UTC+7)
+      const wibDate = new Date(Date.now() + 7 * 60 * 60 * 1000)
+        .toISOString()
+        .split("T")[0];
+
+      if (user.lastResetDate !== wibDate) {
         await ctx.db.patch(user._id, {
           credits: 5,
-          lastResetDate: today,
+          lastResetDate: wibDate,
           // Removed planLimit reset to make expansions permanent
         });
       }
@@ -99,10 +102,14 @@ export const ensureUser = mutation({
 
     // Create new user
     const firstUser = (await ctx.db.query("users").first()) === null;
+    const wibDate = new Date(Date.now() + 7 * 60 * 60 * 1000)
+      .toISOString()
+      .split("T")[0];
+
     const userId = await ctx.db.insert("users", {
       tokenIdentifier: identity.tokenIdentifier,
       credits: 5, // Daily limit
-      lastResetDate: new Date().toISOString().split("T")[0],
+      lastResetDate: wibDate,
       isAdmin: firstUser, // First user is architect
       planLimit: 12,
     });

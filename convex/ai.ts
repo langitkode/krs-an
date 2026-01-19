@@ -125,15 +125,16 @@ export const smartGenerate = action({
       return acc;
     }, {});
 
-    const systemPrompt = `You are a university schedule optimizer. Create 3 diverse, conflict-free schedules.
+    const systemPrompt = `You are a university schedule optimizer. Create 3 diverse, high-quality schedules.
     CRITICAL RULES:
-    1. Total SKS MUST be <= ${args.maxSks}.
-    2. NO time conflicts allowed.
+    1. Total SKS should be <= ${args.maxSks}. If impossible, prioritize mandatory subjects.
+    2. MINIMIZE time conflicts. While conflict-free is ideal, providing a plan with a minor conflict is better than no plan.
     3. Try to respect preferences:
        - Lecturers: ${args.preferences.preferredLecturers.join(", ") || "Any"}
        - Days Off: ${args.preferences.preferredDaysOff.join(", ") || "None"}
-    4. You may drop up to 2 subjects if conflicts are unavoidable.
+    4. You may drop subjects ONLY if they cannot be scheduled at all, but try to keep as many as possible.
     5. Max ${args.preferences.maxDailySks || 8} SKS per day.
+    6. ALWAYS return 3 plans unless the input data is extremely limited.
     `;
 
     const userInput = `DATA: ${JSON.stringify(optimizedCourses)}
