@@ -6,6 +6,7 @@ import {
   Trash,
   ChevronsUpDown,
   Check,
+  ChevronLeft,
   Brain,
   Sparkles,
   AlertTriangle,
@@ -31,7 +32,7 @@ interface ScheduleSelectorProps {
   courses: Course[];
   selectedCodes: string[];
   lockedCourses: Record<string, string[]>;
-  sessionProfile: { maxSks: number; semester: number };
+  sessionProfile: { maxSks: number; semester: number; [key: string]: any };
   toggleCourse: (code: string) => void;
   setLockedCourses: (updater: (prev: any) => any) => void;
   handleDeleteCourse: (e: React.MouseEvent, id: string) => void;
@@ -39,6 +40,7 @@ interface ScheduleSelectorProps {
   onGenerate: (tokenized?: boolean) => void;
   onSmartGenerate?: () => void;
   onSaveManual?: (combo: Course[]) => void;
+  onBack?: () => void;
   isGenerating: boolean;
   isSmartGenerating: boolean;
   cooldown?: { active: boolean; seconds: number };
@@ -56,6 +58,7 @@ export function ScheduleSelector({
   onGenerate,
   onSmartGenerate,
   onSaveManual,
+  onBack,
   isGenerating,
   isSmartGenerating,
   cooldown,
@@ -92,6 +95,16 @@ export function ScheduleSelector({
       <div className="shrink-0 bg-white/90 backdrop-blur-md p-3 md:p-4 rounded-3xl border border-slate-200 shadow-xl shadow-slate-100/50 flex flex-col gap-4">
         <div className="flex flex-col xl:flex-row justify-between items-center xl:items-start gap-4">
           <div className="flex items-center gap-3">
+            {onBack && (
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={onBack}
+                className="w-9 h-9 shrink-0 rounded-xl border-slate-200 hover:bg-slate-50 hover:text-blue-700 mr-1"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+            )}
             <div className="w-10 h-10 md:w-12 md:h-12 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-200 shrink-0">
               <Sparkles className="w-5 h-5 md:w-6 md:h-6 text-white" />
             </div>

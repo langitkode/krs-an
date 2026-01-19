@@ -600,6 +600,7 @@ export function ScheduleMaker({
               <ScheduleViewer
                 plans={plans}
                 currentPlanIndex={currentPlanIndex}
+                setCurrentPlanIndex={setCurrentPlanIndex}
                 onBack={() => {
                   setStep(viewSource === "archive" ? "archive" : "select");
                   setIsManualMode(false);
@@ -609,6 +610,18 @@ export function ScheduleMaker({
                 isManualEdit={isManualMode}
                 onUpdatePlan={handleUpdateManualPlan}
                 allPossibleCourses={courses}
+                onExpand={
+                  viewSource === "live" && planLimit < 36 && !isManualMode
+                    ? () => handleGenerate(true)
+                    : undefined
+                }
+                onShuffle={
+                  viewSource === "live" && !isManualMode
+                    ? () => handleGenerate(false)
+                    : undefined
+                }
+                planLimit={planLimit}
+                isGenerating={isGenerating}
               />
             )}
 

@@ -3,6 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   ChevronLeft,
+  ChevronRight,
+  RefreshCw,
+  Sparkles,
   ClipboardCheck,
   RotateCcw,
   Wand2,
@@ -29,23 +32,33 @@ import { useMemo } from "react";
 interface ScheduleViewerProps {
   plans: Plan[];
   currentPlanIndex: number;
+  setCurrentPlanIndex: (index: number | ((prev: number) => number)) => void;
   onBack: () => void;
   onSavePlan: (data: any) => void;
   isSaving: boolean;
   isManualEdit?: boolean;
   onUpdatePlan?: (updated: Course[]) => void;
   allPossibleCourses?: Course[];
+  onExpand?: () => void;
+  onShuffle?: () => void;
+  planLimit: number;
+  isGenerating?: boolean;
 }
 
 export function ScheduleViewer({
   plans,
   currentPlanIndex,
+  setCurrentPlanIndex,
   onBack,
   onSavePlan,
   isSaving,
   isManualEdit,
   onUpdatePlan,
   allPossibleCourses,
+  onExpand,
+  onShuffle,
+  planLimit,
+  isGenerating,
 }: ScheduleViewerProps) {
   const currentPlan = plans[currentPlanIndex];
   const totalSKS = currentPlan.courses.reduce(
@@ -156,6 +169,74 @@ export function ScheduleViewer({
                 : `PLAN ${currentPlanIndex + 1} OF ${plans.length} • OPTIMIZED BY AI`}
             </p>
           </div>
+        </div>
+
+        <div className="flex items-center gap-1.5 no-print ml-auto">
+          {/* Plan Navigation */}
+          {!isManualEdit && plans.length > 1 && (
+            <div className="flex items-center bg-slate-100 rounded-xl p-0.5 gap-0.5 mr-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 rounded-lg"
+                onClick={() =>
+                  setCurrentPlanIndex((prev) =>
+                    prev > 0 ? prev - 1 : plans.length - 1,
+                  )
+                }
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+              </Button>
+              <span className="text-[10px] font-bold font-mono px-1">
+                {currentPlanIndex + 1}/{plans.length}
+              </span>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 rounded-lg"
+                onClick={() =>
+                  setCurrentPlanIndex((prev) =>
+                    prev < plans.length - 1 ? prev + 1 : 0,
+                  )
+                }
+              >
+                <ChevronRight className="w-3.5 h-3.5" />
+              </Button>
+            </div>
+          )}
+
+          {/* Quick Actions Cluster */}
+          {!isManualEdit && onShuffle && (
+            <div className="flex items-center gap-1">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onShuffle}
+                disabled={isGenerating}
+                className="h-8 px-2.5 rounded-xl border-slate-200 text-slate-600 hover:text-blue-600 font-display text-[9px] font-bold uppercase tracking-wider"
+              >
+                <RefreshCw
+                  className={`w-3 h-3 mr-1.5 ${isGenerating ? "animate-spin" : ""}`}
+                />
+                Shuffle
+              </Button>
+
+              {onExpand && planLimit < 36 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onExpand}
+                  disabled={isGenerating}
+                  className="h-8 px-2.5 rounded-xl border-slate-200 text-slate-600 hover:text-violet-600 font-display text-[9px] font-bold uppercase tracking-wider"
+                >
+                  <Sparkles
+                    className={`w-3 h-3 mr-1.5 ${isGenerating ? "animate-pulse" : ""}`}
+                  />
+                  Expand ({planLimit})
+                </Button>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="flex items-center gap-2 pl-3 md:border-l border-slate-100 h-9 shrink-0">
