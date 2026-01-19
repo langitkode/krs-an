@@ -63,6 +63,7 @@ export function MasterDataTab({ onOpenScraper }: MasterDataTabProps) {
   const deleteMaster = useMutation(api.admin.deleteMasterCourse);
   const bulkImport = useMutation(api.admin.bulkImportMaster);
   const batchDelete = useMutation(api.admin.batchDeleteMaster);
+  const clearMaster = useMutation(api.admin.clearMasterData);
 
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
@@ -215,6 +216,21 @@ export function MasterDataTab({ onOpenScraper }: MasterDataTabProps) {
     }
   };
 
+  const handlePurgeProdi = async () => {
+    if (prodiFilter === "all") return;
+    if (
+      !confirm(`This will purge ALL master data for ${prodiFilter}. Proceed?`)
+    )
+      return;
+
+    try {
+      await clearMaster({ prodi: prodiFilter });
+      toast.success(`Data for ${prodiFilter} purged.`);
+    } catch (err: any) {
+      toast.error("Purge failed.");
+    }
+  };
+
   const toggleSelectAll = () => {
     if (selectedIds.length === courses?.length) {
       setSelectedIds([]);
@@ -279,6 +295,17 @@ export function MasterDataTab({ onOpenScraper }: MasterDataTabProps) {
                   <Wand2 className="w-3 h-3 mr-2" />
                   AI Scraper
                 </Button>
+
+                {prodiFilter !== "all" && (
+                  <Button
+                    variant="outline"
+                    onClick={handlePurgeProdi}
+                    className="rounded-xl font-mono text-[9px] uppercase tracking-widest border-red-100 text-red-600 hover:bg-red-50 h-9 md:h-8"
+                  >
+                    <Trash2 className="w-3 h-3 mr-2" />
+                    Purge {prodiFilter}
+                  </Button>
+                )}
               </div>
 
               <div className="grid grid-cols-2 sm:flex gap-2 w-full">

@@ -49,92 +49,143 @@ export function IntelligenceScraperDialog({
     if (!rawText.trim()) return;
     setIsAiCleaning(true);
     try {
-      const blocks = rawText.trim().split(/\n\s*\n/);
-      const data: any[] = [];
+      const dayMap: Record<string, string> = {
+        senin: "Mon",
+        selasa: "Tue",
+        rabu: "Wed",
+        kamis: "Thu",
+        jumat: "Fri",
+        sabtu: "Sat",
+        minggu: "Sun",
+      };
 
-      blocks.forEach((block) => {
-        const lines = block
-          .split("\n")
-          .map((l) => l.trim())
-          .filter((l) => l);
-        if (lines.length < 1) return;
-
-        const mainLine = lines[0];
-        const lecturer = lines[1] || "-";
-        const cols = mainLine.split("\t").map((c) => c.trim());
-        if (cols.length < 6) return;
-
-        let prodi, code, name, className, sks, scheduleRaw, room;
-
-        if (cols.length >= 8) {
-          prodi = cols[0] || "General";
-          code = cols[1] || "N/A";
-          name = cols[2] || "Untitled";
-          className = cols[3] || "-";
-          sks = parseInt(cols[4]) || 0;
-          scheduleRaw = cols[6] || "";
-          room = cols[7] || "-";
-        } else {
-          prodi = "General";
-          code = cols[0] || "N/A";
-          name = cols[1] || "Untitled";
-          className = cols[2] || "-";
-          sks = parseInt(cols[3]) || 0;
-          scheduleRaw = cols[5] || "";
-          room = cols[6] || "-";
-        }
-
-        const dayMap: Record<string, string> = {
-          senin: "Mon",
-          selasa: "Tue",
-          rabu: "Wed",
-          kamis: "Thu",
-          jumat: "Fri",
-          sabtu: "Sat",
-          minggu: "Sun",
-        };
-
-        const scheduleParts = scheduleRaw
-          ? scheduleRaw
-              .split(";")
-              .map((s: string) => {
-                const match = s
-                  .trim()
-                  .match(/(\w+)\s+(\d{1,2}:\d{2})-(\d{1,2}:\d{2})/);
-                if (match) {
-                  let day = match[1].toLowerCase();
-                  for (const [indo, eng] of Object.entries(dayMap)) {
-                    if (day.startsWith(indo)) {
-                      day = eng;
-                      break;
-                    }
-                  }
-                  return {
-                    day:
-                      day.length > 3
-                        ? day.charAt(0).toUpperCase() +
-                          day.slice(1, 3).toLowerCase()
-                        : day,
-                    start: match[2],
-                    end: match[3],
-                  };
+      const parseSchedule = (scheduleRaw: string) => {
+        if (!scheduleRaw) return [];
+        return scheduleRaw
+          .split(";")
+          .map((s: string) => {
+            const match = s
+              .trim()
+              .match(/(\w+)\s+(\d{1,2}:\d{2})-(\d{1,2}:\d{2})/);
+            if (match) {
+              let day = match[1].toLowerCase();
+              for (const [indo, eng] of Object.entries(dayMap)) {
+                if (day.startsWith(indo)) {
+                  day = eng;
+                  break;
                 }
-                return null;
-              })
-              .filter(Boolean)
-          : [];
+              }
+              return {
+                day:
+                  day.length > 3
+                    ? day.charAt(0).toUpperCase() +
+                      day.slice(1, 3).toLowerCase()
+                    : day,
+                start: match[2],
+                end: match[3],
+              };
+            }
+            return null;
+          })
+          .filter(Boolean);
+      };
 
-        data.push({
-          code,
-          name,
-          sks,
-          prodi: (prodi || "General").toUpperCase().trim().replace(/\.$/, ""),
-          class: className,
-          lecturer,
-          room,
-          schedule: scheduleParts,
-        });
-      });
+      const lines = rawText
+        .split("\n")
+        .map((l) => l.trim())
+        .filter((l) => l);
+      const data: any[] = [];
+      let currentCourse: any = null;
+
+      for (const line of lines) {
+        const cols = line.split("\t").map((c) => c.trim());
+
+        // A "Main Line" typically has many tabs (columns)
+        // We expect: Prodi, Kode, Nama, Kelas, SKS, Jml, Jadwal, Ruang (8 cols)
+        // Or sometimes 7 cols if missing one.
+        if (cols.length >= 6) {
+          // If we have a pending course, push it first
+          if (currentCourse) {
+            data.push(currentCourse);
+          }
+
+          let prodi = "";
+          let code = "";
+          let name = "";
+          let className = "";
+          let sks = 0;
+          let scheduleRaw = "";
+          let room = "";
+
+          if (cols.length >= 8) {
+            prodi = cols[0];
+            code = cols[1];
+            name = cols[2];
+            className = cols[3];
+            sks = parseInt(cols[4]) || 0;
+            scheduleRaw = cols[6] || "";
+            room = cols[7] || "-";
+          } else if (cols.length >= 7) {
+            // Check if first column is "PRODI CODE" (space-separated)
+            const firstColParts = cols[0].split(/\s+/);
+            if (
+              firstColParts.length >= 2 &&
+              /^\d+$/.test(firstColParts[firstColParts.length - 1])
+            ) {
+              code = firstColParts.pop() || "";
+              prodi = firstColParts.join(" ");
+              name = cols[1];
+              className = cols[2];
+              sks = parseInt(cols[3]) || 0;
+              scheduleRaw = cols[5] || "";
+              room = cols[6] || "-";
+            } else {
+              prodi = cols[0];
+              code = cols[1];
+              name = cols[2];
+              className = cols[3];
+              sks = parseInt(cols[4]) || 0;
+              scheduleRaw = cols[5] || "";
+              room = cols[6] || "-";
+            }
+          } else {
+            // Fallback for 6 columns or other
+            prodi = "General";
+            code = cols[0];
+            name = cols[1];
+            className = cols[2];
+            sks = parseInt(cols[3]) || 0;
+            scheduleRaw = cols[4] || "";
+            room = cols[5] || "-";
+          }
+
+          currentCourse = {
+            code,
+            name,
+            sks,
+            prodi: (prodi || "General").toUpperCase().trim().replace(/\.$/, ""),
+            class: className,
+            lecturer: "-",
+            room,
+            schedule: parseSchedule(scheduleRaw),
+          };
+        } else if (currentCourse) {
+          // Lecturer line or "(tidak ada dosen)"
+          const lecturerInfo = line.trim();
+          if (lecturerInfo) {
+            if (currentCourse.lecturer === "-") {
+              currentCourse.lecturer = lecturerInfo;
+            } else {
+              currentCourse.lecturer += ", " + lecturerInfo;
+            }
+          }
+        }
+      }
+
+      // Don't forget the last one
+      if (currentCourse) {
+        data.push(currentCourse);
+      }
 
       if (data.length === 0) throw new Error("No valid data found.");
 
