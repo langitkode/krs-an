@@ -182,28 +182,34 @@ export function MasterCatalogDialog({
                     </div>
 
                     {/* Class Selector Row */}
-                    <div className="flex flex-wrap items-center gap-2 pt-1">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                        Toggle Classes:
-                      </span>
-                      <div className="flex flex-wrap gap-1.5">
-                        {group.classes.map((cls) => {
-                          const isClsSelected = selectedClassIds.has(cls._id);
-                          return (
-                            <button
-                              key={cls._id}
-                              onClick={() => toggleClass(cls._id)}
-                              className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all border ${
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full pt-1">
+                      {group.classes.map((cls) => {
+                        const isClsSelected = selectedClassIds.has(cls._id);
+                        return (
+                          <button
+                            key={cls._id}
+                            onClick={() => toggleClass(cls._id)}
+                            className={`flex flex-col items-start p-2 rounded-xl text-left transition-all border ${
+                              isClsSelected
+                                ? "bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-100"
+                                : "bg-white border-slate-200 text-slate-600 hover:border-blue-300 shadow-sm"
+                            }`}
+                          >
+                            <span className="text-[10px] font-bold uppercase tracking-wider">
+                              Class {cls.class}
+                            </span>
+                            <span
+                              className={`text-[9px] font-medium truncate w-full ${
                                 isClsSelected
-                                  ? "bg-blue-600 border-blue-600 text-white shadow-sm"
-                                  : "bg-white border-slate-200 text-slate-600 hover:border-blue-300 shadow-sm"
+                                  ? "text-blue-100"
+                                  : "text-slate-400"
                               }`}
                             >
-                              {cls.class}
-                            </button>
-                          );
-                        })}
-                      </div>
+                              {cls.lecturer || "No Lecturer"}
+                            </span>
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
