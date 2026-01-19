@@ -112,7 +112,7 @@ export function ScheduleViewer({
   };
 
   return (
-    <div className="flex-1 min-h-0 flex flex-col gap-4 md:gap-6 animate-in fade-in duration-500 overflow-auto lg:overflow-hidden">
+    <div className="h-full flex flex-col gap-4 md:gap-6 animate-in fade-in duration-500 overflow-visible lg:overflow-hidden">
       <style
         dangerouslySetInnerHTML={{
           __html: `
