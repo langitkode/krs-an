@@ -27,12 +27,10 @@ export function MasterCatalogDialog({
   onAddCourses,
 }: MasterCatalogDialogProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  // Selection state: Record<courseCode, selectedClassId>
-  const [selectedClasses, setSelectedClasses] = useState<
-    Record<string, string>
-  >({});
-  // Batch selection set: Set of courseCodes
-  const [batchSelection, setBatchSelection] = useState<Set<string>>(new Set());
+  // Selection state: Set of master_course _ids
+  const [selectedClassIds, setSelectedClassIds] = useState<Set<string>>(
+    new Set(),
+  );
 
   // Grouping logic
   const groupedCourses = useMemo(() => {
@@ -69,44 +67,39 @@ export function MasterCatalogDialog({
     );
   }, [allMasterCourses, searchQuery]);
 
-  const toggleBatch = (code: string) => {
-    const next = new Set(batchSelection);
-    if (next.has(code)) {
-      next.delete(code);
+  const toggleClass = (id: string) => {
+    const next = new Set(selectedClassIds);
+    if (next.has(id)) {
+      next.delete(id);
     } else {
-      next.add(code);
-      // Auto-pick first class if none selected for this course
-      if (
-        !selectedClasses[code] &&
-        groupedCourses.find((g) => g.code === code)?.classes[0]
-      ) {
-        setSelectedClasses((prev) => ({
-          ...prev,
-          [code]: groupedCourses.find((g) => g.code === code)!.classes[0]._id,
-        }));
-      }
+      next.add(id);
     }
-    setBatchSelection(next);
+    setSelectedClassIds(next);
+  };
+
+  const toggleGroup = (classes: any[]) => {
+    const next = new Set(selectedClassIds);
+    const allIds = classes.map((c) => c._id);
+    const allSelected = allIds.every((id) => next.has(id));
+
+    if (allSelected) {
+      // Unselect all
+      allIds.forEach((id) => next.delete(id));
+    } else {
+      // Select all
+      allIds.forEach((id) => next.add(id));
+    }
+    setSelectedClassIds(next);
   };
 
   const handleAddSelected = () => {
-    const toAdd: any[] = [];
-    batchSelection.forEach((code) => {
-      const classId = selectedClasses[code];
-      const courseGroup = groupedCourses.find((g) => g.code === code);
-      if (courseGroup) {
-        const selectedClass =
-          courseGroup.classes.find((c) => c._id === classId) ||
-          courseGroup.classes[0];
-        if (selectedClass) toAdd.push(selectedClass);
-      }
-    });
+    if (!allMasterCourses) return;
+    const toAdd = allMasterCourses.filter((c) => selectedClassIds.has(c._id));
 
     if (toAdd.length > 0) {
       onAddCourses(toAdd);
       // Reset state
-      setBatchSelection(new Set());
-      setSelectedClasses({});
+      setSelectedClassIds(new Set());
     }
   };
 
@@ -135,28 +128,33 @@ export function MasterCatalogDialog({
 
         <div className="flex-1 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
           {groupedCourses.map((group) => {
-            const isSelected = batchSelection.has(group.code);
-            const selectedClassId =
-              selectedClasses[group.code] || group.classes[0]?._id;
-            const selectedClass = group.classes.find(
-              (c) => c._id === selectedClassId,
-            );
+            const groupIds = group.classes.map((c) => c._id);
+            const selectedCountInGroup = groupIds.filter((id) =>
+              selectedClassIds.has(id),
+            ).length;
+            const isAnySelected = selectedCountInGroup > 0;
+            const isAllSelected = selectedCountInGroup === groupIds.length;
 
             return (
               <div
                 key={group.code}
                 className={`p-4 rounded-2xl border transition-all ${
-                  isSelected
+                  isAnySelected
                     ? "bg-blue-50/50 border-blue-200 shadow-sm"
                     : "bg-slate-50 border-slate-100 hover:border-slate-200"
                 }`}
               >
                 <div className="flex items-start gap-4">
-                  <Checkbox
-                    checked={isSelected}
-                    onCheckedChange={() => toggleBatch(group.code)}
-                    className="mt-1 border-slate-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
-                  />
+                  <div className="mt-1">
+                    <Checkbox
+                      checked={
+                        isAllSelected ||
+                        (isAnySelected ? "indeterminate" : false)
+                      }
+                      onCheckedChange={() => toggleGroup(group.classes)}
+                      className="border-slate-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 data-[state=indeterminate]:bg-blue-400"
+                    />
+                  </div>
 
                   <div className="flex-1 space-y-2">
                     <div className="flex justify-between items-start">
@@ -171,6 +169,11 @@ export function MasterCatalogDialog({
                           >
                             {group.sks} SKS
                           </Badge>
+                          {selectedCountInGroup > 0 && (
+                            <Badge className="bg-blue-100 text-blue-700 text-[8px] font-bold border-none h-4 px-1.5">
+                              {selectedCountInGroup} CLASSES SELECTED
+                            </Badge>
+                          )}
                         </div>
                         <h4 className="text-sm font-bold text-slate-900 leading-tight">
                           {group.name}
@@ -181,50 +184,27 @@ export function MasterCatalogDialog({
                     {/* Class Selector Row */}
                     <div className="flex flex-wrap items-center gap-2 pt-1">
                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                        Select Class:
+                        Toggle Classes:
                       </span>
                       <div className="flex flex-wrap gap-1.5">
-                        {group.classes.map((cls) => (
-                          <button
-                            key={cls._id}
-                            onClick={() => {
-                              setSelectedClasses((prev) => ({
-                                ...prev,
-                                [group.code]: cls._id,
-                              }));
-                              if (!batchSelection.has(group.code))
-                                toggleBatch(group.code);
-                            }}
-                            className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all border ${
-                              selectedClassId === cls._id
-                                ? "bg-blue-600 border-blue-600 text-white shadow-sm"
-                                : "bg-white border-slate-200 text-slate-600 hover:border-blue-300"
-                            }`}
-                          >
-                            {cls.class}
-                          </button>
-                        ))}
+                        {group.classes.map((cls) => {
+                          const isClsSelected = selectedClassIds.has(cls._id);
+                          return (
+                            <button
+                              key={cls._id}
+                              onClick={() => toggleClass(cls._id)}
+                              className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all border ${
+                                isClsSelected
+                                  ? "bg-blue-600 border-blue-600 text-white shadow-sm"
+                                  : "bg-white border-slate-200 text-slate-600 hover:border-blue-300 shadow-sm"
+                              }`}
+                            >
+                              {cls.class}
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
-
-                    {/* Info Tooltip-like Area */}
-                    {selectedClass && (
-                      <div className="bg-white/60 rounded-xl p-2 mt-2 border border-blue-100/50">
-                        <p className="text-[10px] text-slate-600 flex items-center gap-1.5">
-                          <span className="font-bold text-blue-700">
-                            Lecturer:
-                          </span>
-                          <span className="italic">
-                            {selectedClass.lecturer}
-                          </span>
-                        </p>
-                        <p className="text-[9px] text-slate-400 mt-0.5">
-                          {selectedClass.schedule
-                            .map((s: any) => `${s.day} ${s.start}-${s.end}`)
-                            .join(", ")}
-                        </p>
-                      </div>
-                    )}
                   </div>
                 </div>
               </div>
@@ -245,9 +225,9 @@ export function MasterCatalogDialog({
 
         <DialogFooter className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between sm:justify-between w-full">
           <div className="flex items-center gap-2">
-            {batchSelection.size > 0 && (
+            {selectedClassIds.size > 0 && (
               <Badge className="bg-blue-600 text-white font-mono text-[10px] px-2 py-1">
-                {batchSelection.size} SELECTED
+                {selectedClassIds.size} CLASSES SELECTED
               </Badge>
             )}
           </div>
@@ -260,7 +240,7 @@ export function MasterCatalogDialog({
               Cancel
             </Button>
             <Button
-              disabled={batchSelection.size === 0}
+              disabled={selectedClassIds.size === 0}
               onClick={handleAddSelected}
               className="bg-blue-700 hover:bg-blue-800 text-white font-bold text-[10px] uppercase tracking-widest px-6 rounded-xl shadow-lg shadow-blue-200 transition-all disabled:opacity-50 disabled:shadow-none"
             >
