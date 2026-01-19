@@ -10,7 +10,6 @@ import {
   Brain,
   Sparkles,
   AlertTriangle,
-  ClipboardCheck,
 } from "lucide-react";
 import { useLanguage } from "../../context/LanguageContext";
 import { checkConflicts } from "../../lib/rules";
