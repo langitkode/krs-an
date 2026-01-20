@@ -647,7 +647,7 @@ export function ScheduleMaker({
             )}
 
             {step === "archive" && (
-              <div className="w-full">
+              <div className="w-full h-full">
                 <ScheduleArchive
                   archived={archived}
                   onImport={handleImportArchived}

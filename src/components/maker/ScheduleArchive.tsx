@@ -231,7 +231,7 @@ export function ScheduleArchive({
   const manualDataPlans = manualPlans.map((p) => p.data);
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="max-w-4xl mx-auto h-full overflow-y-auto space-y-6 px-1 pb-20 animate-in fade-in slide-in-from-bottom-4 duration-700 no-scrollbar">
       <div className="flex items-center justify-between px-2">
         <div className="flex items-center gap-2">
           <History className="w-5 h-5 text-slate-400" />
@@ -263,34 +263,36 @@ export function ScheduleArchive({
 
       <Tabs
         defaultValue={aiPlans.length > 0 ? "ai" : "saved"}
-        className="w-full"
+        className="w-full flex-1 flex flex-col min-h-0"
       >
-        <TabsList className="grid w-full grid-cols-2 mb-8 bg-slate-100/50 p-1 rounded-2xl">
-          <TabsTrigger
-            value="ai"
-            className="rounded-xl font-display font-medium data-[state=active]:bg-white data-[state=active]:text-violet-700 data-[state=active]:shadow-sm"
-          >
-            <Brain className="w-4 h-4 mr-2" />
-            AI Generated
-            {aiPlans.length > 0 && (
-              <span className="ml-2 bg-violet-100 text-violet-700 px-1.5 py-0.5 rounded-md text-[10px] font-bold">
-                {aiPlans.length}
-              </span>
-            )}
-          </TabsTrigger>
-          <TabsTrigger
-            value="saved"
-            className="rounded-xl font-display font-medium data-[state=active]:bg-white data-[state=active]:text-blue-700 data-[state=active]:shadow-sm"
-          >
-            <Bookmark className="w-4 h-4 mr-2" />
-            Saved Plans
-            {manualPlans.length > 0 && (
-              <span className="ml-2 bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-md text-[10px] font-bold">
-                {manualPlans.length}
-              </span>
-            )}
-          </TabsTrigger>
-        </TabsList>
+        <div className="sticky top-0 z-20 bg-[#f8fafc]/95 backdrop-blur-sm pt-2 pb-4 mb-2 shrink-0">
+          <TabsList className="grid w-full grid-cols-2 bg-slate-200/50 p-1 rounded-2xl">
+            <TabsTrigger
+              value="ai"
+              className="rounded-xl font-display font-medium data-[state=active]:bg-white data-[state=active]:text-violet-700 data-[state=active]:shadow-sm"
+            >
+              <Brain className="w-4 h-4 mr-2" />
+              AI Generated
+              {aiPlans.length > 0 && (
+                <span className="ml-2 bg-violet-100 text-violet-700 px-1.5 py-0.5 rounded-md text-[10px] font-bold">
+                  {aiPlans.length}
+                </span>
+              )}
+            </TabsTrigger>
+            <TabsTrigger
+              value="saved"
+              className="rounded-xl font-display font-medium data-[state=active]:bg-white data-[state=active]:text-blue-700 data-[state=active]:shadow-sm"
+            >
+              <Bookmark className="w-4 h-4 mr-2" />
+              Saved Plans
+              {manualPlans.length > 0 && (
+                <span className="ml-2 bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-md text-[10px] font-bold">
+                  {manualPlans.length}
+                </span>
+              )}
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="ai" className="mt-0">
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
