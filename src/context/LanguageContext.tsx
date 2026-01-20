@@ -19,6 +19,8 @@ const translations: Record<Language, Record<string, string>> = {
       "Token reset setiap hari. Gunakan untuk memperluas limit jadwal.",
     "nav.signout": "Keluar",
     "nav.language": "Bahasa",
+    "nav.tutorial": "Tutorial",
+    "nav.contact": "Kontak",
     "footer.tagline":
       "Platform optimasi jadwal perkuliahan tercanggih untuk mahasiswa Indonesia.",
     "footer.about": "Tentang",
@@ -44,6 +46,9 @@ const translations: Record<Language, Record<string, string>> = {
     "config.semester_label": "Target Semester",
     "config.max_sks_label": "Batas Maks SKS",
     "config.btn_init": "Inisialisasi Sesi",
+    "config.clear_session": "Hapus Sesi Tersimpan",
+    "config.clear_confirm":
+      "Hapus semua data sesi yang tersimpan? Ini akan mereset konfigurasi dan pilihan mata kuliah Anda.",
     "config.footer": "DIDUKUNG OLEH THE CORE ARCHITECT ENGINE",
     "selector.title": "Katalog Mata Kuliah",
     "selector.sub_title": "Pilih mata kuliah yang ingin Anda ambil.",
@@ -124,6 +129,18 @@ const translations: Record<Language, Record<string, string>> = {
     "help.ai_smart_generate_title": "Smart Generate (AI)",
     "help.ai_smart_generate_desc":
       "Fitur premium yang menggunakan AI untuk mencari jadwal paling optimal berdasarkan preferensi spesifik Anda.",
+    "tutorial.step1_title": "Mulai Perjalanan Anda",
+    "tutorial.step1_desc":
+      "Atur program studi, semester, dan preferensi Anda di sini. Ini membantu kami menyesuaikan jadwal untuk Anda.",
+    "tutorial.step2_title": "Pilih Mata Kuliah",
+    "tutorial.step2_desc":
+      "Jelajahi katalog dan tambahkan mata kuliah ke sesi Anda. Kami akan mendeteksi konflik secara otomatis!",
+    "tutorial.step3_title": "AI & Alat Cerdas",
+    "tutorial.step3_desc":
+      "Gunakan 'Smart Generate' agar AI membuat jadwal sempurna dalam hitungan detik, atau 'Quick Build' untuk mengacak opsi.",
+    "tutorial.step4_title": "Visualisasi Waktu",
+    "tutorial.step4_desc":
+      "Lihat minggu Anda secara sekilas. Klik kelas mana pun untuk melihat detail atau menguncinya.",
   },
   EN: {
     "nav.architect": "Architect",
@@ -135,6 +152,8 @@ const translations: Record<Language, Record<string, string>> = {
       "Tokens reset daily. Use them to expand schedule limits.",
     "nav.signout": "Sign Out",
     "nav.language": "Language",
+    "nav.tutorial": "Tutorial",
+    "nav.contact": "Contact",
     "footer.tagline":
       "The most advanced course schedule optimization platform for Indonesian students.",
     "footer.about": "About",
@@ -160,6 +179,9 @@ const translations: Record<Language, Record<string, string>> = {
     "config.semester_label": "Target Semester",
     "config.max_sks_label": "Max SKS Load",
     "config.btn_init": "Initialize Session",
+    "config.clear_session": "Clear Saved Session",
+    "config.clear_confirm":
+      "Clear all saved session data? This will reset your configuration and selections.",
     "config.footer": "POWERED BY THE CORE ARCHITECT ENGINE",
     "selector.title": "Course Catalog",
     "selector.sub_title": "Select the courses you want to take.",
@@ -239,6 +261,18 @@ const translations: Record<Language, Record<string, string>> = {
     "help.ai_smart_generate_title": "Smart Generate (AI)",
     "help.ai_smart_generate_desc":
       "Premium feature using AI to find the most optimal schedule based on your specific preferences.",
+    "tutorial.step1_title": "Start Your Journey",
+    "tutorial.step1_desc":
+      "Set your major, semester, and preferences here. This helps us tailor the schedule for you.",
+    "tutorial.step2_title": "Choose Your Courses",
+    "tutorial.step2_desc":
+      "Browse the catalog and add subjects to your session. We'll automatically detect conflicts!",
+    "tutorial.step3_title": "AI & Smart Tools",
+    "tutorial.step3_desc":
+      "Use 'Smart Generate' to let AI build your perfect schedule in seconds, or use 'Quick Build' to shuffle options.",
+    "tutorial.step4_title": "Visual Timegrid",
+    "tutorial.step4_desc":
+      "See your week at a glance. Click on any class to see details or lock it in place.",
   },
 };
 

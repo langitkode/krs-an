@@ -215,11 +215,7 @@ export function ScheduleConfig({
 
             <Button
               onClick={() => {
-                if (
-                  confirm(
-                    "Clear all saved session data? This will reset your configuration and selections.",
-                  )
-                ) {
+                if (confirm(t("config.clear_confirm"))) {
                   clearKRSSession();
                   window.location.reload();
                 }
@@ -228,7 +224,7 @@ export function ScheduleConfig({
               className="w-full mt-2 text-slate-500 hover:text-slate-700 h-10 rounded-xl font-medium text-sm"
             >
               <RotateCcw className="w-4 h-4 mr-2" />
-              Clear Saved Session
+              {t("config.clear_session")}
             </Button>
           </div>
         </div>

@@ -7,6 +7,8 @@ import { toast } from "sonner";
 import { useLanguage } from "../context/LanguageContext";
 import { HelpTooltip } from "./ui/HelpTooltip";
 import { useLocalStorage } from "../hooks/useLocalStorage";
+import { useTutorial, TutorialStep } from "@/hooks/useTutorial";
+import { TutorialModal } from "@/components/ui/TutorialModal";
 
 // Refactored Components
 import { ScheduleConfig } from "./maker/ScheduleConfig";
@@ -145,6 +147,90 @@ export function ScheduleMaker({
       toast.error("Failed to rename plan: " + err.message);
     }
   };
+
+  // --- Tutorial Setup ---
+  // --- Tutorial Setup ---
+  // Define steps with side-effects (actions) to navigate the app
+  const tutorialSteps: TutorialStep[] = [
+    {
+      targetId: "schedule-config",
+      title: t("tutorial.step1_title"),
+      description: t("tutorial.step1_desc"),
+      position: "left",
+    },
+    {
+      targetId: "schedule-selector",
+      title: t("tutorial.step2_title"),
+      description: t("tutorial.step2_desc"),
+      position: "left",
+    },
+    {
+      targetId: "schedule-selector", // Target selector again, but maybe highlight the generate button?
+      // For now, keep generic selector ID but text explains tools
+      title: t("tutorial.step3_title"),
+      description: t("tutorial.step3_desc"),
+      position: "top",
+    },
+    {
+      targetId: "schedule-viewer",
+      title: t("tutorial.step4_title"),
+      description: t("tutorial.step4_desc"),
+      position: "top",
+    },
+  ];
+
+  const {
+    isActive: isTutorialActive,
+    currentStep,
+    currentStepIndex,
+    totalSteps,
+    nextStep,
+    prevStep,
+    skipTutorial,
+    startTutorial,
+  } = useTutorial({
+    tutorialId: "v2_walkthrough",
+    steps: tutorialSteps,
+  });
+
+  // Sync App State with Tutorial Steps
+  useEffect(() => {
+    if (!isTutorialActive) return;
+
+    // Logic to enforce state based on step index
+    // Step 0: Config
+    // Step 1: Select
+    // Step 2: Select (Tools)
+    // Step 3: Viewer
+    if (currentStepIndex === 0 && step !== "config") {
+      setStep("config");
+    } else if (
+      (currentStepIndex === 1 || currentStepIndex === 2) &&
+      step !== "select"
+    ) {
+      setStep("select");
+    } else if (currentStepIndex === 3 && step !== "view") {
+      // Only force view if we have plans, otherwise maybe skip this step or mock it?
+      // For tutorial purposes, if no plans exist, we might be stuck.
+      // Let's auto-generate a dummy or just switch if possible.
+      if (plans.length > 0) {
+        setStep("view");
+      } else {
+        // Edge case: if no plans, maybe stay on select but warn?
+        // Or just do nothing and let user discover.
+        // Better: Mock data or just skip logic.
+        // For now, attempt switch.
+        setStep("select"); // Fallback to select if no plans
+      }
+    }
+  }, [currentStepIndex, isTutorialActive, step, plans.length]);
+
+  // Listen for manual trigger from Navbar
+  useEffect(() => {
+    const handleTrigger = () => startTutorial();
+    window.addEventListener("trigger-tutorial", handleTrigger);
+    return () => window.removeEventListener("trigger-tutorial", handleTrigger);
+  }, []);
 
   const handleSharePlan = async (planId: string) => {
     const plan = archived?.find((p) => (p as any)._id === planId);
@@ -589,61 +675,67 @@ export function ScheduleMaker({
           {/* Main Content Area */}
           <div className="flex-1 min-w-0 h-full overflow-y-auto lg:overflow-hidden p-3 lg:p-6">
             {step === "config" && (
-              <ScheduleConfig
-                sessionProfile={sessionProfile}
-                setSessionProfile={setSessionProfile}
-                onStart={handleAutoLoad}
-              />
+              <div id="schedule-config" className="h-full">
+                <ScheduleConfig
+                  sessionProfile={sessionProfile}
+                  setSessionProfile={setSessionProfile}
+                  onStart={handleAutoLoad}
+                />
+              </div>
             )}
 
             {step === "select" && (
-              <ScheduleSelector
-                courses={courses}
-                selectedCodes={selectedCodes}
-                lockedCourses={lockedCourses}
-                sessionProfile={sessionProfile}
-                toggleCourse={toggleCourse}
-                setLockedCourses={setLockedCourses}
-                handleDeleteCourse={handleDeleteCourse}
-                onAddSubject={() => setIsMasterSearchOpen(true)}
-                onGenerate={handleGenerate}
-                onSmartGenerate={onInitSmartGenerate}
-                onSaveManual={handleSaveManualPlan}
-                onBack={() => setStep("config")}
-                isGenerating={isGenerating}
-                isSmartGenerating={isSmartGenerating}
-                cooldown={cooldown}
-              />
+              <div id="schedule-selector" className="h-full">
+                <ScheduleSelector
+                  courses={courses}
+                  selectedCodes={selectedCodes}
+                  lockedCourses={lockedCourses}
+                  sessionProfile={sessionProfile}
+                  toggleCourse={toggleCourse}
+                  setLockedCourses={setLockedCourses}
+                  handleDeleteCourse={handleDeleteCourse}
+                  onAddSubject={() => setIsMasterSearchOpen(true)}
+                  onGenerate={handleGenerate}
+                  onSmartGenerate={onInitSmartGenerate}
+                  onSaveManual={handleSaveManualPlan}
+                  onBack={() => setStep("config")}
+                  isGenerating={isGenerating}
+                  isSmartGenerating={isSmartGenerating}
+                  cooldown={cooldown}
+                />
+              </div>
             )}
 
             {step === "view" && plans.length > 0 && (
-              <ScheduleViewer
-                plans={plans}
-                currentPlanIndex={currentPlanIndex}
-                setCurrentPlanIndex={setCurrentPlanIndex}
-                onBack={() => {
-                  setStep(viewSource === "archive" ? "archive" : "select");
-                  setIsManualMode(false);
-                }}
-                onSavePlan={handleSaveManualPlan}
-                isSaving={isSaving}
-                isManualEdit={isManualMode}
-                onUpdatePlan={handleUpdateManualPlan}
-                allPossibleCourses={courses}
-                onExpand={
-                  viewSource === "live" && planLimit < 36 && !isManualMode
-                    ? () => handleGenerate(true)
-                    : undefined
-                }
-                onShuffle={
-                  viewSource === "live" && !isManualMode
-                    ? () => handleGenerate(false)
-                    : undefined
-                }
-                planLimit={planLimit}
-                isGenerating={isGenerating}
-                prodi={sessionProfile.prodi}
-              />
+              <div id="schedule-viewer" className="h-full">
+                <ScheduleViewer
+                  plans={plans}
+                  currentPlanIndex={currentPlanIndex}
+                  setCurrentPlanIndex={setCurrentPlanIndex}
+                  onBack={() => {
+                    setStep(viewSource === "archive" ? "archive" : "select");
+                    setIsManualMode(false);
+                  }}
+                  onSavePlan={handleSaveManualPlan}
+                  isSaving={isSaving}
+                  isManualEdit={isManualMode}
+                  onUpdatePlan={handleUpdateManualPlan}
+                  allPossibleCourses={courses}
+                  onExpand={
+                    viewSource === "live" && planLimit < 36 && !isManualMode
+                      ? () => handleGenerate(true)
+                      : undefined
+                  }
+                  onShuffle={
+                    viewSource === "live" && !isManualMode
+                      ? () => handleGenerate(false)
+                      : undefined
+                  }
+                  planLimit={planLimit}
+                  isGenerating={isGenerating}
+                  prodi={sessionProfile.prodi}
+                />
+              </div>
             )}
 
             {step === "archive" && (
@@ -684,6 +776,16 @@ export function ScheduleMaker({
         shareId={activeShareId}
         planName={activeSharePlanName}
       />
+      {isTutorialActive && currentStep && (
+        <TutorialModal
+          step={currentStep}
+          currentStepIndex={currentStepIndex}
+          totalSteps={totalSteps}
+          onNext={nextStep}
+          onPrev={prevStep}
+          onSkip={skipTutorial}
+        />
+      )}
     </div>
   );
 }

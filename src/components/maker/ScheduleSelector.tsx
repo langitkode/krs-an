@@ -8,10 +8,8 @@ import {
   ChevronLeft,
   Brain,
   Sparkles,
-  AlertTriangle,
 } from "lucide-react";
 import { useLanguage } from "../../context/LanguageContext";
-import { checkConflicts } from "../../lib/rules";
 import { HelpTooltip } from "@/components/ui/HelpTooltip";
 import {
   Select,
@@ -74,22 +72,6 @@ export function ScheduleSelector({
     },
     {} as Record<string, Course[]>,
   );
-
-  // Manual Builder Logic
-  const currentManualCombination = Object.entries(lockedCourses)
-    .map(([code, ids]) => {
-      const variations = grouped[code] || [];
-      return variations.find((v) => v.id === ids[0]);
-    })
-    .filter(Boolean) as Course[];
-
-  const { valid: isManualValid, messages: conflictMessages } = checkConflicts(
-    currentManualCombination,
-  );
-
-  const isManualComplete =
-    currentManualCombination.length === selectedCodes.length &&
-    selectedCodes.length > 0;
 
   return (
     <div className="h-full flex flex-col gap-3 md:gap-4 animate-in fade-in duration-500 overflow-hidden">
@@ -209,66 +191,7 @@ export function ScheduleSelector({
         </div>
       </div>
 
-      {/* Manual Builder Flash Card */}
-      {currentManualCombination.length > 0 && (
-        <div
-          className={`px-4 py-2 rounded-2xl border transition-all animate-in slide-in-from-top-2 flex items-center justify-between gap-3 overflow-x-auto no-scrollbar ${
-            !isManualValid
-              ? "bg-red-50 border-red-100"
-              : isManualComplete
-                ? "bg-green-50 border-green-100"
-                : "bg-blue-50/30 border-blue-100"
-          }`}
-        >
-          <div className="flex items-center gap-2 min-w-fit shrink-0">
-            <div
-              className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
-                !isManualValid
-                  ? "bg-red-100 text-red-600"
-                  : isManualComplete
-                    ? "bg-green-100 text-green-600"
-                    : "bg-blue-100 text-blue-600"
-              }`}
-            >
-              {!isManualValid ? (
-                <AlertTriangle className="w-3.5 h-3.5" />
-              ) : isManualComplete ? (
-                <Check className="w-3.5 h-3.5" />
-              ) : (
-                <PlusCircle className="w-3.5 h-3.5" />
-              )}
-            </div>
-            <div className="min-w-0">
-              <p className="text-[10px] font-bold text-slate-900 leading-none mb-0.5">
-                {!isManualValid
-                  ? "Conflict!"
-                  : isManualComplete
-                    ? "Schedule Ready!"
-                    : "Drafting..."}
-              </p>
-              <p className="text-[8px] text-slate-500 font-medium truncate italic">
-                {!isManualValid
-                  ? conflictMessages[0]
-                  : isManualComplete
-                    ? "Configuration is safe."
-                    : `${currentManualCombination.length} subjects locked.`}
-              </p>
-            </div>
-          </div>
-
-          <Button
-            disabled={!isManualValid || !isManualComplete || isGenerating}
-            onClick={() => onSaveManual?.(currentManualCombination)}
-            className={`h-7 px-4 rounded-lg font-bold text-[8px] uppercase tracking-wider transition-all ${
-              isManualValid && isManualComplete
-                ? "bg-slate-900 text-white"
-                : "bg-slate-100 text-slate-400 opacity-50"
-            }`}
-          >
-            Save Draft
-          </Button>
-        </div>
-      )}
+      {/* Course List Cards */}
 
       {/* Course List Cards */}
       <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">

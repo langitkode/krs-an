@@ -11,7 +11,9 @@ import {
   HelpCircle,
   Coffee,
   MessageSquare,
+  User,
 } from "lucide-react";
+import { ContactDialog } from "../maker/ContactDialog";
 import { useLanguage } from "../../context/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { HelpTooltip } from "@/components/ui/HelpTooltip";
@@ -246,6 +248,25 @@ export function Navbar({
 
                     {/* Supplemental Utilities (formerly Footer) */}
                     <div className="grid grid-cols-2 gap-2">
+                      <button
+                        onClick={() => {
+                          onRestoreArchitect?.(); // Ensure we are on main view
+                          // The actual trigger will be passed down, but for now we might need a context or prop.
+                          // Wait, the tutorial state is in ScheduleMaker (parent).
+                          // Passing a straight prop callback is best.
+                          window.dispatchEvent(
+                            new CustomEvent("trigger-tutorial"),
+                          ); // Cleaner for deeply nested components without prop drilling
+                        }}
+                        className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-slate-50 transition-colors border border-transparent hover:border-slate-100 group"
+                      >
+                        <div className="w-6 h-6 rounded-lg bg-violet-50 flex items-center justify-center border border-violet-100/50 group-hover:bg-violet-100 transition-colors">
+                          <Sparkles size={12} className="text-violet-600" />
+                        </div>
+                        <span className="text-[10px] font-bold text-slate-600 uppercase tracking-tight">
+                          {t("nav.tutorial")}
+                        </span>
+                      </button>
                       <AboutDialog
                         trigger={
                           <button className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-slate-50 transition-colors border border-transparent hover:border-slate-100 group">
@@ -293,6 +314,18 @@ export function Navbar({
                           {t("footer.feedback")}
                         </span>
                       </a>
+                      <ContactDialog
+                        trigger={
+                          <button className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-slate-50 transition-colors border border-transparent hover:border-slate-100 group">
+                            <div className="w-6 h-6 rounded-lg bg-pink-50 flex items-center justify-center border border-pink-100/50 group-hover:bg-pink-100 transition-colors">
+                              <User size={12} className="text-pink-600" />
+                            </div>
+                            <span className="text-[10px] font-bold text-slate-600 uppercase tracking-tight">
+                              {t("nav.contact")}
+                            </span>
+                          </button>
+                        }
+                      />
                     </div>
                   </div>
                 </div>
