@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+# Sitemaps (Optional, if you have one)
+# Sitemap: https://krsan.web.id/sitemap.xml
