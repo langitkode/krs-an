@@ -4,13 +4,16 @@ import { v } from "convex/values";
 export default defineSchema({
   users: defineTable({
     tokenIdentifier: v.string(), // Clerk ID
+    email: v.optional(v.string()), // For production migration safety
     credits: v.number(), // Remaining generation credits
     lastResetDate: v.string(), // ISO date for daily reset
     isAdmin: v.optional(v.boolean()),
     lastSmartGenerateTime: v.optional(v.number()), // Timestamp of last AI usage
     planLimit: v.optional(v.number()), // Persistence for expanded generation limit
     preferredAiModel: v.optional(v.string()), // "groq" | "gemini"
-  }).index("by_token", ["tokenIdentifier"]),
+  })
+    .index("by_token", ["tokenIdentifier"])
+    .index("by_email", ["email"]),
 
   plans: defineTable({
     userId: v.id("users"),

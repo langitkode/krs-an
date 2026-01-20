@@ -84,33 +84,55 @@ export const ensureUser = mutation({
       )
       .unique();
 
-    if (user !== null) {
-      // Check for daily reset (WIB: UTC+7)
-      const wibDate = new Date(Date.now() + 7 * 60 * 60 * 1000)
-        .toISOString()
-        .split("T")[0];
+    const wibDate = new Date(Date.now() + 7 * 60 * 60 * 1000)
+      .toISOString()
+      .split("T")[0];
 
+    if (user !== null) {
+      // Security/Safety: Ensure email is always up to date
+      if (user.email !== identity.email) {
+        await ctx.db.patch(user._id, { email: identity.email });
+      }
+
+      // Check for daily reset (WIB: UTC+7)
       if (user.lastResetDate !== wibDate) {
         await ctx.db.patch(user._id, {
           credits: 5,
           lastResetDate: wibDate,
-          // Removed planLimit reset to make expansions permanent
         });
       }
       return user._id;
     }
 
-    // Create new user
+    // DATA SAFETY NET: If tokenIdentifier not found (e.g. after migration to production domain)
+    // Check if user exists with the same email
+    if (identity.email) {
+      const existingUserByEmail = await ctx.db
+        .query("users")
+        .withIndex("by_email", (q) => q.eq("email", identity.email))
+        .unique();
+
+      if (existingUserByEmail) {
+        // Link the old record to the new production identity
+        await ctx.db.patch(existingUserByEmail._id, {
+          tokenIdentifier: identity.tokenIdentifier,
+          // Sync reset while we're at it
+          credits: 5,
+          lastResetDate: wibDate,
+        });
+        return existingUserByEmail._id;
+      }
+    }
+
+    // Create new user (Brand new user)
     const firstUser = (await ctx.db.query("users").first()) === null;
-    const wibDate = new Date(Date.now() + 7 * 60 * 60 * 1000)
-      .toISOString()
-      .split("T")[0];
 
     const userId = await ctx.db.insert("users", {
       tokenIdentifier: identity.tokenIdentifier,
-      credits: 5, // Daily limit
+      email: identity.email,
+      credits: 5,
       lastResetDate: wibDate,
-      isAdmin: firstUser, // First user is architect
+      isAdmin: firstUser,
       planLimit: 12,
     });
 
