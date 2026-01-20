@@ -138,4 +138,4 @@ We welcome contributions to improve the platform. Please follow these steps:
 This project is an independent educational tool. Course data is sourced from public university portals.
 
 **Copyright © 2026 KRSan Production.**  
-Built by [Indra Pradana](https://github.com/indraprhmbd).
+Built by [Indra Prihambada](https://github.com/indraprhmbd).
