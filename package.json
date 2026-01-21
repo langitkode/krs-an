@@ -11,6 +11,9 @@
   },
   "dependencies": {
     "@clerk/clerk-react": "^5.59.4",
+    "@fontsource/inter": "^5.2.8",
+    "@fontsource/jetbrains-mono": "^5.2.8",
+    "@fontsource/outfit": "^5.2.8",
     "@google/generative-ai": "^0.24.1",
     "@langchain/core": "^1.1.15",
     "@langchain/groq": "^1.0.3",
