@@ -16,6 +16,7 @@ import { HelpTooltip } from "../ui/HelpTooltip";
 import { clearKRSSession } from "../../hooks/useLocalStorage";
 import { coerceSemester, validSemesters } from "@/lib/period";
 import { MakerShell, type MakerRailStep } from "./MakerShell";
+import { UpdateBanner } from "./UpdateBanner";
 
 interface ScheduleConfigProps {
   sessionProfile: {
@@ -42,6 +43,7 @@ export function ScheduleConfig({
   return (
     <MakerShell rail={rail}>
       <div className="mx-auto max-w-4xl py-8">
+        <UpdateBanner prodi={sessionProfile.prodi} />
         <div className="grid items-start gap-8 lg:grid-cols-[1fr_1.15fr]">
           {/* Hero column */}
           <div className="flex flex-col items-center gap-4 text-center lg:sticky lg:top-0 lg:items-start lg:text-left">

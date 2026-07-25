@@ -13,6 +13,7 @@ import type * as ai from "../ai.js";
 import type * as audit from "../audit.js";
 import type * as lib from "../lib.js";
 import type * as plans from "../plans.js";
+import type * as updateEvents from "../updateEvents.js";
 import type * as users from "../users.js";
 
 import type {
@@ -27,6 +28,7 @@ declare const fullApi: ApiFromModules<{
   audit: typeof audit;
   lib: typeof lib;
   plans: typeof plans;
+  updateEvents: typeof updateEvents;
   users: typeof users;
 }>;
 
