@@ -104,6 +104,8 @@ const translations: Record<string, string> = {
   "viewer.sub_title": "Hasil optimasi jadwal terbaik untuk Anda.",
   "viewer.save": "Simpan ke Arsip",
   "viewer.saving": "Menyimpan...",
+  "viewer.print_btn": "Cetak",
+  "viewer.print_prepare": "Menyiapkan cetakan...",
   "landing.tagline":
     "Optimasi jadwal perkuliahan profesional untuk mahasiswa. Didukung oleh AI untuk pengalaman akademik yang elegan.",
   "landing.welcome": "Selamat Datang Kembali",

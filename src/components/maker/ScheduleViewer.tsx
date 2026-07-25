@@ -562,11 +562,14 @@ export function ScheduleViewer({
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => window.print()}
+                onClick={() => {
+                  toast.success(t("viewer.print_prepare"));
+                  setTimeout(() => window.print(), 50);
+                }}
                 className="h-7 px-2 font-mono text-caps uppercase"
               >
                 <Icon name="printer" className="mr-1" size={12} />
-                Print
+                {t("viewer.print_btn")}
               </Button>
             </CardHeader>
             <CardContent className="p-0 flex-1 overflow-y-auto custom-scrollbar">
