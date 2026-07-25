@@ -301,6 +301,8 @@ const translations: Record<string, string> = {
   "tutorial.step4_desc":
     "Lihat minggu Anda secara sekilas. Klik kelas mana pun untuk melihat detail atau menguncinya.",
 
+  "selector.smart_generate_disabled":
+    "Maaf, fitur Smart Generate untuk sementara dinonaktifkan. Masih butuh banyak penyempurnaan agar hasilnya optimal, dan biaya LLM yang cukup tinggi masih jadi kendala. Terima kasih atas pengertiannya.",
 };
 
 const LanguageContext = createContext<LanguageContextType | undefined>(
