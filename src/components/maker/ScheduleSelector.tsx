@@ -55,10 +55,8 @@ export function ScheduleSelector({
   onAddSubject,
   onLoadCurriculum,
   onGenerate,
-  onSmartGenerate,
   onSaveManual,
   isGenerating,
-  isSmartGenerating,
   cooldown,
   rail,
 }: ScheduleSelectorProps) {
@@ -140,25 +138,13 @@ export function ScheduleSelector({
               descKey: "help.quick_build_desc",
             },
           },
-          onSmartGenerate && {
+          {
             key: "smart-generate",
             label: t("selector.smart_generate"),
             icon: "sparkles",
-            variant: "highlight",
-            onClick: onSmartGenerate,
-            // Without a selection there is nothing to schedule, and Smart
-            // Generate spends a credit plus a 30s rate limit to find that
-            // out. The other generators are free, so they only need the
-            // same guard for consistency.
-            disabled:
-              !hasSelection ||
-              isSmartGenerating ||
-              cooldown?.active ||
-              isGenerating,
-            disabledReason: !hasSelection
-              ? t("selector.needs_courses")
-              : undefined,
-            loading: isSmartGenerating,
+            onClick: () => toast(t("selector.smart_generate_disabled")),
+            className:
+              "bg-muted text-muted-foreground hover:bg-muted hover:text-muted-foreground cursor-pointer",
             tooltip: {
               titleKey: "help.ai_smart_generate_title",
               descKey: "help.ai_smart_generate_desc",

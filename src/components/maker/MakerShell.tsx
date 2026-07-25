@@ -45,6 +45,8 @@ export interface MakerBarAction {
   /** "highlight" marks an AI-powered action (Smart Generate, Expand, Fix
    * Conflicts) so it carries the brand's orange affordance consistently. */
   variant?: "default" | "outline" | "highlight";
+  /** Extra classes merged onto the button, overriding variant styles. */
+  className?: string;
   /** Spins the icon (an in-flight AI call) rather than a generic pulse. */
   loading?: boolean;
   tooltip?: { titleKey: string; descKey: string };
@@ -105,6 +107,7 @@ function BarButton({
         className={cn(
           action.variant === "highlight" &&
             "bg-highlight text-highlight-foreground hover:bg-highlight/90 disabled:bg-muted disabled:text-muted-foreground",
+          action.className,
         )}
       >
         <Icon
