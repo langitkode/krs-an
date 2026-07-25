@@ -224,6 +224,14 @@ export const smartGenerate = action({
       throw new ConvexError("Not authenticated");
     }
 
+    // Smart Generate is temporarily disabled for further refinement
+    // and high LLM costs. Remove this block to re-enable.
+    throw new ConvexError(
+      "Fitur Smart Generate untuk sementara dinonaktifkan. " +
+        "Masih butuh banyak penyempurnaan dan biaya LLM yang tinggi. " +
+        "Harap gunakan Susun Cepat atau Plotter.",
+    );
+
     // 2. Atomically reserve a credit and arm the 30s rate limit before any
     // model call (see reserveSmartCredit). Refunded in the catch below if the
     // run yields no usable plan, preserving "a credit is spent only when at
