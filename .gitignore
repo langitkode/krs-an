@@ -29,6 +29,3 @@ dist-ssr
 venv/
 ai-service
 _temp/
-
-.claude/
-CLAUDE.md
