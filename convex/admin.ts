@@ -3,6 +3,7 @@ import { v } from "convex/values";
 import { paginationOptsValidator } from "convex/server";
 import { logAudit } from "./audit";
 import { requireAdmin, normalizeDayOfWeek } from "./lib";
+import { internal } from "./_generated/api";
 
 // checkAdmin used to be defined here (and duplicated in users.ts). It is now
 // requireAdmin in ./lib. Re-exported under the old name so existing importers
@@ -160,6 +161,25 @@ export const bulkImportMaster = mutation({
         }
       }),
     );
+
+    // Track per-prodi counts for auto-event creation
+    const prodiCounts: Record<string, { inserted: number; updated: number }> = {};
+    for (let i = 0; i < results.length; i++) {
+      const prodi = inputs[i].prodi;
+      if (!prodiCounts[prodi]) prodiCounts[prodi] = { inserted: 0, updated: 0 };
+      if (results[i].status === "inserted") prodiCounts[prodi].inserted++;
+      else prodiCounts[prodi].updated++;
+    }
+    for (const [prodi, counts] of Object.entries(prodiCounts)) {
+      const total = counts.inserted + counts.updated;
+      await ctx.runMutation(internal.updateEvents.createAutoEvent, {
+        prodi,
+        type: "course_import",
+        inserted: counts.inserted,
+        updated: counts.updated,
+        total,
+      });
+    }
 
     await logAudit(ctx, {
       user: user.tokenIdentifier,

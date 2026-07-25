@@ -105,4 +105,19 @@ export default defineSchema({
     // dropdown can be filtered by the chosen University.
     university: v.optional(v.string()),
   }).index("by_name", ["name"]),
+
+  // In-app update banners shown on config screen. Written by admin mutations
+  // (bulkImportMaster auto-creates events) or manually for announcements.
+  // Rendered reactively on the front page, dismissible per-user.
+  update_events: defineTable({
+    prodi: v.string(),
+    type: v.string(), // "course_import" | "curriculum_update" | "admin_notice"
+    title: v.string(),
+    message: v.string(),
+    severity: v.string(), // "info" | "success" | "warning"
+    dismissed_by: v.array(v.string()), // tokenIdentifier[] of dismissers
+    active: v.boolean(),
+  })
+    .index("by_active", ["active"])
+    .index("by_prodi", ["prodi"]),
 });

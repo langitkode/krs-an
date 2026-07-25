@@ -300,6 +300,7 @@ const translations: Record<string, string> = {
   "tutorial.step4_title": "Visualisasi Waktu",
   "tutorial.step4_desc":
     "Lihat minggu Anda secara sekilas. Klik kelas mana pun untuk melihat detail atau menguncinya.",
+
 };
 
 const LanguageContext = createContext<LanguageContextType | undefined>(
