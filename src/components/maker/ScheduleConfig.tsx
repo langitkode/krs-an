@@ -57,7 +57,7 @@ export function ScheduleConfig({
               width={750}
               height={500}
               fetchPriority="high"
-              className="w-full max-w-md"
+              className="hidden w-full max-w-md lg:block"
             />
             <p className="max-w-xs text-body text-muted-foreground">
               {t("config.sub_title")}
