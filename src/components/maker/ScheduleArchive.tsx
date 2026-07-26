@@ -214,7 +214,7 @@ function DonateBanner() {
         className="shrink-0 rounded-control bg-primary px-2.5 py-1 text-caption font-bold text-primary-foreground hover:bg-primary/90 transition-colors"
         onClick={() => window.open("https://bagibagi.co/indraprhmbd", "_blank")}
       >
-        Donasi
+        Support
       </button>
     </div>
   );

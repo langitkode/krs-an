@@ -475,14 +475,14 @@ export function DonateDialog({ trigger }: { trigger?: React.ReactNode }) {
               >
                 <Button className="h-10 text-caption font-bold">
                   <Icon name="external-link" size={14} className="mr-1.5" />
-                  Donasi via BagiBagi
+                  Support via BagiBagi
                 </Button>
               </a>
             </div>
           </div>
 
           <p className="text-center text-caption italic text-muted-foreground">
-            Donasi dipakai untuk biaya server dan API AI supaya KRSan tetap
+            Support dipakai untuk biaya server dan API AI supaya KRSan tetap
             gratis untuk semua mahasiswa. Terima kasih.
           </p>
         </div>
