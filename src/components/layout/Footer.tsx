@@ -11,16 +11,6 @@ import {
 import { Icon, type IconName } from "@/components/ui/icon";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "../../context/LanguageContext";
-import { toast } from "sonner";
-
-/**
- * One source of truth for the donation account. The displayed number and the
- * one the copy button wrote had drifted apart, so anyone using the button was
- * sending money to a different account than the one on screen. Render and copy
- * both read from here; the copy strips the display spacing.
- */
-const ACCOUNT_NUMBER = "9010 8876 8893";
-const ACCOUNT_HOLDER = "ARSYADI INDRA";
 
 export function Footer() {
   const { t } = useLanguage();
@@ -468,44 +458,32 @@ export function DonateDialog({ trigger }: { trigger?: React.ReactNode }) {
         </DialogHeader>
 
         <div className="space-y-4 p-4">
-          <div className="space-y-3 rounded-card border border-dashed border-border-strong bg-muted p-4 text-center">
-            <div className="mb-1 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1">
-              <img
-                src="https://cdn.brandfetch.io/idZQucmeCy/w/400/h/400/theme/dark/icon.jpeg?c=1bxid64Mup7aczewSAYMX&t=1764515058001"
-                alt="SeaBank"
-                className="h-4"
-                onError={(e) => {
-                  e.currentTarget.style.display = "none";
-                }}
-              />
-              <span className="text-caption font-bold text-muted-foreground">
-                SEABANK
-              </span>
-            </div>
-
-            <div className="space-y-1">
-              <p className="font-mono text-headline text-foreground sm:text-display">
-                {ACCOUNT_NUMBER}
+          <div className="flex items-center gap-4 rounded-card border border-dashed border-border-strong bg-muted p-4">
+            <img
+              src="https://bagibagi.co/bagibagi-09.png"
+              alt="BagiBagi"
+              className="h-14 shrink-0"
+            />
+            <div className="flex min-w-0 flex-col gap-2">
+              <p className="text-body text-muted-foreground">
+                Dukung KRSan lewat BagiBagi.co - platform apresiasi untuk kreator.
               </p>
-              <p className="text-caps uppercase text-muted-foreground">
-                A/N {ACCOUNT_HOLDER}
-              </p>
+              <a
+                href="https://bagibagi.co/indraprhmbd"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Button className="h-10 text-caption font-bold">
+                  <Icon name="external-link" size={14} className="mr-1.5" />
+                  Donasi via BagiBagi
+                </Button>
+              </a>
             </div>
-
-            <Button
-              onClick={() => {
-                navigator.clipboard.writeText(ACCOUNT_NUMBER.replace(/\s/g, ""));
-                toast.success(t("toast.account_copied"));
-              }}
-              className="h-10 w-full text-caption font-bold"
-            >
-              Salin Nomor Rekening
-            </Button>
           </div>
 
           <p className="text-center text-caption italic text-muted-foreground">
-            Donasi dipakai untuk biaya server dan API Groq supaya AI scheduler
-            tetap gratis untuk semua mahasiswa. Terima kasih.
+            Donasi dipakai untuk biaya server dan API AI supaya KRSan tetap
+            gratis untuk semua mahasiswa. Terima kasih.
           </p>
         </div>
       </DialogContent>

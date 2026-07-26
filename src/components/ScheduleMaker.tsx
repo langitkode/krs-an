@@ -9,7 +9,7 @@ import { usePlanArchive } from "@/hooks/usePlanArchive";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { useTutorial, TutorialStep } from "@/hooks/useTutorial";
 import { TutorialModal } from "@/components/ui/TutorialModal";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { useScheduleSession } from "@/hooks/maker/useScheduleSession";
 import { useSmartGenerate } from "@/hooks/maker/useSmartGenerate";
@@ -24,6 +24,7 @@ import { ScheduleArchive } from "./maker/ScheduleArchive";
 import { SmartGenerateDialog } from "./maker/SmartGenerateDialog";
 import { MasterCatalogDialog } from "./maker/MasterCatalogDialog";
 import { ShareDialog } from "./maker/ShareDialog";
+import { FeedbackDialog } from "./maker/FeedbackDialog";
 import type { MakerRailStep } from "./maker/MakerShell";
 import { DEFAULT_SEMESTER, coerceSemester } from "@/lib/period";
 
@@ -54,6 +55,9 @@ export function ScheduleMaker({ userData }: ScheduleMakerProps) {
     activeSharePlanName,
     openShareDialog,
   } = useSession();
+
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [feedbackSaveCount, setFeedbackSaveCount] = useState(0);
 
   const [sessionProfile, setSessionProfile] = useLocalStorage<{
     university: string;
@@ -116,6 +120,10 @@ export function ScheduleMaker({ userData }: ScheduleMakerProps) {
     savePlan,
     isLocalArchive,
     configKey: `${sessionProfile.prodi}|${semester}`,
+    onFeedbackTrigger: (count) => {
+      setFeedbackSaveCount(count);
+      setFeedbackOpen(true);
+    },
   });
 
   // The step rail shared by config/select/view via MakerShell. Archive is
@@ -373,6 +381,11 @@ export function ScheduleMaker({ userData }: ScheduleMakerProps) {
         onClose={() => setIsShareDialogOpen(false)}
         shareId={activeShareId}
         planName={activeSharePlanName}
+      />
+      <FeedbackDialog
+        open={feedbackOpen}
+        onOpenChange={setFeedbackOpen}
+        saveCount={feedbackSaveCount}
       />
       {isTutorialActive && currentStep && (
         <TutorialModal

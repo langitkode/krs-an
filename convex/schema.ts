@@ -120,4 +120,14 @@ export default defineSchema({
   })
     .index("by_active", ["active"])
     .index("by_prodi", ["prodi"]),
+
+  feedback: defineTable({
+    userId: v.optional(v.id("users")),
+    tokenIdentifier: v.optional(v.string()),
+    email: v.optional(v.string()),
+    rating: v.number(),
+    message: v.optional(v.string()),
+    saveCount: v.number(),
+    createdAt: v.number(),
+  }).index("by_user", ["userId"]),
 });

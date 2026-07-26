@@ -11,6 +11,7 @@
 import type * as admin from "../admin.js";
 import type * as ai from "../ai.js";
 import type * as audit from "../audit.js";
+import type * as feedback from "../feedback.js";
 import type * as lib from "../lib.js";
 import type * as plans from "../plans.js";
 import type * as updateEvents from "../updateEvents.js";
@@ -26,6 +27,7 @@ declare const fullApi: ApiFromModules<{
   admin: typeof admin;
   ai: typeof ai;
   audit: typeof audit;
+  feedback: typeof feedback;
   lib: typeof lib;
   plans: typeof plans;
   updateEvents: typeof updateEvents;
