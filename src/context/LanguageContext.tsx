@@ -31,7 +31,7 @@ const translations: Record<string, string> = {
   "footer.tagline":
     "Platform optimasi jadwal perkuliahan tercanggih untuk mahasiswa Indonesia.",
   "footer.about": "Tentang",
-  "footer.donate": "Donasi",
+  "footer.donate": "Support",
   "footer.feedback": "Saran",
   "footer.copyright": "Built by Indra",
   "share.loading": "Memuat jadwal yang dibagikan...",
@@ -162,7 +162,7 @@ const translations: Record<string, string> = {
     "Tidak ada jadwal yang valid. Coba lepas beberapa kelas yang dikunci.",
   "toast.archive_full": "Arsip penuh (maks 30). Hapus beberapa jadwal dulu.",
   "toast.archive_action": "Arsip",
-  "toast.donate_nudge": "Suka pakai KRSan? Klik Donasi untuk traktir kopi!",
+  "toast.donate_nudge": "Suka pakai KRSan? Support dengan traktir kopi!",
   "feedback.title": "Berikan Masukan",
   "feedback.subtitle": "Apakah KRSan membantu kamu?",
   "feedback.rating_hint": "Ketuk bintang untuk memberi nilai",
