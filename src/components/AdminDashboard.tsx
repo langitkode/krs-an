@@ -11,6 +11,7 @@ import { useDocumentTitle } from "../hooks/useDocumentTitle";
 import { MasterDataTab } from "./admin/MasterDataTab";
 import { CurriculumTab } from "./admin/CurriculumTab";
 import { ProdiTab } from "./admin/ProdiTab";
+import { FeedbackTab } from "./admin/FeedbackTab";
 import { IntelligenceScraperDialog } from "./admin/dialogs/IntelligenceScraperDialog";
 import { CurriculumImportDialog } from "./admin/dialogs/CurriculumImportDialog";
 import { UgmFormatImportDialog } from "./admin/dialogs/UgmFormatImportDialog";
@@ -147,6 +148,12 @@ export function AdminDashboard() {
             >
               <Icon name="list" size={14} className="mr-2" /> Prodi
             </TabsTrigger>
+            <TabsTrigger
+              value="feedback"
+              className="flex-1 rounded-control px-3 py-2 font-mono text-caps uppercase md:flex-none md:px-6"
+            >
+              <Icon name="message" size={14} className="mr-2" /> Feedback
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="master">
@@ -164,6 +171,9 @@ export function AdminDashboard() {
 
           <TabsContent value="prodi">
             <ProdiTab />
+          </TabsContent>
+          <TabsContent value="feedback">
+            <FeedbackTab />
           </TabsContent>
         </Tabs>
 

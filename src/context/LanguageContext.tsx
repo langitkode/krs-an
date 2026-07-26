@@ -160,6 +160,16 @@ const translations: Record<string, string> = {
     "Belum ada mata kuliah. Tambah mata kuliah dulu.",
   "toast.no_valid_schedules":
     "Tidak ada jadwal yang valid. Coba lepas beberapa kelas yang dikunci.",
+  "toast.archive_full": "Arsip penuh (maks 30). Hapus beberapa jadwal dulu.",
+  "toast.archive_action": "Arsip",
+  "toast.donate_nudge": "Suka pakai KRSan? Klik Donasi untuk traktir kopi!",
+  "feedback.title": "Berikan Masukan",
+  "feedback.subtitle": "Apakah KRSan membantu kamu?",
+  "feedback.rating_hint": "Ketuk bintang untuk memberi nilai",
+  "feedback.message_placeholder": "Ceritakan pengalaman kamu... (maks 500 karakter)",
+  "feedback.submit": "Kirim Masukan",
+  "feedback.skip": "Nanti Aja",
+  "feedback.success": "Makasih ya, masukannya sangat berarti untuk pengembangan KRSan!",
   "toast.smart_generate_infeasible":
     "Tidak ada kombinasi bebas konflik untuk mata kuliah yang dipilih. Smart Generate memakai data yang sama, jadi tidak akan berhasil juga -- ubah pilihan mata kuliah/kelas dulu.",
   "toast.plotter_infeasible_warning":
@@ -246,7 +256,7 @@ const translations: Record<string, string> = {
     "KRSan proyek sampingan pribadi, bukan produk komersial. Halaman ini menjelaskan data apa saja yang disimpan saat Anda pakai KRSan dan kenapa.",
   "privacy.data_collected_title": "Data yang Disimpan",
   "privacy.data_collected":
-    "Kalau Anda masuk lewat akun, KRSan menyimpan identitas dari Clerk (email, foto profil), rencana jadwal yang disimpan ke arsip, sisa token harian, dan catatan pemakaian Smart Generate. Kalau Anda tidak masuk akun, semua konfigurasi dan draf mata kuliah cuma tersimpan di localStorage browser Anda sendiri, tidak pernah dikirim ke server mana pun.",
+    "Kalau Anda masuk lewat akun, KRSan menyimpan identitas dari Clerk (email, foto profil), rencana jadwal yang disimpan ke arsip, sisa token harian, catatan pemakaian Smart Generate, dan rating/pesan masukan yang Anda kirim. Kalau Anda tidak masuk akun, semua konfigurasi, draf mata kuliah, dan hitungan penyimpanan rencana cuma tersimpan di localStorage browser Anda sendiri, tidak pernah dikirim ke server mana pun.",
   "privacy.third_parties_title": "Layanan Pihak Ketiga",
   "privacy.third_parties":
     "KRSan pakai Clerk untuk autentikasi, Convex untuk database dan hosting backend, dan Groq untuk fitur Smart Generate (AI). Ketiganya punya kebijakan privasi masing-masing untuk data yang mereka proses atas nama KRSan.",

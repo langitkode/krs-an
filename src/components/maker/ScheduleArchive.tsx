@@ -203,6 +203,23 @@ const PlanCard = ({
   );
 };
 
+function DonateBanner() {
+  return (
+    <div className="flex items-center gap-2 rounded-card border border-border bg-muted px-3 py-2 text-caption text-muted-foreground">
+      <Icon name="coffee" size={14} className="shrink-0" />
+      <p className="flex-1">
+        Suka pakai KRSan? Traktir kopi via BagiBagi.
+      </p>
+      <button
+        className="shrink-0 rounded-control bg-primary px-2.5 py-1 text-caption font-bold text-primary-foreground hover:bg-primary/90 transition-colors"
+        onClick={() => window.open("https://bagibagi.co/indraprhmbd", "_blank")}
+      >
+        Donasi
+      </button>
+    </div>
+  );
+}
+
 export function ScheduleArchive({
   archived,
   onImport,
@@ -274,6 +291,8 @@ export function ScheduleArchive({
             </p>
           </div>
         )}
+
+        <DonateBanner />
 
         <Tabs
           defaultValue={aiPlans.length > 0 ? "ai" : "saved"}

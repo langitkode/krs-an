@@ -33,6 +33,9 @@ interface UseScheduleSessionArgs {
    * wrong-prodi courses sitting in the select step with no way back to an
    * empty state short of the explicit "Hapus Sesi" action. */
   configKey: string;
+  /** Called after a plan save when the user's total save count is a
+   * multiple of 5 (5th, 10th, 15th...). Fires at most once per milestone. */
+  onFeedbackTrigger?: (saveCount: number) => void;
 }
 
 export function useScheduleSession({
@@ -42,6 +45,7 @@ export function useScheduleSession({
   savePlan,
   isLocalArchive,
   configKey,
+  onFeedbackTrigger,
 }: UseScheduleSessionArgs) {
   const [courses, setCourses] = useLocalStorage<Course[]>("krs-courses", []);
   const [selectedCodes, setSelectedCodes] = useLocalStorage<string[]>(
@@ -338,7 +342,15 @@ export function useScheduleSession({
 
       toast.success(
         t(isFullPlan ? "toast.plan_archived" : "toast.manual_saved"),
-        { description: isLocalArchive ? t("toast.saved_local") : undefined },
+        {
+          description: isLocalArchive
+            ? `${t("toast.saved_local")} ${t("toast.donate_nudge")}`
+            : t("toast.donate_nudge"),
+          action: {
+            label: t("toast.archive_action"),
+            onClick: () => setStep("archive"),
+          },
+        },
       );
 
       const newPlan = isFullPlan
@@ -357,9 +369,40 @@ export function useScheduleSession({
         setCurrentPlanIndex(0);
       }
 
+      // Feedback trigger: 3rd save, then every 5th
+      const prevCount = parseInt(
+        localStorage.getItem("krs-plan-save-count") || "0",
+        10,
+      );
+      const newCount = prevCount + 1;
+      localStorage.setItem("krs-plan-save-count", String(newCount));
+      if (onFeedbackTrigger && (newCount === 3 || (newCount > 3 && (newCount - 3) % 5 === 0))) {
+        const lastPrompt = parseInt(
+          localStorage.getItem("krs-feedback-last-prompt") || "0",
+          10,
+        );
+        if (newCount !== lastPrompt) {
+          localStorage.setItem(
+            "krs-feedback-last-prompt",
+            String(newCount),
+          );
+          onFeedbackTrigger(newCount);
+        }
+      }
+
       setStep("view");
     } catch (err: any) {
-      toast.error(t("toast.save_failed", { error: err.message }));
+      const msg = err.message || "";
+      if (msg.includes("Maximum limit of 30 plans")) {
+        toast.error(t("toast.archive_full"), {
+          action: {
+            label: t("toast.archive_action"),
+            onClick: () => setStep("archive"),
+          },
+        });
+      } else {
+        toast.error(t("toast.save_failed", { error: err.message }));
+      }
     } finally {
       setIsSaving(false);
     }
