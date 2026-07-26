@@ -107,10 +107,13 @@ export const createAutoEvent = internalMutation({
       .query("update_events")
       .withIndex("by_prodi", (q) => q.eq("prodi", prodi))
       .collect();
-    const alreadyActive = existing.find(
+    // Deactivate previous events so repeated imports each get a fresh banner
+    const stale = existing.filter(
       (e) => e.type === args.type && e.active,
     );
-    if (alreadyActive) return;
+    await Promise.all(
+      stale.map((e) => ctx.db.patch(e._id, { active: false })),
+    );
 
     let title: string;
     let message: string;
