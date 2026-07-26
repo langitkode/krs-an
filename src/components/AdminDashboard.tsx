@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Icon } from "@/components/ui/icon";
+import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
 import { MasterDataTab } from "./admin/MasterDataTab";
 import { CurriculumTab } from "./admin/CurriculumTab";
@@ -15,6 +16,7 @@ import { CurriculumImportDialog } from "./admin/dialogs/CurriculumImportDialog";
 import { UgmFormatImportDialog } from "./admin/dialogs/UgmFormatImportDialog";
 
 export function AdminDashboard() {
+  useDocumentTitle("page.title.admin");
   const user = useQuery(api.users.getCurrentUser);
   const clearMaster = useMutation(api.admin.clearMasterData);
   const [isAiDialogOpen, setIsAiDialogOpen] = useState(false);

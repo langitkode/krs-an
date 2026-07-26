@@ -305,6 +305,15 @@ const translations: Record<string, string> = {
 
   "selector.smart_generate_disabled":
     "Maaf, fitur Smart Generate untuk sementara dinonaktifkan. Masih butuh banyak penyempurnaan agar hasilnya optimal, dan biaya LLM yang cukup tinggi masih jadi kendala. Terima kasih atas pengertiannya.",
+
+  "page.title.config": "Konfigurasi",
+  "page.title.select": "Pilih Mata Kuliah",
+  "page.title.view": "Lihat Jadwal",
+  "page.title.archive": "Arsip Rencana Studi",
+  "page.title.admin": "Dashboard Admin",
+  "page.title.share": "Jadwal Dibagikan",
+  "page.title.privacy": "Kebijakan Privasi",
+  "page.title.terms": "Syarat & Ketentuan",
 };
 
 const LanguageContext = createContext<LanguageContextType | undefined>(

@@ -13,6 +13,7 @@ import {
 import type { Course } from "@/types";
 import { getProdiConfig } from "../../lib/prodi";
 import { ACADEMIC_YEAR, coerceSemester } from "@/lib/period";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { formatSchedule } from "@/lib/schedule-format";
 import {
   MakerShell,
@@ -61,6 +62,7 @@ export function ScheduleSelector({
   rail,
 }: ScheduleSelectorProps) {
   const { t } = useLanguage();
+  useDocumentTitle("page.title.select");
   const prodiConfig = getProdiConfig(sessionProfile.prodi);
 
   // Every generator needs at least one selected course. Guarding here rather
