@@ -23,6 +23,7 @@ import { useMemo, useState } from "react";
 import { getProdiConfig } from "../../lib/prodi";
 import { formatSchedule } from "@/lib/schedule-format";
 import { useLanguage } from "../../context/LanguageContext";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { HelpTooltip } from "@/components/ui/HelpTooltip";
 import {
   MakerShell,
@@ -66,6 +67,7 @@ export function ScheduleViewer({
   rail,
 }: ScheduleViewerProps) {
   const { t } = useLanguage();
+  useDocumentTitle("page.title.view");
   const [isInventoryOpen, setIsInventoryOpen] = useState(false);
   const prodiConfig = getProdiConfig(prodi || "");
   const currentPlan = plans[currentPlanIndex];

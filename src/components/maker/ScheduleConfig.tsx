@@ -14,6 +14,7 @@ import { Icon } from "@/components/ui/icon";
 import { useLanguage } from "../../context/LanguageContext";
 import { HelpTooltip } from "../ui/HelpTooltip";
 import { clearKRSSession } from "../../hooks/useLocalStorage";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { coerceSemester, validSemesters } from "@/lib/period";
 import { MakerShell, type MakerRailStep } from "./MakerShell";
 import { UpdateBanner } from "./UpdateBanner";
@@ -38,6 +39,7 @@ export function ScheduleConfig({
   rail,
 }: ScheduleConfigProps) {
   const { t } = useLanguage();
+  useDocumentTitle("page.title.config");
   const prodiOptions = useQuery(api.admin.listProdiOptions, {}) ?? [];
 
   return (

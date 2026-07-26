@@ -2,9 +2,11 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { useLanguage } from "../context/LanguageContext";
+import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
 export function PrivacyPage() {
   const { t } = useLanguage();
+  useDocumentTitle("page.title.privacy");
   const navigate = useNavigate();
 
   return (

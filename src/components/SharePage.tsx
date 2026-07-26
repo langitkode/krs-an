@@ -12,9 +12,11 @@ import { SignInButton } from "@clerk/clerk-react";
 import { getProdiConfig } from "../lib/prodi";
 import { formatSchedule } from "../lib/schedule-format";
 import { useLanguage } from "../context/LanguageContext";
+import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
 export function SharePage() {
   const { t } = useLanguage();
+  useDocumentTitle("page.title.share");
   const { shareId } = useParams<{ shareId: string }>();
   const navigate = useNavigate();
   // Clerk's isSignedIn resolves before Convex has an authenticated client, so

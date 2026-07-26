@@ -7,6 +7,7 @@ import { useState } from "react";
 import type { ArchivedPlan, Plan } from "@/types";
 import { MakerShell } from "./MakerShell";
 import { cn } from "@/lib/utils";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 interface ScheduleArchiveProps {
   archived: ArchivedPlan[] | undefined;
@@ -210,6 +211,7 @@ export function ScheduleArchive({
   onShare,
   isLocal = false,
 }: ScheduleArchiveProps) {
+  useDocumentTitle("page.title.archive");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
 
