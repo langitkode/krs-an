@@ -274,6 +274,7 @@ export function ScheduleGrid({
   : "border-border border-l-primary bg-card hover:bg-accent"
   }${onCourseDragStart ? (isDragDrop ? " cursor-grab active:cursor-grabbing" : " cursor-pointer") : ""}`}
                             style={{ top: `${top}rem`, height: `${height}rem` }}
+                            onClick={() => onCourseClick?.(c.code)}
                           >
                             <div className="mb-0 flex items-start justify-between overflow-hidden">
                               <span
