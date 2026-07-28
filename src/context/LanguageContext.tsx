@@ -172,6 +172,7 @@ const translations: Record<string, string> = {
   "feedback.success": "Makasih ya, masukannya sangat berarti untuk pengembangan KRSan!",
   "toast.smart_generate_infeasible":
     "Tidak ada kombinasi bebas konflik untuk mata kuliah yang dipilih. Smart Generate memakai data yang sama, jadi tidak akan berhasil juga -- ubah pilihan mata kuliah/kelas dulu.",
+  "toast.desktop_only": "Fitur ini hanya tersedia untuk tampilan desktop.",
   "toast.plotter_infeasible_warning":
     "Susun Cepat tidak menemukan kombinasi bebas konflik untuk pilihan ini -- Plotter kemungkinan juga tidak bisa menghindarinya sepenuhnya.",
   "toast.selections_cleared": "Pilihan dibersihkan.",

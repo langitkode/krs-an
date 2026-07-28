@@ -19,9 +19,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { getProdiConfig } from "../../lib/prodi";
-import { formatSchedule } from "@/lib/schedule-format";
+import { formatSchedule, normalizeDayOfWeek } from "@/lib/schedule-format";
 import { useLanguage } from "../../context/LanguageContext";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { HelpTooltip } from "@/components/ui/HelpTooltip";
@@ -41,6 +41,7 @@ interface ScheduleViewerProps {
   isManualEdit?: boolean;
   onUpdatePlan?: (updated: Course[]) => void;
   allPossibleCourses?: Course[];
+  onAddSubject?: () => void;
   onExpand?: () => void;
   onShuffle?: () => void;
   planLimit: number;
@@ -59,6 +60,7 @@ export function ScheduleViewer({
   isManualEdit,
   onUpdatePlan,
   allPossibleCourses,
+  onAddSubject,
   onExpand,
   onShuffle,
   planLimit,
@@ -69,8 +71,34 @@ export function ScheduleViewer({
   const { t } = useLanguage();
   useDocumentTitle("page.title.view");
   const [isInventoryOpen, setIsInventoryOpen] = useState(false);
+  const [activeCode, setActiveCode] = useState<string | null>(null);
+  const [isDragDrop, setIsDragDrop] = useState(false);
+  const [draggedCode, setDraggedCode] = useState<string | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isToolsOpen, setIsToolsOpen] = useState(false);
   const prodiConfig = getProdiConfig(prodi || "");
   const currentPlan = plans[currentPlanIndex];
+
+  useEffect(() => {
+    const handler = () => {
+      const fs = !!document.fullscreenElement;
+      setIsFullscreen(fs);
+      if (fs) setIsDragDrop(true);
+      else setIsDragDrop(false);
+      document.documentElement.classList.toggle("krs-fullscreen", fs);
+    };
+    document.addEventListener("fullscreenchange", handler);
+    return () => document.removeEventListener("fullscreenchange", handler);
+  }, []);
+
+  useEffect(() => {
+    if (!activeCode) return;
+    const timer = setTimeout(() => {
+      const el = document.getElementById(`inventory-${activeCode}`);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, isInventoryOpen ? 100 : 0);
+    return () => clearTimeout(timer);
+  }, [activeCode, isInventoryOpen]);
   const totalSKS = currentPlan.courses.reduce(
     (sum, c) => sum + (c.sks || 0),
     0,
@@ -97,6 +125,10 @@ export function ScheduleViewer({
     return Array.from(new Set(allPossibleCourses?.map((ac) => ac.code) || []));
   }, [allPossibleCourses]);
 
+  const toMinutes = (t: string) => {
+    const [h, m] = t.split(":").map(Number);
+    return h * 60 + m;
+  };
   const handleUpdateCourse = (code: string, newVariation: Course) => {
     if (!onUpdatePlan) return;
     const nextCourses = currentPlan.courses.filter((c) => c.code !== code);
@@ -150,7 +182,16 @@ export function ScheduleViewer({
           return (
             <div
               key={code}
-              className="p-4 bg-muted/50 border-l-4 border-l-border transition-all hover:bg-accent/50"
+              id={`inventory-${code}`}
+              draggable={isManualEdit && isDragDrop}
+              className={`p-4 bg-muted/50 border-l-4 transition-all hover:bg-accent/50 ${
+                activeCode === code ? "border-l-primary bg-accent" : "border-l-border"
+              } ${isManualEdit && isDragDrop ? "cursor-grab active:cursor-grabbing" : ""}`}
+              onDragStart={() => {
+                if (!isManualEdit) return;
+                setDraggedCode(code);
+              }}
+              onDragEnd={() => isManualEdit && setDraggedCode(null)}
             >
               <div className="flex justify-between items-start mb-1">
                 <span className="text-caps font-mono text-muted-foreground uppercase">
@@ -217,9 +258,20 @@ export function ScheduleViewer({
         return (
           <div
             key={code}
+            id={`inventory-${code}`}
+            draggable={isManualEdit && isDragDrop}
             className={`p-4 transition-colors group flex flex-col gap-2 ${
- isConflicted ? "bg-destructive/10" : "hover:bg-muted/50"
- }`}
+              isConflicted
+                ? "bg-destructive/10"
+                : activeCode === code
+                  ? "bg-accent"
+                  : "hover:bg-muted/50"
+            } ${isManualEdit && isDragDrop ? "cursor-grab active:cursor-grabbing" : ""}`}
+            onDragStart={() => {
+              if (!isManualEdit) return;
+              setDraggedCode(code);
+            }}
+            onDragEnd={() => isManualEdit && setDraggedCode(null)}
           >
             <div className="flex justify-between items-start">
               <div className="flex flex-col min-w-0 flex-1">
@@ -427,6 +479,26 @@ export function ScheduleViewer({
               },
             },
           isManualEdit && {
+            key: "add-subject",
+            label: "Course",
+            icon: "plus",
+            onClick: onAddSubject || (() => {}),
+          },
+          isManualEdit && {
+            key: "chess-toggle",
+            label: "Drag",
+            icon: "move",
+            variant: isDragDrop ? "highlight" : undefined,
+            onClick: () => {
+              if (window.innerWidth < 1024) {
+                toast.info(t("toast.desktop_only"));
+                return;
+              }
+              setIsDragDrop(!isDragDrop);
+              setIsInventoryOpen(false);
+            },
+          },
+          isManualEdit && {
             key: "fix-conflicts",
             label: "Fix Conflicts",
             // Kept distinct from Save's "check" (both appear together in the
@@ -446,6 +518,19 @@ export function ScheduleViewer({
             label: "Reset",
             icon: "close",
             onClick: handleReset,
+          },
+          isManualEdit && {
+            key: "fullscreen",
+            label: isFullscreen ? "Exit" : "Fullscreen",
+            icon: isFullscreen ? "minimize" : "maximize",
+            variant: isFullscreen ? "highlight" : undefined,
+            onClick: () => {
+              if (document.fullscreenElement) {
+                document.exitFullscreen();
+              } else {
+                document.documentElement.requestFullscreen();
+              }
+            },
           },
           {
             key: "save",
@@ -520,6 +605,159 @@ export function ScheduleViewer({
         }}
       />
 
+      {isManualEdit && isFullscreen && (
+        <div className="fixed inset-0 z-50 flex flex-col bg-card">
+          <div className="flex-1 min-h-0 overflow-hidden relative">
+            {isManualEdit && isToolsOpen && (
+              <div className="fixed bottom-20 right-6 z-50 flex items-center gap-1.5">
+                <button
+                  onClick={() => {
+                    if (window.innerWidth < 1024) {
+                      toast.info(t("toast.desktop_only"));
+                      return;
+                    }
+                    setIsDragDrop(!isDragDrop);
+                  }}
+                  className={`flex items-center gap-1.5 rounded-full px-3 py-2 text-caption font-bold shadow-overlay transition-all hover:opacity-90 ${
+                    isDragDrop
+                      ? "bg-highlight text-highlight-foreground"
+                      : "bg-accent text-foreground"
+                  }`}
+                >
+                  <Icon name="move" size={13} />
+                  Drag
+                </button>
+                {isManualEdit && (
+                  <button
+                    onClick={onAddSubject || (() => {})}
+                    className="flex items-center gap-1.5 rounded-full bg-accent text-foreground px-3 py-2 text-caption font-bold shadow-overlay hover:opacity-90 transition-all"
+                  >
+                    <Icon name="plus" size={13} />
+                    Course
+                  </button>
+                )}
+                {isManualEdit && (
+                  <button
+                    onClick={handleQuickFix}
+                    disabled={valid}
+                    className="flex items-center gap-1.5 rounded-full bg-accent text-foreground px-3 py-2 text-caption font-bold shadow-overlay hover:opacity-90 transition-all disabled:opacity-40"
+                  >
+                    <Icon name="sparkles" size={13} />
+                    Fix
+                  </button>
+                )}
+                {isManualEdit && (
+                  <button
+                    onClick={handleReset}
+                    className="flex items-center gap-1.5 rounded-full bg-accent text-foreground px-3 py-2 text-caption font-bold shadow-overlay hover:opacity-90 transition-all"
+                  >
+                    <Icon name="close" size={13} />
+                    Reset
+                  </button>
+                )}
+              </div>
+            )}
+            <div className="fixed bottom-20 right-6 z-50 flex items-center gap-2">
+              {isManualEdit && (
+                <button
+                  onClick={() => setIsToolsOpen((v) => !v)}
+                  className={`flex items-center gap-1.5 rounded-full px-3 py-2.5 text-caption font-bold shadow-overlay transition-all hover:opacity-90 ${
+                    isToolsOpen
+                      ? "bg-accent text-foreground"
+                      : "bg-primary text-primary-foreground"
+                  }`}
+                >
+                  <Icon name="grid" size={14} />
+                  Tools
+                </button>
+              )}
+              <button
+                onClick={() => document.exitFullscreen()}
+                className="flex items-center gap-1.5 rounded-full bg-background/90 border border-border px-3 py-2 text-caption text-muted-foreground shadow-overlay hover:bg-accent transition-colors backdrop-blur-sm"
+              >
+                <Icon name="minimize" size={12} />
+                Exit
+              </button>
+            </div>
+            <ScheduleGrid
+              courses={currentPlan.courses}
+              isCourseCentric={prodiConfig.isCourseCentric}
+              onCourseClick={(code) => {
+                setActiveCode(code);
+              }}
+              isDragDrop={isDragDrop}
+              draggedCode={draggedCode}
+              allPossibleCourses={allPossibleCourses}
+              currentPlanCourses={currentPlan.courses}
+              onCourseDragStart={(code) => setDraggedCode(code)}
+              onCourseDragEnd={() => setDraggedCode(null)}
+              onDropCourse={(code, dayIdx, hoveredStart) => {
+                const variations = groupedVariations[code] || [];
+                const day = ["Mon","Tue","Wed","Thu","Fri","Sat"][dayIdx] as any;
+                const dayVariations = variations.filter((v) =>
+                  v.schedule.some((s) => normalizeDayOfWeek(s.day) === day),
+                );
+                const candidates = dayVariations.length > 0 ? dayVariations : variations;
+                if (candidates.length === 0) {
+                  toast.error("Tidak ada kelas tersedia");
+                  setDraggedCode(null);
+                  return;
+                }
+                const hoverMin = toMinutes(hoveredStart);
+                const best = candidates.reduce((a, b) => {
+                  const aMin = Math.min(...a.schedule.map((s) => toMinutes(s.start)));
+                  const bMin = Math.min(...b.schedule.map((s) => toMinutes(s.start)));
+                  return Math.abs(aMin - hoverMin) < Math.abs(bMin - hoverMin) ? a : b;
+                });
+                handleUpdateCourse(code, best);
+                setDraggedCode(null);
+              }}
+            />
+          </div>
+          <div className="shrink-0 h-16 border-t border-border bg-muted/80 flex items-center gap-1.5 overflow-x-auto custom-scrollbar px-1">
+            {uniqueCodes.map((code) => {
+              const variations = groupedVariations[code] || [];
+              const c = currentPlan.courses.find((cp) => cp.code === code);
+              const isConflicted = c
+                ? conflictMessages.some((m) => m.includes(c.name) && m.includes(c.class))
+                : false;
+              const sampleCourse = c || variations[0];
+              if (!sampleCourse) return null;
+              return (
+                <div
+                  key={code}
+                  draggable={isDragDrop}
+                  onDragStart={() => {
+                    setDraggedCode(code);
+                  }}
+                  onDragEnd={() => setDraggedCode(null)}
+                  onClick={() => setActiveCode(code)}
+                  className={`shrink-0 flex items-center gap-1.5 rounded-lg px-2.5 py-2.5 border text-grid transition-colors cursor-default ${
+                    isConflicted
+                      ? "border-destructive/40 bg-destructive/10"
+                      : c
+                        ? "border-l-primary border-border bg-card hover:bg-accent"
+                        : "border-dashed border-border bg-muted/50"
+                  } ${isDragDrop ? "cursor-grab active:cursor-grabbing" : ""}`}
+                >
+                  <span className={`font-bold whitespace-nowrap text-caption truncate max-w-[100px] ${isConflicted ? "text-destructive" : "text-foreground"}`}>
+                    {sampleCourse?.name || code}
+                  </span>
+                  {c && (
+                    <Badge variant="outline" className="h-3.5 px-1 rounded-[2px] border-transparent bg-muted text-grid-meta text-muted-foreground shrink-0">
+                      {c.class}
+                    </Badge>
+                  )}
+                  <Badge variant="secondary" className="h-3.5 px-1 rounded-[2px] border-transparent bg-primary/10 text-primary text-grid-meta shrink-0">
+                    {c ? c.sks : (sampleCourse?.sks || 0)} SKS
+                  </Badge>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       <div
         id="printable-area"
         className="flex lg:grid lg:grid-cols-[1.2fr_380px] gap-4 md:gap-8 items-stretch h-full overflow-hidden pb-4"
@@ -545,12 +783,44 @@ export function ScheduleViewer({
             <ScheduleGrid
               courses={currentPlan.courses}
               isCourseCentric={prodiConfig.isCourseCentric}
+              onCourseClick={(code) => {
+                setActiveCode(code);
+                if (window.innerWidth < 1024) setIsInventoryOpen(true);
+              }}
+              isDragDrop={isManualEdit ? isDragDrop : undefined}
+              draggedCode={isManualEdit ? draggedCode : undefined}
+              allPossibleCourses={isManualEdit ? allPossibleCourses : undefined}
+              currentPlanCourses={isManualEdit ? currentPlan.courses : undefined}
+              onCourseDragStart={isManualEdit ? (code) => setDraggedCode(code) : undefined}
+              onCourseDragEnd={isManualEdit ? () => setDraggedCode(null) : undefined}
+              onDropCourse={isManualEdit ? (code, dayIdx, hoveredStart) => {
+                const variations = groupedVariations[code] || [];
+                const day = ["Mon","Tue","Wed","Thu","Fri","Sat"][dayIdx] as any;
+                const dayVariations = variations.filter((v) =>
+                  v.schedule.some((s) => normalizeDayOfWeek(s.day) === day),
+                );
+                const candidates = dayVariations.length > 0 ? dayVariations : variations;
+                if (candidates.length === 0) {
+                  toast.error("Tidak ada kelas tersedia");
+                  setDraggedCode(null);
+                  return;
+                }
+                const hoverMin = toMinutes(hoveredStart);
+                const best = candidates.reduce((a, b) => {
+                  const aMin = Math.min(...a.schedule.map((s) => toMinutes(s.start)));
+                  const bMin = Math.min(...b.schedule.map((s) => toMinutes(s.start)));
+                  return Math.abs(aMin - hoverMin) < Math.abs(bMin - hoverMin) ? a : b;
+                });
+                handleUpdateCourse(code, best);
+                setDraggedCode(null);
+                setIsInventoryOpen(false);
+              } : undefined}
             />
           </div>
         </div>
 
         <div className="hidden lg:flex w-full shrink-0 flex-col h-full min-h-0">
-          <Card className="border-border shadow-card overflow-hidden rounded-card flex flex-col h-full bg-card">
+          <Card className="border-border shadow-card overflow-hidden rounded-card flex flex-col bg-card h-full">
             <CardHeader className="bg-muted py-3 border-b border-border flex flex-row items-center justify-between">
               <CardTitle className="text-caption flex items-center gap-2">
                 <span>Course Inventory</span>
