@@ -42,6 +42,7 @@ interface ScheduleViewerProps {
   onUpdatePlan?: (updated: Course[]) => void;
   allPossibleCourses?: Course[];
   onAddSubject?: () => void;
+  onManualEdit?: (courses: Course[]) => void;
   onExpand?: () => void;
   onShuffle?: () => void;
   planLimit: number;
@@ -61,6 +62,7 @@ export function ScheduleViewer({
   onUpdatePlan,
   allPossibleCourses,
   onAddSubject,
+  onManualEdit,
   onExpand,
   onShuffle,
   planLimit,
@@ -76,6 +78,7 @@ export function ScheduleViewer({
   const [draggedCode, setDraggedCode] = useState<string | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isToolsOpen, setIsToolsOpen] = useState(false);
+  const [showManualConfirm, setShowManualConfirm] = useState(false);
   const prodiConfig = getProdiConfig(prodi || "");
   const currentPlan = plans[currentPlanIndex];
 
@@ -533,6 +536,12 @@ export function ScheduleViewer({
               }
             },
           },
+          !isManualEdit && {
+            key: "edit-manual",
+            label: "Edit Manual",
+            icon: "pencil",
+            onClick: () => setShowManualConfirm(true),
+          },
           {
             key: "save",
             label: saveLabel,
@@ -568,6 +577,31 @@ export function ScheduleViewer({
             </DialogTitle>
           </DialogHeader>
           <div className="flex-1 overflow-y-auto px-1">{renderInventory()}</div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showManualConfirm} onOpenChange={setShowManualConfirm}>
+        <DialogContent size="sm">
+          <DialogHeader>
+            <DialogTitle>Beralih ke Mode Manual?</DialogTitle>
+          </DialogHeader>
+          <p className="text-body-sm text-muted-foreground px-6 pb-2">
+            Edit manual berarti Anda akan kehilangan fitur Shuffle dan Expand, serta
+            beralih ke mode plotter manual. Anda masih bisa menyimpan jadwal ini.
+          </p>
+          <div className="flex justify-end gap-2 px-6 pb-4">
+            <Button variant="outline" onClick={() => setShowManualConfirm(false)}>
+              Batal
+            </Button>
+            <Button
+              onClick={() => {
+                setShowManualConfirm(false);
+                onManualEdit?.(currentPlan.courses);
+              }}
+            >
+              Lanjutkan
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
 

@@ -1,6 +1,6 @@
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
-import type { Course } from "@/types";
+import type { Course, Plan } from "@/types";
 import { toast } from "sonner";
 import { useLanguage } from "../context/LanguageContext";
 import { useSession } from "../context/SessionContext";
@@ -313,6 +313,19 @@ export function ScheduleMaker({ userData }: ScheduleMakerProps) {
                   onUpdatePlan={session.handleUpdateManualPlan}
                   allPossibleCourses={session.courses}
                   onAddSubject={() => setIsMasterSearchOpen(true)}
+                  onManualEdit={(courses) => {
+                    const draftPlan: Plan = {
+                      id: "manual-draft",
+                      name: "Manual Edit",
+                      courses,
+                      score: { safe: 100, risky: 0, optimal: 0 },
+                      analysis: "Manual assembly in progress...",
+                    };
+                    session.setPlans([draftPlan]);
+                    session.setCurrentPlanIndex(0);
+                    session.setIsManualMode(true);
+                    setStep("view");
+                  }}
                   onExpand={
                     session.viewSource === "live" &&
                     session.planLimit < 36 &&
