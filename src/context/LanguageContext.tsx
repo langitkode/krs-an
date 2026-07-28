@@ -162,6 +162,7 @@ const translations: Record<string, string> = {
     "Tidak ada jadwal yang valid. Coba lepas beberapa kelas yang dikunci.",
   "toast.archive_full": "Arsip penuh (maks 30). Hapus beberapa jadwal dulu.",
   "toast.archive_action": "Arsip",
+  "archive.edit": "Muat & Edit",
   "toast.donate_nudge": "Suka pakai KRSan? Support dengan traktir kopi!",
   "feedback.title": "Berikan Masukan",
   "feedback.subtitle": "Apakah KRSan membantu kamu?",

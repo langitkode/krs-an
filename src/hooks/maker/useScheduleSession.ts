@@ -36,6 +36,9 @@ interface UseScheduleSessionArgs {
   /** Called after a plan save when the user's total save count is a
    * multiple of 5 (5th, 10th, 15th...). Fires at most once per milestone. */
   onFeedbackTrigger?: (saveCount: number) => void;
+  /** Config context for "Muat & Edit" — saved with plan to reload full catalog. */
+  prodi: string;
+  semester: number;
 }
 
 export function useScheduleSession({
@@ -46,6 +49,8 @@ export function useScheduleSession({
   isLocalArchive,
   configKey,
   onFeedbackTrigger,
+  prodi,
+  semester: currentSemester,
 }: UseScheduleSessionArgs) {
   const [courses, setCourses] = useLocalStorage<Course[]>("krs-courses", []);
   const [selectedCodes, setSelectedCodes] = useLocalStorage<string[]>(
@@ -323,13 +328,15 @@ export function useScheduleSession({
         : `Manual Draft ${new Date().toLocaleTimeString()}`;
 
       const payload = isFullPlan
-        ? data
+        ? { ...data, prodi: data.prodi ?? prodi, semester: data.semester ?? currentSemester }
         : {
             id: crypto.randomUUID(),
             name: "Manual Plan",
             courses: data,
             score: { safe: 100, risky: 0, optimal: 0 },
             analysis: "Hand-crafted schedule with manual selection",
+            prodi,
+            semester: currentSemester,
           };
 
       const planId = await savePlan({
@@ -409,6 +416,28 @@ export function useScheduleSession({
     }
   };
 
+  const handleEditArchived = (planCourses: Course[], allCourses?: Course[]) => {
+    const codes = [...new Set(planCourses.map((c) => c.code))];
+    const locked: Record<string, string[]> = {};
+    for (const c of planCourses) {
+      if (!locked[c.code]) locked[c.code] = [];
+      locked[c.code].push(c.id);
+    }
+    const plan: Plan = {
+      id: crypto.randomUUID(),
+      name: "Edit",
+      courses: planCourses,
+    };
+    setCourses(allCourses ?? planCourses);
+    setSelectedCodes(codes);
+    setLockedCourses(locked);
+    setPlans([plan]);
+    setCurrentPlanIndex(0);
+    setIsManualMode(true);
+    setViewSource("archive");
+    setStep("view");
+  };
+
   const handleUpdateManualPlan = (updatedCourses: Course[]) => {
     setPlans((prev) => {
       const next = [...prev];
@@ -450,5 +479,6 @@ export function useScheduleSession({
     handleGenerate,
     handleSaveManualPlan,
     handleUpdateManualPlan,
+    handleEditArchived,
   };
 }

@@ -318,7 +318,10 @@ export function ScheduleViewer({
             </div>
 
             {isManualEdit && (
-              <div className="pt-1 mt-1 border-t border-border/50">
+              <div
+                className="pt-1 mt-1 border-t border-border/50"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <Select
                   value={c.id}
                   onValueChange={(value) => {

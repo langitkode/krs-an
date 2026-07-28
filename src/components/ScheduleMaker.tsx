@@ -124,6 +124,8 @@ export function ScheduleMaker({ userData }: ScheduleMakerProps) {
       setFeedbackSaveCount(count);
       setFeedbackOpen(true);
     },
+    prodi: sessionProfile.prodi,
+    semester,
   });
 
   // The step rail shared by config/select/view via MakerShell. Archive is
@@ -161,7 +163,27 @@ export function ScheduleMaker({ userData }: ScheduleMakerProps) {
     t,
   });
 
-  const { handleDeleteArchived, handleRenameArchived, handleImportArchived } =
+  const handleMuatEdit = (archivedPlan: Plan) => {
+    // Try to reload full catalog from curriculum when prodi/semester match
+    let fullCatalog: Course[] | undefined;
+    if (
+      archivedPlan.prodi === sessionProfile.prodi &&
+      archivedPlan.semester === semester &&
+      allMasterCourses &&
+      curriculum
+    ) {
+      const mandatoryCodes = new Set(curriculum.map((c) => c.code));
+      fullCatalog = allMasterCourses
+        .filter((c: any) => mandatoryCodes.has(c.code))
+        .map((c: any) => ({
+          ...c,
+          id: c._id || `${c.code}-${c.class}`,
+        }));
+    }
+    session.handleEditArchived(archivedPlan.courses, fullCatalog);
+  };
+
+  const { handleDeleteArchived, handleRenameArchived } =
     useArchiveActions({
       t,
       deletePlan,
@@ -303,7 +325,9 @@ export function ScheduleMaker({ userData }: ScheduleMakerProps) {
                   setCurrentPlanIndex={session.setCurrentPlanIndex}
                   onBack={() => {
                     setStep(
-                      session.viewSource === "archive" ? "archive" : "select",
+                      session.viewSource === "archive" && !session.isManualMode
+                        ? "archive"
+                        : "select",
                     );
                     session.setIsManualMode(false);
                   }}
@@ -358,10 +382,10 @@ export function ScheduleMaker({ userData }: ScheduleMakerProps) {
                 <ScheduleArchive
                   archived={archived}
                   isLocal={isLocalArchive}
-                  onImport={handleImportArchived}
                   onDelete={handleDeleteArchived}
                   onRename={handleRenameArchived}
                   onShare={handleSharePlan}
+                  onEdit={handleMuatEdit}
                 />
               </div>
             )}
