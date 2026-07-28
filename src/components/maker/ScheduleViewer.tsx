@@ -524,6 +524,7 @@ export function ScheduleViewer({
             label: isFullscreen ? "Exit" : "Fullscreen",
             icon: isFullscreen ? "minimize" : "maximize",
             variant: isFullscreen ? "highlight" : undefined,
+            className: "hidden lg:flex",
             onClick: () => {
               if (document.fullscreenElement) {
                 document.exitFullscreen();

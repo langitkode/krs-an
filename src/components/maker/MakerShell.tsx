@@ -333,6 +333,7 @@ export function MakerShell({
                   : action.variant === "highlight"
                     ? "text-highlight"
                     : "text-foreground active:bg-accent",
+                action.className,
               )}
             >
               <Icon
