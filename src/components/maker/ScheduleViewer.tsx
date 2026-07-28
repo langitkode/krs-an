@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { getProdiConfig } from "../../lib/prodi";
 import { formatSchedule } from "@/lib/schedule-format";
 import { useLanguage } from "../../context/LanguageContext";
@@ -41,6 +41,7 @@ interface ScheduleViewerProps {
   isManualEdit?: boolean;
   onUpdatePlan?: (updated: Course[]) => void;
   allPossibleCourses?: Course[];
+  onAddSubject?: () => void;
   onExpand?: () => void;
   onShuffle?: () => void;
   planLimit: number;
@@ -59,6 +60,7 @@ export function ScheduleViewer({
   isManualEdit,
   onUpdatePlan,
   allPossibleCourses,
+  onAddSubject,
   onExpand,
   onShuffle,
   planLimit,
@@ -69,8 +71,19 @@ export function ScheduleViewer({
   const { t } = useLanguage();
   useDocumentTitle("page.title.view");
   const [isInventoryOpen, setIsInventoryOpen] = useState(false);
+  const [activeCode, setActiveCode] = useState<string | null>(null);
   const prodiConfig = getProdiConfig(prodi || "");
   const currentPlan = plans[currentPlanIndex];
+
+  useEffect(() => {
+    if (!activeCode) return;
+    // Wait for dialog render on mobile or just scroll sidebar on desktop
+    const timer = setTimeout(() => {
+      const el = document.getElementById(`inventory-${activeCode}`);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, isInventoryOpen ? 100 : 0);
+    return () => clearTimeout(timer);
+  }, [activeCode, isInventoryOpen]);
   const totalSKS = currentPlan.courses.reduce(
     (sum, c) => sum + (c.sks || 0),
     0,
@@ -150,7 +163,10 @@ export function ScheduleViewer({
           return (
             <div
               key={code}
-              className="p-4 bg-muted/50 border-l-4 border-l-border transition-all hover:bg-accent/50"
+              id={`inventory-${code}`}
+              className={`p-4 bg-muted/50 border-l-4 transition-all hover:bg-accent/50 ${
+                activeCode === code ? "border-l-primary bg-accent" : "border-l-border"
+              }`}
             >
               <div className="flex justify-between items-start mb-1">
                 <span className="text-caps font-mono text-muted-foreground uppercase">
@@ -217,9 +233,14 @@ export function ScheduleViewer({
         return (
           <div
             key={code}
+            id={`inventory-${code}`}
             className={`p-4 transition-colors group flex flex-col gap-2 ${
- isConflicted ? "bg-destructive/10" : "hover:bg-muted/50"
- }`}
+              isConflicted
+                ? "bg-destructive/10"
+                : activeCode === code
+                  ? "bg-accent"
+                  : "hover:bg-muted/50"
+            }`}
           >
             <div className="flex justify-between items-start">
               <div className="flex flex-col min-w-0 flex-1">
@@ -263,7 +284,10 @@ export function ScheduleViewer({
             </div>
 
             {isManualEdit && (
-              <div className="pt-1 mt-1 border-t border-border/50">
+              <div
+                className="pt-1 mt-1 border-t border-border/50"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <Select
                   value={c.id}
                   onValueChange={(value) => {
@@ -427,6 +451,12 @@ export function ScheduleViewer({
               },
             },
           isManualEdit && {
+            key: "add-subject",
+            label: "Course",
+            icon: "plus",
+            onClick: onAddSubject || (() => {}),
+          },
+          isManualEdit && {
             key: "fix-conflicts",
             label: "Fix Conflicts",
             // Kept distinct from Save's "check" (both appear together in the
@@ -545,6 +575,12 @@ export function ScheduleViewer({
             <ScheduleGrid
               courses={currentPlan.courses}
               isCourseCentric={prodiConfig.isCourseCentric}
+              onCourseClick={(code) => {
+                setActiveCode(code);
+                // Desktop: sidebar always visible, just scroll
+                // Mobile: open dialog first
+                if (window.innerWidth < 1024) setIsInventoryOpen(true);
+              }}
             />
           </div>
         </div>

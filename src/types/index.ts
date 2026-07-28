@@ -28,6 +28,9 @@ export interface Plan {
     optimal: number;
   };
   analysis?: string; // AI explanation
+  /** Config context snapshot for "Muat & Edit" — allows reloading full course catalog. */
+  prodi?: string;
+  semester?: number;
 }
 
 export interface UserPreferences {
