@@ -312,6 +312,7 @@ export function ScheduleMaker({ userData }: ScheduleMakerProps) {
                   isManualEdit={session.isManualMode}
                   onUpdatePlan={session.handleUpdateManualPlan}
                   allPossibleCourses={session.courses}
+                  onAddSubject={() => setIsMasterSearchOpen(true)}
                   onExpand={
                     session.viewSource === "live" &&
                     session.planLimit < 36 &&
