@@ -644,7 +644,7 @@ export function ScheduleViewer({
         <div className="fixed inset-0 z-50 flex flex-col bg-card">
           <div className="flex-1 min-h-0 overflow-hidden relative">
             {isManualEdit && isToolsOpen && (
-              <div className="fixed bottom-20 right-6 z-50 flex items-center gap-1.5">
+              <div className="fixed bottom-20 right-[190px] z-50 flex items-center gap-1.5">
                 <button
                   onClick={() => {
                     if (window.innerWidth < 1024) {
@@ -662,34 +662,28 @@ export function ScheduleViewer({
                   <Icon name="move" size={13} />
                   Drag
                 </button>
-                {isManualEdit && (
-                  <button
-                    onClick={onAddSubject || (() => {})}
-                    className="flex items-center gap-1.5 rounded-full bg-accent text-foreground px-3 py-2 text-caption font-bold shadow-overlay hover:opacity-90 transition-all"
-                  >
-                    <Icon name="plus" size={13} />
-                    Course
-                  </button>
-                )}
-                {isManualEdit && (
-                  <button
-                    onClick={handleQuickFix}
-                    disabled={valid}
-                    className="flex items-center gap-1.5 rounded-full bg-accent text-foreground px-3 py-2 text-caption font-bold shadow-overlay hover:opacity-90 transition-all disabled:opacity-40"
-                  >
-                    <Icon name="sparkles" size={13} />
-                    Fix
-                  </button>
-                )}
-                {isManualEdit && (
-                  <button
-                    onClick={handleReset}
-                    className="flex items-center gap-1.5 rounded-full bg-accent text-foreground px-3 py-2 text-caption font-bold shadow-overlay hover:opacity-90 transition-all"
-                  >
-                    <Icon name="close" size={13} />
-                    Reset
-                  </button>
-                )}
+                <button
+                  onClick={onAddSubject || (() => {})}
+                  className="flex items-center gap-1.5 rounded-full bg-accent text-foreground px-3 py-2 text-caption font-bold shadow-overlay hover:opacity-90 transition-all"
+                >
+                  <Icon name="plus" size={13} />
+                  Course
+                </button>
+                <button
+                  onClick={handleQuickFix}
+                  disabled={valid}
+                  className="flex items-center gap-1.5 rounded-full bg-accent text-foreground px-3 py-2 text-caption font-bold shadow-overlay hover:opacity-90 transition-all disabled:opacity-40"
+                >
+                  <Icon name="sparkles" size={13} />
+                  Fix
+                </button>
+                <button
+                  onClick={handleReset}
+                  className="flex items-center gap-1.5 rounded-full bg-accent text-foreground px-3 py-2 text-caption font-bold shadow-overlay hover:opacity-90 transition-all"
+                >
+                  <Icon name="close" size={13} />
+                  Reset
+                </button>
               </div>
             )}
             <div className="fixed bottom-20 right-6 z-50 flex items-center gap-2">
@@ -749,7 +743,15 @@ export function ScheduleViewer({
               }}
             />
           </div>
-          <div className="shrink-0 h-16 border-t border-border bg-muted/80 flex items-center gap-1.5 overflow-x-auto custom-scrollbar px-1">
+          <div
+            className="shrink-0 h-16 border-t border-border bg-muted/80 flex items-center gap-1.5 overflow-x-auto custom-scrollbar px-1"
+            onWheel={(e) => {
+              if (e.currentTarget.scrollWidth > e.currentTarget.clientWidth) {
+                e.preventDefault();
+                e.currentTarget.scrollLeft += e.deltaY;
+              }
+            }}
+          >
             {uniqueCodes.map((code) => {
               const variations = groupedVariations[code] || [];
               const c = currentPlan.courses.find((cp) => cp.code === code);
