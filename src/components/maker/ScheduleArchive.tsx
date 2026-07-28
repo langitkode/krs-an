@@ -196,7 +196,7 @@ const PlanCard = ({
           }`}
           onClick={() => onImport(contextPlans, index)}
         >
-          Muat ke Penampil
+          Muat & Edit
         </Button>
       </div>
     </Card>

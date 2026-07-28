@@ -140,6 +140,8 @@ const translations: Record<string, string> = {
   "toast.plan_renamed": "Nama jadwal diperbarui.",
   "toast.rename_failed": "Gagal mengganti nama: {error}",
   "toast.imported_to_viewer": "{count} jadwal dimuat ke penampil.",
+  "toast.edit_mode_loaded": "Jadwal dimuat ke mode Plotter.",
+  "archive.load_edit": "Muat & Edit",
   "toast.plans_imported": "{count} jadwal diimpor.",
   "toast.import_failed": "Impor gagal: {error}",
   "toast.share_empty":

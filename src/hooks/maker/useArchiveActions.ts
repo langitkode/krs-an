@@ -9,6 +9,8 @@ interface UseArchiveActionsArgs {
   setCurrentPlanIndex: (index: number) => void;
   setViewSource: (source: "live" | "archive") => void;
   setStep: (step: "config" | "select" | "view" | "archive") => void;
+  handleEditArchived?: (plan: any, allMasterCourses?: any[]) => void;
+  allMasterCourses?: any[];
 }
 
 /** Delete / rename / import-to-viewer for a saved plan. */
@@ -20,6 +22,8 @@ export function useArchiveActions({
   setCurrentPlanIndex,
   setViewSource,
   setStep,
+  handleEditArchived,
+  allMasterCourses,
 }: UseArchiveActionsArgs) {
   const handleDeleteArchived = async (planId: string) => {
     try {
@@ -40,6 +44,12 @@ export function useArchiveActions({
   };
 
   const handleImportArchived = (allPlans: Plan[], index: number) => {
+    const targetPlan = allPlans[index];
+    if (targetPlan && handleEditArchived) {
+      handleEditArchived(targetPlan, allMasterCourses);
+      return;
+    }
+
     setPlans(allPlans);
     setCurrentPlanIndex(index);
     setViewSource("archive");

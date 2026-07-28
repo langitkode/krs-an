@@ -124,6 +124,7 @@ export function ScheduleMaker({ userData }: ScheduleMakerProps) {
       setFeedbackSaveCount(count);
       setFeedbackOpen(true);
     },
+    sessionProfile: { prodi: sessionProfile.prodi, semester },
   });
 
   // The step rail shared by config/select/view via MakerShell. Archive is
@@ -170,6 +171,9 @@ export function ScheduleMaker({ userData }: ScheduleMakerProps) {
       setCurrentPlanIndex: session.setCurrentPlanIndex,
       setViewSource: session.setViewSource,
       setStep,
+      handleEditArchived: (plan, masterCourses) =>
+        session.handleEditArchived(plan, masterCourses),
+      allMasterCourses,
     });
 
   // --- Tutorial setup ---

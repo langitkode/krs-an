@@ -16,6 +16,7 @@ export interface Course {
   room: string;
   schedule: TimeSlot[];
   group?: string; // Optional grouping (e.g., if multiple entries needed for one course)
+  prodi?: string;
 }
 
 export interface Plan {
@@ -28,6 +29,8 @@ export interface Plan {
     optimal: number;
   };
   analysis?: string; // AI explanation
+  prodi?: string;
+  semester?: number;
 }
 
 export interface UserPreferences {

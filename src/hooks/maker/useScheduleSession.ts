@@ -36,6 +36,8 @@ interface UseScheduleSessionArgs {
   /** Called after a plan save when the user's total save count is a
    * multiple of 5 (5th, 10th, 15th...). Fires at most once per milestone. */
   onFeedbackTrigger?: (saveCount: number) => void;
+  /** Active session profile, used to stamp prodi/semester on saved plans. */
+  sessionProfile: { prodi: string; semester: number };
 }
 
 export function useScheduleSession({
@@ -46,6 +48,7 @@ export function useScheduleSession({
   isLocalArchive,
   configKey,
   onFeedbackTrigger,
+  sessionProfile,
 }: UseScheduleSessionArgs) {
   const [courses, setCourses] = useLocalStorage<Course[]>("krs-courses", []);
   const [selectedCodes, setSelectedCodes] = useLocalStorage<string[]>(
@@ -322,14 +325,21 @@ export function useScheduleSession({
         ? data.name
         : `Manual Draft ${new Date().toLocaleTimeString()}`;
 
+      // Stamp prodi & semester so "Muat & Edit" can later reconstruct the full
+      // catalog inventory for this plan without bloating the payload.
+      const profileMeta: Pick<Plan, "prodi" | "semester"> = {
+        prodi: sessionProfile.prodi,
+        semester: sessionProfile.semester,
+      };
       const payload = isFullPlan
-        ? data
+        ? { ...data, ...profileMeta }
         : {
             id: crypto.randomUUID(),
             name: "Manual Plan",
             courses: data,
             score: { safe: 100, risky: 0, optimal: 0 },
             analysis: "Hand-crafted schedule with manual selection",
+            ...profileMeta,
           };
 
       const planId = await savePlan({
@@ -422,6 +432,64 @@ export function useScheduleSession({
     });
   };
 
+  /**
+   * Load an archived plan directly into Plotter / Manual Edit mode.
+   *
+   * Strategy:
+   * 1. Extract unique course codes from the plan snapshot.
+   * 2. Find every matching section in allMasterCourses (new/updated sections
+   *    become available; existing ones are already deduped by id).
+   * 3. Always preserve the plan's own snapshot courses so orphaned / removed
+   *    DB rows never blank out the inventory.
+   * 4. Lock the plan's exact active section IDs so Plotter opens pre-filled.
+   * 5. sessionProfile is NEVER modified.
+   */
+  const handleEditArchived = (
+    planInput: any,
+    allMasterCourses?: any[],
+  ) => {
+    const planData: Plan =
+      planInput && "data" in planInput && planInput.data
+        ? planInput.data
+        : (planInput as Plan);
+    const planCourses = planData?.courses || [];
+    if (planCourses.length === 0) return;
+
+    const codesSet = new Set(planCourses.map((c) => c.code));
+    const locked: Record<string, string[]> = {};
+    for (const c of planCourses) {
+      if (!locked[c.code]) locked[c.code] = [];
+      if (!locked[c.code].includes(c.id)) locked[c.code].push(c.id);
+    }
+
+    // Gather all available section variations for the plan's course codes from
+    // the master catalog. New sections added after the plan was saved appear
+    // here automatically so the user can swap to them.
+    const masterVariations: Course[] = (allMasterCourses || [])
+      .filter((mc) => codesSet.has(mc.code))
+      .map((mc) => ({
+        ...mc,
+        id: mc._id || mc.id || `${mc.code}-${mc.class}`,
+      }));
+
+    // Merge: start with master variations, then add any snapshot courses not
+    // already present (covers orphaned / cross-prodi / shared plan sections).
+    const masterIds = new Set(masterVariations.map((c) => c.id));
+    const snapshotOnly = planCourses.filter((c) => !masterIds.has(c.id));
+    const merged = [...masterVariations, ...snapshotOnly];
+
+    setCourses(merged);
+    setSelectedCodes(Array.from(codesSet));
+    setLockedCourses(locked);
+
+    setPlans([planData]);
+    setCurrentPlanIndex(0);
+    setIsManualMode(true);
+    setViewSource("archive");
+    setStep("view");
+    toast.info(t("toast.edit_mode_loaded"));
+  };
+
   return {
     courses,
     setCourses,
@@ -450,5 +518,6 @@ export function useScheduleSession({
     handleGenerate,
     handleSaveManualPlan,
     handleUpdateManualPlan,
+    handleEditArchived,
   };
 }
