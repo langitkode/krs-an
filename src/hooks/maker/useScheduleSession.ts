@@ -281,6 +281,7 @@ export function useScheduleSession({
         setPlans(generated);
         setCurrentPlanIndex(0);
         setViewSource("live");
+        setIsManualMode(false);
         setStep("view");
       }
     } finally {
