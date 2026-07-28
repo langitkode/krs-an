@@ -8,13 +8,14 @@ import type { ArchivedPlan, Plan } from "@/types";
 import { MakerShell } from "./MakerShell";
 import { cn } from "@/lib/utils";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface ScheduleArchiveProps {
   archived: ArchivedPlan[] | undefined;
-  onImport: (allPlans: Plan[], index: number) => void;
   onDelete: (id: string) => void;
   onRename: (id: string, newName: string) => void;
   onShare: (id: string) => void;
+  onEdit: (plan: Plan) => void;
   /** True when these plans live in localStorage rather than the account. */
   isLocal?: boolean;
 }
@@ -42,32 +43,29 @@ const EmptyState = ({
 const PlanCard = ({
   plan,
   isAi,
-  contextPlans,
-  index,
   editingId,
   editName,
   setEditName,
   handleStartEdit,
   handleSaveRename,
   setEditingId,
-  onImport,
   onDelete,
   onShare,
+  onEdit,
 }: {
   plan: ArchivedPlan;
   isAi?: boolean;
-  contextPlans: Plan[];
-  index: number;
   editingId: string | null;
   editName: string;
   setEditName: (name: string) => void;
   handleStartEdit: (plan: ArchivedPlan) => void;
   handleSaveRename: (id: string) => void;
   setEditingId: (id: string | null) => void;
-  onImport: (allPlans: Plan[], index: number) => void;
   onDelete: (id: string) => void;
   onShare: (id: string) => void;
+  onEdit: (plan: Plan) => void;
 }) => {
+  const { t } = useLanguage();
   const isEditing = editingId === plan._id;
 
   return (
@@ -194,9 +192,9 @@ const PlanCard = ({
               ? "bg-highlight hover:bg-highlight/90 text-highlight-foreground"
               : "bg-primary hover:bg-primary/90 text-primary-foreground"
           }`}
-          onClick={() => onImport(contextPlans, index)}
+          onClick={() => onEdit(plan.data)}
         >
-          Muat ke Penampil
+          {t("archive.edit")}
         </Button>
       </div>
     </Card>
@@ -222,10 +220,10 @@ function DonateBanner() {
 
 export function ScheduleArchive({
   archived,
-  onImport,
   onDelete,
   onRename,
   onShare,
+  onEdit,
   isLocal = false,
 }: ScheduleArchiveProps) {
   useDocumentTitle("page.title.archive");
@@ -246,9 +244,6 @@ export function ScheduleArchive({
     }
     setEditingId(null);
   };
-
-  const aiDataPlans = aiPlans.map((p) => p.data);
-  const manualDataPlans = manualPlans.map((p) => p.data);
 
   const count = archived?.length || 0;
 
@@ -329,22 +324,20 @@ export function ScheduleArchive({
 
         <TabsContent value="ai" className="mt-0">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {aiPlans.map((plan, i) => (
+            {aiPlans.map((plan) => (
               <PlanCard
                 key={plan._id}
                 plan={plan}
                 isAi
-                contextPlans={aiDataPlans}
-                index={i}
                 editingId={editingId}
                 editName={editName}
                 setEditName={setEditName}
                 handleStartEdit={handleStartEdit}
                 handleSaveRename={handleSaveRename}
                 setEditingId={setEditingId}
-                onImport={onImport}
                 onDelete={onDelete}
                 onShare={onShare}
+                onEdit={onEdit}
               />
             ))}
             {aiPlans.length === 0 && (
@@ -355,21 +348,19 @@ export function ScheduleArchive({
 
         <TabsContent value="saved" className="mt-0">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {manualPlans.map((plan, i) => (
+            {manualPlans.map((plan) => (
               <PlanCard
                 key={plan._id}
                 plan={plan}
-                contextPlans={manualDataPlans}
-                index={i}
                 editingId={editingId}
                 editName={editName}
                 setEditName={setEditName}
                 handleStartEdit={handleStartEdit}
                 handleSaveRename={handleSaveRename}
                 setEditingId={setEditingId}
-                onImport={onImport}
                 onDelete={onDelete}
                 onShare={onShare}
+                onEdit={onEdit}
               />
             ))}
             {manualPlans.length === 0 && (

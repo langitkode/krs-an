@@ -34,9 +34,11 @@ const toMinutes = (t: string) => {
 export function ScheduleGrid({
   courses,
   isCourseCentric,
+  onCourseClick,
 }: {
   courses: Course[];
   isCourseCentric?: boolean;
+  onCourseClick?: (code: string) => void;
 }) {
   const slots = (END_HOUR - START_HOUR) * ROWS_PER_HOUR;
   const { messages: conflictMessages } = checkConflicts(courses);
@@ -59,6 +61,7 @@ export function ScheduleGrid({
           courses={courses}
           isConflicted={isConflicted}
           isCourseCentric={isCourseCentric}
+          onCourseClick={onCourseClick}
         />
       </div>
 
@@ -148,11 +151,12 @@ export function ScheduleGrid({
                         <div
                           key={`${c.id}-${idx}`}
                           className={`absolute left-[1px] right-[1px] flex flex-col justify-start overflow-hidden rounded-[3px] border border-l-2 p-1 text-grid transition-colors hover:z-40 ${
- conflicted
- ? "border-destructive/40 border-l-destructive bg-destructive/10"
- : "border-border border-l-primary bg-card hover:bg-accent"
- }`}
+  conflicted
+  ? "border-destructive/40 border-l-destructive bg-destructive/10"
+  : "border-border border-l-primary bg-card hover:bg-accent"
+  }`}
                           style={{ top: `${top}rem`, height: `${height}rem` }}
+                          onClick={() => onCourseClick?.(c.code)}
                         >
                           <div className="mb-0 flex items-start justify-between overflow-hidden">
                             <span
@@ -194,10 +198,12 @@ function Agenda({
   courses,
   isConflicted,
   isCourseCentric,
+  onCourseClick,
 }: {
   courses: Course[];
   isConflicted: (c: Course) => boolean;
   isCourseCentric?: boolean;
+  onCourseClick?: (code: string) => void;
 }) {
   const byDay = DAYS.map((day) => {
     const entries = courses
@@ -231,11 +237,12 @@ function Agenda({
               return (
                 <li
                   key={`${course.id}-${idx}`}
-                  className={`flex gap-2.5 rounded-card border border-l-2 bg-card p-2.5 ${
- conflicted
- ? "border-destructive/40 border-l-destructive"
- : "border-border border-l-primary"
- }`}
+                  className={`flex gap-2.5 rounded-card border border-l-2 bg-card p-2.5 cursor-pointer ${
+  conflicted
+  ? "border-destructive/40 border-l-destructive"
+  : "border-border border-l-primary"
+  }`}
+                  onClick={() => onCourseClick?.(course.code)}
                 >
                   <div className="shrink-0 font-mono text-caption text-muted-foreground">
                     <div className="font-bold text-foreground">{slot.start}</div>
