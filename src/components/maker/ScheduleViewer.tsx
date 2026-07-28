@@ -8,6 +8,8 @@ import { checkConflicts, resolveConflictsMinimally } from "../../lib/rules";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -583,13 +585,13 @@ export function ScheduleViewer({
       <Dialog open={showManualConfirm} onOpenChange={setShowManualConfirm}>
         <DialogContent size="sm">
           <DialogHeader>
-            <DialogTitle>Beralih ke Mode Manual?</DialogTitle>
+            <DialogTitle className="text-title">Beralih ke Mode Manual?</DialogTitle>
+            <DialogDescription className="text-body-sm text-muted-foreground pt-1">
+              Edit manual berarti Anda akan kehilangan fitur Shuffle dan Expand, serta
+              beralih ke mode plotter manual. Anda masih bisa menyimpan jadwal ini.
+            </DialogDescription>
           </DialogHeader>
-          <p className="text-body-sm text-muted-foreground px-6 pb-2">
-            Edit manual berarti Anda akan kehilangan fitur Shuffle dan Expand, serta
-            beralih ke mode plotter manual. Anda masih bisa menyimpan jadwal ini.
-          </p>
-          <div className="flex justify-end gap-2 px-6 pb-4">
+          <DialogFooter className="pt-2">
             <Button variant="outline" onClick={() => setShowManualConfirm(false)}>
               Batal
             </Button>
@@ -601,7 +603,7 @@ export function ScheduleViewer({
             >
               Lanjutkan
             </Button>
-          </div>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
