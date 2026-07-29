@@ -385,10 +385,12 @@ export const splitMasterCoursesByPrefix = mutation({
 });
 
 /**
- * Copy master_courses rows from one prodi to one or more target prodis based
- * on class-code prefix matching. Unlike splitMasterCoursesByPrefix, this does
- * NOT remove or modify the source rows -- new rows are inserted into each
- * target prodi. Useful for duplicating a shared base catalog before splitting.
+ * Copy (upsert) master_courses rows from one prodi to one or more target
+ * prodis based on class-code prefix matching. Source rows are never modified.
+ *
+ * Dedup: if a row with the same code + class already exists in the target
+ * prodi it is patched (overwritten) rather than duplicated, so running this
+ * operation twice is safe and idempotent.
  */
 export const copyMasterCoursesByPrefix = mutation({
   args: {
@@ -415,28 +417,101 @@ export const copyMasterCoursesByPrefix = mutation({
       .withIndex("by_prodi", (q) => q.eq("prodi", sourceNormalized))
       .collect();
 
-    // Build insert payloads: strip system fields _id and _creationTime, then
-    // override prodi with the target. All other fields are copied verbatim.
-    const toCopy = rows.flatMap((row) => {
+    let inserted = 0;
+    let overwritten = 0;
+    const perTarget: Record<string, number> = {};
+
+    await Promise.all(
+      rows.map(async (row) => {
+        const classUpper = row.class.trim().toUpperCase();
+        const match = mappings.find((m) => classUpper.startsWith(m.prefix));
+        if (!match) return;
+
+        const { _id, _creationTime, ...rest } = row;
+        const payload = { ...rest, prodi: match.prodi };
+
+        // Upsert: check for an existing row with same code + class in the
+        // target prodi. Patch if found, insert if not.
+        const existing = await ctx.db
+          .query("master_courses")
+          .withIndex("by_code", (q) => q.eq("code", row.code))
+          .filter((q) =>
+            q.and(
+              q.eq(q.field("class"), row.class),
+              q.eq(q.field("prodi"), match.prodi),
+            ),
+          )
+          .first();
+
+        if (existing) {
+          await ctx.db.patch(existing._id, payload);
+          overwritten++;
+        } else {
+          await ctx.db.insert("master_courses", payload);
+          inserted++;
+        }
+
+        perTarget[match.prodi] = (perTarget[match.prodi] || 0) + 1;
+      }),
+    );
+
+    const unmatched = rows.length - inserted - overwritten;
+    return {
+      scanned: rows.length,
+      copied: inserted + overwritten,
+      inserted,
+      overwritten,
+      unmatched,
+      perTarget,
+    };
+  },
+});
+
+/**
+ * Delete master_courses rows from a source prodi whose class code starts with
+ * any of the given prefixes. The target prodi in each mapping is ignored --
+ * only the prefix column is used to match rows to delete.
+ *
+ * This is a permanent, irreversible operation. The caller is expected to
+ * confirm before invoking.
+ */
+export const deleteMasterCoursesByPrefix = mutation({
+  args: {
+    sourceProdi: v.string(),
+    prefixes: v.array(v.string()),
+  },
+  handler: async (ctx, args) => {
+    await requireAdmin(ctx);
+    await rateLimit(ctx, { name: "adminMutations", throws: true });
+
+    const sourceNormalized = args.sourceProdi
+      .toUpperCase()
+      .trim()
+      .replace(/\.$/, "");
+    const normalizedPrefixes = args.prefixes
+      .map((p) => p.trim().toUpperCase())
+      .filter((p) => p.length > 0);
+
+    if (normalizedPrefixes.length === 0) {
+      return { scanned: 0, deleted: 0, unmatched: 0 };
+    }
+
+    const rows = await ctx.db
+      .query("master_courses")
+      .withIndex("by_prodi", (q) => q.eq("prodi", sourceNormalized))
+      .collect();
+
+    const toDelete = rows.filter((row) => {
       const classUpper = row.class.trim().toUpperCase();
-      const match = mappings.find((m) => classUpper.startsWith(m.prefix));
-      if (!match) return [];
-      const { _id, _creationTime, ...rest } = row;
-      return [{ ...rest, prodi: match.prodi }];
+      return normalizedPrefixes.some((p) => classUpper.startsWith(p));
     });
 
-    await Promise.all(toCopy.map((doc) => ctx.db.insert("master_courses", doc)));
-
-    const perTarget: Record<string, number> = {};
-    for (const doc of toCopy) {
-      perTarget[doc.prodi] = (perTarget[doc.prodi] || 0) + 1;
-    }
+    await Promise.all(toDelete.map((row) => ctx.db.delete(row._id)));
 
     return {
       scanned: rows.length,
-      copied: toCopy.length,
-      unmatched: rows.length - toCopy.length,
-      perTarget,
+      deleted: toDelete.length,
+      unmatched: rows.length - toDelete.length,
     };
   },
 });

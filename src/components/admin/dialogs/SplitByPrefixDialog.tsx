@@ -47,6 +47,7 @@ export function SplitByPrefixDialog({
 }: SplitByPrefixDialogProps) {
   const splitByPrefix = useMutation(api.admin.splitMasterCoursesByPrefix);
   const copyByPrefix = useMutation(api.admin.copyMasterCoursesByPrefix);
+  const deleteByPrefix = useMutation(api.admin.deleteMasterCoursesByPrefix);
 
   const [sourceProdi, setSourceProdi] = useState("");
   const [mappings, setMappings] = useState<MappingRow[]>([
@@ -54,6 +55,7 @@ export function SplitByPrefixDialog({
   ]);
   const [isRunning, setIsRunning] = useState(false);
   const [isCopying, setIsCopying] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const sorted = [...prodiOptions].sort((a, b) =>
     a.name.localeCompare(b.name),
@@ -74,6 +76,12 @@ export function SplitByPrefixDialog({
   const canRun =
     sourceProdi.length > 0 &&
     mappings.some((m) => m.prefix.trim() && m.prodi);
+
+  const canDelete =
+    sourceProdi.length > 0 &&
+    mappings.some((m) => m.prefix.trim() !== "");
+
+  const isPending = isRunning || isCopying || isDeleting;
 
   const handleRun = async () => {
     setIsRunning(true);
@@ -129,6 +137,29 @@ export function SplitByPrefixDialog({
       toast.error("Copy gagal: " + err.message);
     } finally {
       setIsCopying(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    const validPrefixes = mappings.map((m) => m.prefix.trim()).filter(Boolean);
+    if (validPrefixes.length === 0) return;
+
+    const confirmMsg = `PERINGATAN: Tindakan ini akan menghapus semua kelas dari prodi "${sourceProdi}" yang memiliki prefix berikut secara permanen:\n\n${validPrefixes.join(", ")}\n\nApakah Anda yakin ingin menghapus data ini?`;
+    if (!window.confirm(confirmMsg)) return;
+
+    setIsDeleting(true);
+    try {
+      const result = await deleteByPrefix({
+        sourceProdi,
+        prefixes: validPrefixes,
+      });
+      toast.success(
+        `${result.deleted} kelas berhasil dihapus dari ${sourceProdi} (${result.unmatched} tidak cocok).`
+      );
+    } catch (err: any) {
+      toast.error("Hapus gagal: " + err.message);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -224,27 +255,34 @@ export function SplitByPrefixDialog({
           </div>
 
           <p className="rounded-card border border-border bg-muted p-3 text-caption text-muted-foreground">
-            Kelas yang tidak cocok dengan prefix manapun tidak akan
-            dipindahkan -- bisa dipindah manual lewat pilih baris + tombol
-            Pindah di Master Data.
+            Aturan prefix akan memindahkan atau menyalin data kelas ke prodi tujuan.
+            Untuk <strong>Hapus</strong>, kolom &quot;Prodi tujuan&quot; akan diabaikan (hanya prefix yang digunakan).
           </p>
         </div>
 
-        <DialogFooter className="mt-4">
+        <DialogFooter className="mt-4 flex flex-wrap gap-2 justify-end">
           <Button variant="ghost" onClick={onClose} className="text-caps uppercase">
             Batal
           </Button>
           <Button
             variant="outline"
+            onClick={handleDelete}
+            disabled={!canDelete || isPending}
+            className="px-6 text-caps uppercase text-destructive hover:bg-destructive/10"
+          >
+            {isDeleting ? "Menghapus..." : "Jalankan Hapus"}
+          </Button>
+          <Button
+            variant="outline"
             onClick={handleCopy}
-            disabled={!canRun || isRunning || isCopying}
+            disabled={!canRun || isPending}
             className="px-6 text-caps uppercase"
           >
             {isCopying ? "Menyalin..." : "Jalankan Copy"}
           </Button>
           <Button
             onClick={handleRun}
-            disabled={!canRun || isRunning || isCopying}
+            disabled={!canRun || isPending}
             className="px-6 text-caps uppercase"
           >
             {isRunning ? "Memproses..." : "Jalankan Split"}
