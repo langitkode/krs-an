@@ -1,5 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { paginationOptsValidator } from "convex/server";
 import { getAuthedUser, requireAdmin } from "./lib";
 import { rateLimit } from "./rateLimitConfig";
 
@@ -70,14 +71,14 @@ export const submit = mutation({
   },
 });
 
-/** Admin-only: list all feedback, newest first. */
+/** Admin-only: list all feedback, newest first, paginated. */
 export const listFeedback = query({
-  args: {},
-  handler: async (ctx) => {
+  args: { paginationOpts: paginationOptsValidator },
+  handler: async (ctx, args) => {
     await requireAdmin(ctx);
     return await ctx.db
       .query("feedback")
       .order("desc")
-      .collect();
+      .paginate(args.paginationOpts);
   },
 });

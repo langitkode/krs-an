@@ -1,5 +1,6 @@
-import { useQuery } from "convex/react";
+import { usePaginatedQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
+import { Button } from "@/components/ui/button";
 
 function StarDisplay({ rating }: { rating: number }) {
   return (
@@ -10,9 +11,13 @@ function StarDisplay({ rating }: { rating: number }) {
 }
 
 export function FeedbackTab() {
-  const feedback = useQuery(api.feedback.listFeedback);
+  const { results: feedback, status, loadMore } = usePaginatedQuery(
+    api.feedback.listFeedback,
+    {},
+    { initialNumItems: 25 },
+  );
 
-  if (feedback === undefined) {
+  if (status === "LoadingFirstPage") {
     return (
       <div className="flex items-center justify-center py-20 text-muted-foreground">
         Loading...
@@ -70,6 +75,14 @@ export function FeedbackTab() {
           </div>
         ))}
       </div>
+
+      {status === "CanLoadMore" && (
+        <div className="flex justify-center pt-2">
+          <Button variant="outline" size="sm" onClick={() => loadMore(25)}>
+            Muat Lagi
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
