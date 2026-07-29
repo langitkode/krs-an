@@ -1,0 +1,11 @@
+# KRSan
+
+> Platform optimasi jadwal perkuliahan untuk mahasiswa Indonesia.
+> Membantu menyusun jadwal KRS tanpa bentrok menggunakan algoritma
+> penjadwalan dan AI.
+
+## Pages
+
+- [Beranda](https://krsan.web.id/): Penyusun jadwal kuliah online
+- [Kebijakan Privasi](https://krsan.web.id/privacy): Informasi data yang dikumpulkan
+- [Syarat & Ketentuan](https://krsan.web.id/terms): Ketentuan penggunaan

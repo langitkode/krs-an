@@ -39,3 +39,9 @@ createRoot(document.getElementById("root")!).render(
     </ClerkProvider>
   </StrictMode>,
 );
+
+// Build-time prerender trigger: puppeteer waits for this event before
+// capturing the rendered HTML.
+requestAnimationFrame(() => {
+  document.dispatchEvent(new Event("prerender-ready"));
+});
