@@ -72,13 +72,16 @@ export const getPaginatedMasterCourses = query({
       });
 
       const numItems = args.paginationOpts.numItems;
-      const paginatedPage = filtered.slice(0, numItems);
-      const isDone = numItems >= filtered.length;
+      const cursor = args.paginationOpts.cursor;
+      const offset = cursor ? parseInt(cursor, 10) : 0;
+
+      const paginatedPage = filtered.slice(offset, offset + numItems);
+      const isDone = offset + numItems >= filtered.length;
 
       return {
         page: paginatedPage,
         isDone,
-        continueCursor: isDone ? "" : String(numItems),
+        continueCursor: isDone ? "" : String(offset + numItems),
       };
     }
 
