@@ -439,6 +439,28 @@ export const splitMasterCoursesByPrefix = mutation({
       perTarget[p.prodi] = (perTarget[p.prodi] || 0) + 1;
     }
 
+    // Trigger update banners for each target prodi
+    for (const [prodi, count] of Object.entries(perTarget)) {
+      await ctx.runMutation(internal.updateEvents.createAutoEvent, {
+        prodi,
+        type: "course_import",
+        inserted: count,
+        updated: 0,
+        total: count,
+      });
+    }
+
+    // Trigger update banner for source prodi (classes moved out)
+    if (patches.length > 0) {
+      await ctx.runMutation(internal.updateEvents.createAutoEvent, {
+        prodi: sourceNormalized,
+        type: "course_import",
+        inserted: 0,
+        updated: patches.length,
+        total: patches.length,
+      });
+    }
+
     return {
       scanned: rows.length,
       moved: patches.length,
@@ -519,6 +541,17 @@ export const copyMasterCoursesByPrefix = mutation({
       }),
     );
 
+    // Trigger update banners for each target prodi
+    for (const [prodi, count] of Object.entries(perTarget)) {
+      await ctx.runMutation(internal.updateEvents.createAutoEvent, {
+        prodi,
+        type: "course_import",
+        inserted: count,
+        updated: 0,
+        total: count,
+      });
+    }
+
     const unmatched = rows.length - inserted - overwritten;
     return {
       scanned: rows.length,
@@ -571,6 +604,17 @@ export const deleteMasterCoursesByPrefix = mutation({
     });
 
     await Promise.all(toDelete.map((row) => ctx.db.delete(row._id)));
+
+    // Trigger update banner for source prodi (classes deleted)
+    if (toDelete.length > 0) {
+      await ctx.runMutation(internal.updateEvents.createAutoEvent, {
+        prodi: sourceNormalized,
+        type: "course_import",
+        inserted: 0,
+        updated: toDelete.length,
+        total: toDelete.length,
+      });
+    }
 
     return {
       scanned: rows.length,
