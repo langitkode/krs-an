@@ -200,6 +200,8 @@ const translations: Record<string, string> = {
     "{count} mata kuliah dimuat dari kurikulum.",
   "toast.curriculum_empty":
     "Kurikulum untuk prodi dan semester ini sudah ada, tapi kelasnya belum tersedia di katalog. Coba tambah manual atau hubungi admin.",
+  "toast.rate_limited": "Terlalu banyak permintaan",
+  "toast.rate_limited_desc": "Silakan tunggu beberapa saat sebelum mencoba lagi.",
 
   "auth.sign_in_title": "Butuh login",
   "auth.sign_in_action": "Masuk",

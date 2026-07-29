@@ -3,6 +3,7 @@ import { useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { toast } from "sonner";
 import { useLanguage } from "@/context/LanguageContext";
+import { getAnonymousId } from "@/lib/anonymousId";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -40,11 +41,18 @@ export function FeedbackDialog({
         rating,
         message: message.trim() || undefined,
         saveCount,
+        anonymousId: getAnonymousId(),
       });
       toast.success(t("feedback.success"));
       onOpenChange(false);
     } catch (err: any) {
-      toast.error(err.message);
+      if (err?.data?.kind === "RateLimited") {
+        toast.error(t("toast.rate_limited"), {
+          description: t("toast.rate_limited_desc"),
+        });
+      } else {
+        toast.error(err.message);
+      }
     } finally {
       setSubmitting(false);
     }
