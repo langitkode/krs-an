@@ -46,12 +46,14 @@ export function SplitByPrefixDialog({
   prodiOptions,
 }: SplitByPrefixDialogProps) {
   const splitByPrefix = useMutation(api.admin.splitMasterCoursesByPrefix);
+  const copyByPrefix = useMutation(api.admin.copyMasterCoursesByPrefix);
 
   const [sourceProdi, setSourceProdi] = useState("");
   const [mappings, setMappings] = useState<MappingRow[]>([
     { prefix: "", prodi: "" },
   ]);
   const [isRunning, setIsRunning] = useState(false);
+  const [isCopying, setIsCopying] = useState(false);
 
   const sorted = [...prodiOptions].sort((a, b) =>
     a.name.localeCompare(b.name),
@@ -99,6 +101,34 @@ export function SplitByPrefixDialog({
       toast.error("Split gagal: " + err.message);
     } finally {
       setIsRunning(false);
+    }
+  };
+
+  const handleCopy = async () => {
+    setIsCopying(true);
+    try {
+      const validMappings = mappings.filter(
+        (m) => m.prefix.trim() && m.prodi,
+      );
+      const result = await copyByPrefix({
+        sourceProdi,
+        mappings: validMappings,
+      });
+      const perTargetSummary = Object.entries(result.perTarget)
+        .map(([prodi, count]) => `${count} ke ${prodi}`)
+        .join(", ");
+      toast.success(
+        `${result.copied} disalin (${perTargetSummary || "tidak ada"}).` +
+          (result.unmatched > 0
+            ? ` ${result.unmatched} tidak cocok prefix manapun, tidak disalin.`
+            : ""),
+      );
+      // Intentionally no form reset: admin may want to follow up with
+      // Jalankan Split using the same config.
+    } catch (err: any) {
+      toast.error("Copy gagal: " + err.message);
+    } finally {
+      setIsCopying(false);
     }
   };
 
@@ -205,8 +235,16 @@ export function SplitByPrefixDialog({
             Batal
           </Button>
           <Button
+            variant="outline"
+            onClick={handleCopy}
+            disabled={!canRun || isRunning || isCopying}
+            className="px-6 text-caps uppercase"
+          >
+            {isCopying ? "Menyalin..." : "Jalankan Copy"}
+          </Button>
+          <Button
             onClick={handleRun}
-            disabled={!canRun || isRunning}
+            disabled={!canRun || isRunning || isCopying}
             className="px-6 text-caps uppercase"
           >
             {isRunning ? "Memproses..." : "Jalankan Split"}

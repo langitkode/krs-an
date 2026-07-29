@@ -384,6 +384,63 @@ export const splitMasterCoursesByPrefix = mutation({
   },
 });
 
+/**
+ * Copy master_courses rows from one prodi to one or more target prodis based
+ * on class-code prefix matching. Unlike splitMasterCoursesByPrefix, this does
+ * NOT remove or modify the source rows -- new rows are inserted into each
+ * target prodi. Useful for duplicating a shared base catalog before splitting.
+ */
+export const copyMasterCoursesByPrefix = mutation({
+  args: {
+    sourceProdi: v.string(),
+    mappings: v.array(v.object({ prefix: v.string(), prodi: v.string() })),
+  },
+  handler: async (ctx, args) => {
+    await requireAdmin(ctx);
+    await rateLimit(ctx, { name: "adminMutations", throws: true });
+
+    const sourceNormalized = args.sourceProdi
+      .toUpperCase()
+      .trim()
+      .replace(/\.$/, "");
+    const mappings = args.mappings
+      .map((m) => ({
+        prefix: m.prefix.trim().toUpperCase(),
+        prodi: m.prodi.toUpperCase().trim().replace(/\.$/, ""),
+      }))
+      .filter((m) => m.prefix.length > 0 && m.prodi.length > 0);
+
+    const rows = await ctx.db
+      .query("master_courses")
+      .withIndex("by_prodi", (q) => q.eq("prodi", sourceNormalized))
+      .collect();
+
+    // Build insert payloads: strip system fields _id and _creationTime, then
+    // override prodi with the target. All other fields are copied verbatim.
+    const toCopy = rows.flatMap((row) => {
+      const classUpper = row.class.trim().toUpperCase();
+      const match = mappings.find((m) => classUpper.startsWith(m.prefix));
+      if (!match) return [];
+      const { _id, _creationTime, ...rest } = row;
+      return [{ ...rest, prodi: match.prodi }];
+    });
+
+    await Promise.all(toCopy.map((doc) => ctx.db.insert("master_courses", doc)));
+
+    const perTarget: Record<string, number> = {};
+    for (const doc of toCopy) {
+      perTarget[doc.prodi] = (perTarget[doc.prodi] || 0) + 1;
+    }
+
+    return {
+      scanned: rows.length,
+      copied: toCopy.length,
+      unmatched: rows.length - toCopy.length,
+      perTarget,
+    };
+  },
+});
+
 // Curriculum Operations
 export const listCurriculum = query({
   args: { prodi: v.string(), semester: v.optional(v.number()) },
