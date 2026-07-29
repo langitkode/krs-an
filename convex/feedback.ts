@@ -31,16 +31,20 @@ export const submit = mutation({
       throw new Error(`Message must not exceed ${MAX_MESSAGE_LENGTH} characters`);
     }
 
-    // --- rate limiting ---
-    if (args.anonymousId) {
-      await rateLimit(ctx, { name: "submitFeedback", key: args.anonymousId, throws: true });
-    }
-
     // --- identity ---
     const user = await getAuthedUser(ctx);
     const identity = await ctx.auth.getUserIdentity();
     const tokenId = identity?.tokenIdentifier;
     const email = identity?.email || user?.email;
+
+    // --- rate limiting ---
+    // Rate-limit both anonymous and authed callers. Previously only anonymous
+    // callers were throttled (keyed by anonymousId); signed-in users had no
+    // throttle on voluntary submissions at all.
+    const rateLimitKey = tokenId || args.anonymousId;
+    if (rateLimitKey) {
+      await rateLimit(ctx, { name: "submitFeedback", key: rateLimitKey, throws: true });
+    }
 
     // --- duplicate guard: same tokenId + saveCount ---
     // saveCount 0 means the user opened the dialog manually (Saran link in
