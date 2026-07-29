@@ -27,21 +27,44 @@ export const getPaginatedMasterCourses = query({
   },
   handler: async (ctx, args) => {
     if (args.search) {
-      let q = ctx.db
-        .query("master_courses")
-        .withSearchIndex("search_courses", (q) => {
-          let searchQ = q.search("name", args.search!);
-          if (args.prodi && args.prodi !== "all") {
-            searchQ = searchQ.eq("prodi", args.prodi!);
-          }
-          return searchQ;
-        });
+      let rows;
+      if (args.prodi && args.prodi !== "all") {
+        rows = await ctx.db
+          .query("master_courses")
+          .withIndex("by_prodi", (q) => q.eq("prodi", args.prodi!))
+          .collect();
+      } else {
+        rows = await ctx.db.query("master_courses").collect();
+      }
 
-      const results = await q.take(50); // Limit to top 50 results for speed/efficiency
+      const searchTerms = args.search
+        .toLowerCase()
+        .split(/\s+/)
+        .filter((t) => t.length > 0);
+
+      const filtered = rows.filter((row) => {
+        const code = row.code.toLowerCase();
+        const name = row.name.toLowerCase();
+        const className = row.class.toLowerCase();
+        const lecturer = row.lecturer.toLowerCase();
+
+        return searchTerms.every(
+          (term) =>
+            code.includes(term) ||
+            name.includes(term) ||
+            className.includes(term) ||
+            lecturer.includes(term),
+        );
+      });
+
+      const numItems = args.paginationOpts.numItems;
+      const paginatedPage = filtered.slice(0, numItems);
+      const isDone = numItems >= filtered.length;
+
       return {
-        page: results,
-        isDone: true,
-        continueCursor: "",
+        page: paginatedPage,
+        isDone,
+        continueCursor: isDone ? "" : String(numItems),
       };
     }
 
@@ -63,23 +86,38 @@ export const getMasterCoursesCount = query({
     search: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    // A search term used to trigger a full-table `.collect()` re-filtered by
-    // hand in JS, on every debounced keystroke. Route through the same search
-    // index getPaginatedMasterCourses uses instead: it also keeps the count in
-    // sync with what that query actually displays (both name-matched), where
-    // before this also matched on `code` and could disagree with the list.
     if (args.search) {
-      const results = await ctx.db
-        .query("master_courses")
-        .withSearchIndex("search_courses", (q) => {
-          let searchQ = q.search("name", args.search!);
-          if (args.prodi && args.prodi !== "all") {
-            searchQ = searchQ.eq("prodi", args.prodi!);
-          }
-          return searchQ;
-        })
-        .collect();
-      return results.length;
+      let rows;
+      if (args.prodi && args.prodi !== "all") {
+        rows = await ctx.db
+          .query("master_courses")
+          .withIndex("by_prodi", (q) => q.eq("prodi", args.prodi!))
+          .collect();
+      } else {
+        rows = await ctx.db.query("master_courses").collect();
+      }
+
+      const searchTerms = args.search
+        .toLowerCase()
+        .split(/\s+/)
+        .filter((t) => t.length > 0);
+
+      const filtered = rows.filter((row) => {
+        const code = row.code.toLowerCase();
+        const name = row.name.toLowerCase();
+        const className = row.class.toLowerCase();
+        const lecturer = row.lecturer.toLowerCase();
+
+        return searchTerms.every(
+          (term) =>
+            code.includes(term) ||
+            name.includes(term) ||
+            className.includes(term) ||
+            lecturer.includes(term),
+        );
+      });
+
+      return filtered.length;
     }
 
     if (args.prodi && args.prodi !== "all") {

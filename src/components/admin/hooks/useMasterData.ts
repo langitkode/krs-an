@@ -47,11 +47,8 @@ export function useMasterData() {
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const endIndex = startIndex + ITEMS_PER_PAGE;
 
-  // If we are searching, we don't paginate on client side because server returns the full slice
-  // However, with our new paginated architecture, we follow the results
-  const displayedCourses = debouncedSearch
-    ? results
-    : results.slice(startIndex, endIndex);
+  // Slices the accumulated results list to display only the active page's subset
+  const displayedCourses = results.slice(startIndex, endIndex);
 
   // Navigation functions
   const goToPage = (page: number) => {
