@@ -44,6 +44,9 @@ export const submit = mutation({
     const rateLimitKey = tokenId || args.anonymousId;
     if (rateLimitKey) {
       await rateLimit(ctx, { name: "submitFeedback", key: rateLimitKey, throws: true });
+      if (args.saveCount === 0) {
+        await rateLimit(ctx, { name: "submitFeedbackVoluntary", key: rateLimitKey, throws: true });
+      }
     }
 
     // --- duplicate guard: same tokenId + saveCount ---

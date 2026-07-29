@@ -2,6 +2,7 @@ import { defineRateLimits } from "convex-helpers/server/rateLimit";
 
 const SECOND = 1000;
 const MINUTE = 60 * SECOND;
+const DAY = 24 * 60 * 60 * SECOND;
 
 /**
  * Rate limit configurations for all tiers.
@@ -23,6 +24,8 @@ const MINUTE = 60 * SECOND;
 export const { checkRateLimit, rateLimit, resetRateLimit } = defineRateLimits({
   // ── Tier 2: Anonymous mutations (per-device) ──────────────
   submitFeedback: { kind: "token bucket", rate: 3, period: 10 * SECOND, capacity: 5 },
+  // Max 5 voluntary feedback submissions per day per device/user
+  submitFeedbackVoluntary: { kind: "token bucket", rate: 5, period: DAY, capacity: 5 },
 
   // ── Tier 3: Authenticated mutations (per-user) ───────────
   // Plan operations: save, delete, rename
