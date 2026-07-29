@@ -1,8 +1,9 @@
-import { useQuery } from "convex/react";
+﻿import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { Icon } from "@/components/ui/icon";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { UpdateHistoryDialog } from "./UpdateHistoryDialog";
 
 function timeAgo(ts: number): string {
   const rtf = new Intl.RelativeTimeFormat("id-ID", { numeric: "auto" });
@@ -60,46 +61,67 @@ interface UpdateBannerProps {
 }
 
 export function UpdateBanner({ prodi }: UpdateBannerProps) {
+  const [historyOpen, setHistoryOpen] = useState(false);
+
   const rawEvents = useQuery(api.updateEvents.listActiveEvents, {
     prodi: undefined,
   });
 
-  const visibleEvents = useMemo(() => {
-    if (!rawEvents) return [];
-    return prodi
+  // Show only the single latest event for the selected prodi
+  const latestEvent = useMemo<UpdateEvent | null>(() => {
+    if (!rawEvents) return null;
+    const filtered = prodi
       ? rawEvents.filter((e: UpdateEvent) => e.prodi === prodi)
       : rawEvents;
+    return filtered.length > 0 ? filtered[0] : null;
   }, [rawEvents, prodi]);
 
-  if (!visibleEvents || visibleEvents.length === 0) return null;
+  if (!latestEvent) return null;
+
+  const icon = severityIcon[latestEvent.severity] ?? severityIcon.info;
 
   return (
-    <div className="mb-4 flex flex-col">
-      {visibleEvents.map((event: UpdateEvent) => {
-        const icon = severityIcon[event.severity] ?? severityIcon.info;
-        return (
-          <div
-            key={event._id}
-            className="flex items-center gap-2 border-b border-border px-4 py-1.5 text-caption text-foreground bg-muted/50"
-          >
-            <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5">
-              <Icon name={icon as any} size={14} className="shrink-0" />
-              <span className="font-semibold">{event.title}</span>
-              {event.message && (
-                <span className="text-muted-foreground">
-                  ({event.message.replace(/^prodi\s+[^:]+:\s*/i, "")})
-                </span>
-              )}
-              <span className="rounded bg-foreground/10 px-1 py-0.5 text-data-sm font-mono">
-                {event.prodi}
+    <>
+      <div className="mb-4 border-b border-border bg-muted/50">
+        <div className="flex items-center gap-2 px-4 py-1.5 text-caption text-foreground">
+          {/* Left: icon + title + detail */}
+          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-0.5">
+            <Icon name={icon as any} size={14} className="shrink-0" />
+            <span className="font-semibold">{latestEvent.title}</span>
+            {latestEvent.message && (
+              <span className="text-muted-foreground">
+                ({latestEvent.message.replace(/^prodi\s+[^:]+:\s*/i, "")})
               </span>
-              <span className="text-data-sm opacity-70">
-                {timeAgo(event._creationTime)} • {formatTime(event._creationTime)}
-              </span>
-            </div>
+            )}
+            <span className="rounded bg-foreground/10 px-1 py-0.5 text-data-sm font-mono">
+              {latestEvent.prodi}
+            </span>
+            <span className="text-data-sm opacity-70">
+              {timeAgo(latestEvent._creationTime)} &bull;{" "}
+              {formatTime(latestEvent._creationTime)}
+            </span>
           </div>
-        );
-      })}
-    </div>
+
+          {/* Right: history link */}
+          {prodi && (
+            <button
+              type="button"
+              onClick={() => setHistoryOpen(true)}
+              className="ml-2 shrink-0 text-data-sm text-primary underline-offset-2 hover:underline"
+            >
+              Lihat riwayat
+            </button>
+          )}
+        </div>
+      </div>
+
+      {prodi && (
+        <UpdateHistoryDialog
+          prodi={prodi}
+          open={historyOpen}
+          onOpenChange={setHistoryOpen}
+        />
+      )}
+    </>
   );
 }

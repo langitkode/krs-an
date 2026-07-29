@@ -23,6 +23,27 @@ export const listActiveEvents = query({
 });
 
 /**
+ * Paginated history of all events (active + inactive) for a prodi.
+ * Ordered newest-first. Used by the history dialog.
+ */
+export const listEventHistory = query({
+  args: {
+    prodi: v.string(),
+    paginationOpts: v.object({
+      numItems: v.number(),
+      cursor: v.union(v.string(), v.null()),
+    }),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("update_events")
+      .withIndex("by_prodi", (q) => q.eq("prodi", args.prodi))
+      .order("desc")
+      .paginate(args.paginationOpts);
+  },
+});
+
+/**
  * Dismiss an event for the current user.
  * Anonymous users track dismiss via localStorage on the client.
  */
@@ -87,10 +108,10 @@ export const deactivateEvent = mutation({
 });
 
 /**
- * Internal mutation called by bulkImportMaster after import.
- * Creates a course_import event for each prodi that got new rows.
- * Skips if an active event already exists for the same prodi+type
- * to avoid stacking duplicates on repeated imports.
+ * Internal mutation called by import/split/delete operations.
+ * Always creates a fresh event and deactivates the previous active one
+ * for the same prodi+type — so each event is an accurate snapshot of
+ * one operation with its own timestamp. No unbounded accumulation.
  */
 export const createAutoEvent = internalMutation({
   args: {
@@ -106,71 +127,53 @@ export const createAutoEvent = internalMutation({
     const ins = args.inserted ?? 0;
     const upd = args.updated ?? 0;
     const del = args.deleted ?? 0;
+    const tot = ins + upd + del;
 
-    const existing = await ctx.db
-      .query("update_events")
-      .withIndex("by_prodi", (q) => q.eq("prodi", prodi))
-      .collect();
-
-    // Check if there is a currently active event of the same type to accumulate into
-    const activeEvent = existing.find(
-      (e) => e.type === args.type && e.active,
-    );
-
-    // Merge counts: active banner's existing counters + new counters
-    const mergedIns = (activeEvent?.inserted ?? 0) + ins;
-    const mergedUpd = (activeEvent?.updated ?? 0) + upd;
-    const mergedDel = (activeEvent?.deleted ?? 0) + del;
-    const mergedTot = mergedIns + mergedUpd + mergedDel;
-
-    if (mergedTot === 0) return; // Nothing changed
+    if (tot === 0) return; // Nothing changed
 
     // Generate rich title based on modification type
     let title = "Jadwal kuliah diperbarui";
-    if (mergedIns > 0 && mergedUpd === 0 && mergedDel === 0) {
-      title = `${mergedIns} kelas baru ditambahkan`;
-    } else if (mergedDel > 0 && mergedIns === 0 && mergedUpd === 0) {
-      title = `${mergedDel} kelas dihapus`;
-    } else if (mergedUpd > 0 && mergedIns === 0 && mergedDel === 0) {
-      title = `${mergedUpd} kelas diperbarui`;
-    } else if (mergedTot > 0) {
-      title = `${mergedTot} perubahan jadwal kelas`;
-    }
-
-    // Generate descriptive details
-    const parts: string[] = [];
-    if (mergedIns > 0) parts.push(`${mergedIns} kelas baru ditambahkan`);
-    if (mergedUpd > 0) parts.push(`${mergedUpd} kelas diperbarui`);
-    if (mergedDel > 0) parts.push(`${mergedDel} kelas dihapus`);
-
-    const message = `Prodi ${prodi}: ${parts.join(", ")}.`;
-    const severity = mergedDel > 0 && mergedIns === 0 ? "warning" : "success";
-
-    if (activeEvent) {
-      // Update existing banner and clear dismissed list so users see the new counts
-      await ctx.db.patch(activeEvent._id, {
-        title,
-        message,
-        severity,
-        inserted: mergedIns,
-        updated: mergedUpd,
-        deleted: mergedDel,
-        dismissed_by: [], // Reset dismissal so the banner pops back up
-      });
+    if (ins > 0 && upd === 0 && del === 0) {
+      title = `${ins} kelas baru ditambahkan`;
+    } else if (del > 0 && ins === 0 && upd === 0) {
+      title = `${del} kelas dihapus`;
+    } else if (upd > 0 && ins === 0 && del === 0) {
+      title = `${upd} kelas diperbarui`;
     } else {
-      // Create new banner
-      await ctx.db.insert("update_events", {
-        prodi,
-        type: args.type,
-        title,
-        message,
-        severity,
-        dismissed_by: [],
-        active: true,
-        inserted: mergedIns,
-        updated: mergedUpd,
-        deleted: mergedDel,
-      });
+      title = `${tot} perubahan jadwal kelas`;
     }
+
+    // Generate descriptive detail message
+    const parts: string[] = [];
+    if (ins > 0) parts.push(`${ins} kelas baru ditambahkan`);
+    if (upd > 0) parts.push(`${upd} kelas diperbarui`);
+    if (del > 0) parts.push(`${del} kelas dihapus`);
+    const message = `Prodi ${prodi}: ${parts.join(", ")}.`;
+
+    const severity = del > 0 && ins === 0 ? "warning" : "success";
+
+    // Deactivate any existing active event of the same type for this prodi
+    const rows = await ctx.db
+      .query("update_events")
+      .withIndex("by_prodi", (q) => q.eq("prodi", prodi))
+      .collect();
+    const existingActive = rows.find((e) => e.type === args.type && e.active);
+    if (existingActive) {
+      await ctx.db.patch(existingActive._id, { active: false });
+    }
+
+    // Insert fresh event with accurate timestamp
+    await ctx.db.insert("update_events", {
+      prodi,
+      type: args.type,
+      title,
+      message,
+      severity,
+      dismissed_by: [],
+      active: true,
+      inserted: ins,
+      updated: upd,
+      deleted: del,
+    });
   },
 });
