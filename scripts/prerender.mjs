@@ -54,17 +54,14 @@ try {
   const renderedRoutes = await prerenderer.renderRoutes(ROUTES);
 
   for (const route of renderedRoutes) {
-    const routePath =
-      route.route === "/" ? "" : route.route.replace(/^\//, "");
-    const outputPath = routePath
-      ? path.join(routePath, "index.html")
-      : "index.html";
-    const fullPath = path.join(distDir, outputPath);
+    // Flat HTML files — avoids Cloudflare auto-trailing-slash for directories
+    const filename =
+      route.route === "/" ? "index.html" : `${route.route.replace(/^\//, "")}.html`;
+    const fullPath = path.join(distDir, filename);
 
-    fs.mkdirSync(path.dirname(fullPath), { recursive: true });
     fs.writeFileSync(fullPath, route.html.trim());
     console.log(
-      `[prerender] ${outputPath} (${route.html.length} bytes)`,
+      `[prerender] ${filename} (${route.html.length} bytes)`,
     );
     count++;
   }

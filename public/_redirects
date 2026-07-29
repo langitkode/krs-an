@@ -1,1 +1,6 @@
+# Redirect trailing-slash routes to non-trailing-slash (flat HTML files)
+/privacy/  /privacy  301
+/terms/    /terms    301
+
+# SPA fallback: serve index.html for unmatched routes
 /*  /index.html  200
