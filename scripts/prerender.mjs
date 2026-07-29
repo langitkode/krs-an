@@ -30,10 +30,21 @@ const prerenderer = new Prerenderer({
     headless: true,
   },
   postProcess(renderedRoute) {
-    renderedRoute.html = renderedRoute.html.replace(
-      /https?:\/\/localhost:\d+/g,
-      "https://krsan.web.id",
-    );
+    const routeUrl =
+      renderedRoute.originalRoute === "/"
+        ? "https://krsan.web.id"
+        : `https://krsan.web.id${renderedRoute.originalRoute}`;
+
+    renderedRoute.html = renderedRoute.html
+      .replace(/https?:\/\/localhost:\d+/g, "https://krsan.web.id")
+      .replace(
+        /<meta property="og:url" content="[^"]*"/,
+        `<meta property="og:url" content="${routeUrl}"`,
+      )
+      .replace(
+        /<link rel="canonical" href="[^"]*"/,
+        `<link rel="canonical" href="${routeUrl}"`,
+      );
   },
 });
 
