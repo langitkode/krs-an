@@ -14,6 +14,7 @@ import type * as audit from "../audit.js";
 import type * as feedback from "../feedback.js";
 import type * as lib from "../lib.js";
 import type * as plans from "../plans.js";
+import type * as rateLimitConfig from "../rateLimitConfig.js";
 import type * as updateEvents from "../updateEvents.js";
 import type * as users from "../users.js";
 
@@ -30,6 +31,7 @@ declare const fullApi: ApiFromModules<{
   feedback: typeof feedback;
   lib: typeof lib;
   plans: typeof plans;
+  rateLimitConfig: typeof rateLimitConfig;
   updateEvents: typeof updateEvents;
   users: typeof users;
 }>;
