@@ -50,7 +50,6 @@ interface UpdateEvent {
   prodi: string;
   type: string;
   title: string;
-  message: string;
   severity: string;
   active: boolean;
   _creationTime: number;
@@ -88,11 +87,6 @@ export function UpdateBanner({ prodi }: UpdateBannerProps) {
           <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-0.5">
             <Icon name={icon as any} size={14} className="shrink-0" />
             <span className="font-semibold">{latestEvent.title}</span>
-            {latestEvent.message && (
-              <span className="text-muted-foreground">
-                ({latestEvent.message.replace(/^prodi\s+[^:]+:\s*/i, "")})
-              </span>
-            )}
             <span className="rounded bg-foreground/10 px-1 py-0.5 text-data-sm font-mono">
               {latestEvent.prodi}
             </span>

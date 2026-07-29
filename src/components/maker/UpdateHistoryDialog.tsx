@@ -74,8 +74,8 @@ export function UpdateHistoryDialog({
     { initialNumItems: 10 },
   );
 
-  const stripProdi = (msg: string) =>
-    msg.replace(/^prodi\s+[^:]+:\s*/i, "");
+  // const stripProdi = (msg: string) =>
+  //   msg.replace(/^prodi\s+[^:]+:\s*/i, "");
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -107,7 +107,7 @@ export function UpdateHistoryDialog({
               {results.map((event) => {
                 const icon = severityIcon[event.severity] ?? "info";
                 const color = severityColor[event.severity] ?? "text-muted-foreground";
-                const detail = event.message ? stripProdi(event.message) : null;
+                // const detail = event.message ? stripProdi(event.message) : null;
                 return (
                   <div
                     key={event._id}
@@ -127,11 +127,11 @@ export function UpdateHistoryDialog({
                           </span>
                         )}
                       </div>
-                      {detail && (
+                      {/*{detail && (
                         <p className="mt-0.5 text-caption text-muted-foreground">
                           {detail}
                         </p>
-                      )}
+                      )}*/}
                       <p className="mt-1 text-data-sm text-muted-foreground/70">
                         {timeAgo(event._creationTime)} -{" "}
                         {formatAbsolute(event._creationTime)}
