@@ -85,6 +85,11 @@ export function UpdateBanner({ prodi }: UpdateBannerProps) {
             <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5">
               <Icon name={icon as any} size={14} className="shrink-0" />
               <span className="font-semibold">{event.title}</span>
+              {event.message && (
+                <span className="text-muted-foreground">
+                  ({event.message.replace(/^prodi\s+[^:]+:\s*/i, "")})
+                </span>
+              )}
               <span className="rounded bg-foreground/10 px-1 py-0.5 text-data-sm font-mono">
                 {event.prodi}
               </span>
