@@ -43,7 +43,11 @@ export const submit = mutation({
     const email = identity?.email || user?.email;
 
     // --- duplicate guard: same tokenId + saveCount ---
-    if (tokenId) {
+    // saveCount 0 means the user opened the dialog manually (Saran link in
+    // Footer/Navbar), not from a save-milestone trigger. There is no meaningful
+    // "already submitted at this milestone" for ad-hoc submissions, so skip
+    // deduplication entirely and always allow them through.
+    if (tokenId && args.saveCount !== 0) {
       const existing = await ctx.db
         .query("feedback")
         .filter((q) =>
