@@ -117,6 +117,9 @@ export default defineSchema({
     severity: v.string(), // "info" | "success" | "warning"
     dismissed_by: v.array(v.string()), // tokenIdentifier[] of dismissers
     active: v.boolean(),
+    inserted: v.optional(v.number()),
+    updated: v.optional(v.number()),
+    deleted: v.optional(v.number()),
   })
     .index("by_active", ["active"])
     .index("by_prodi", ["prodi"]),

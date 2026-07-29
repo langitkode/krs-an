@@ -106,50 +106,71 @@ export const createAutoEvent = internalMutation({
     const ins = args.inserted ?? 0;
     const upd = args.updated ?? 0;
     const del = args.deleted ?? 0;
-    const tot = args.total ?? (ins + upd + del);
-
-    if (tot === 0) return; // Nothing changed
 
     const existing = await ctx.db
       .query("update_events")
       .withIndex("by_prodi", (q) => q.eq("prodi", prodi))
       .collect();
-    // Deactivate previous events so repeated imports each get a fresh banner
-    const stale = existing.filter(
+
+    // Check if there is a currently active event of the same type to accumulate into
+    const activeEvent = existing.find(
       (e) => e.type === args.type && e.active,
     );
-    await Promise.all(
-      stale.map((e) => ctx.db.patch(e._id, { active: false })),
-    );
+
+    // Merge counts: active banner's existing counters + new counters
+    const mergedIns = (activeEvent?.inserted ?? 0) + ins;
+    const mergedUpd = (activeEvent?.updated ?? 0) + upd;
+    const mergedDel = (activeEvent?.deleted ?? 0) + del;
+    const mergedTot = mergedIns + mergedUpd + mergedDel;
+
+    if (mergedTot === 0) return; // Nothing changed
 
     // Generate rich title based on modification type
     let title = "Jadwal kuliah diperbarui";
-    if (ins > 0 && upd === 0 && del === 0) {
-      title = `${ins} kelas baru ditambahkan`;
-    } else if (del > 0 && ins === 0 && upd === 0) {
-      title = `${del} kelas dihapus`;
-    } else if (upd > 0 && ins === 0 && del === 0) {
-      title = `${upd} kelas diperbarui`;
-    } else if (tot > 0) {
-      title = `${tot} perubahan jadwal kelas`;
+    if (mergedIns > 0 && mergedUpd === 0 && mergedDel === 0) {
+      title = `${mergedIns} kelas baru ditambahkan`;
+    } else if (mergedDel > 0 && mergedIns === 0 && mergedUpd === 0) {
+      title = `${mergedDel} kelas dihapus`;
+    } else if (mergedUpd > 0 && mergedIns === 0 && mergedDel === 0) {
+      title = `${mergedUpd} kelas diperbarui`;
+    } else if (mergedTot > 0) {
+      title = `${mergedTot} perubahan jadwal kelas`;
     }
 
     // Generate descriptive details
     const parts: string[] = [];
-    if (ins > 0) parts.push(`${ins} kelas baru ditambahkan`);
-    if (upd > 0) parts.push(`${upd} kelas diperbarui`);
-    if (del > 0) parts.push(`${del} kelas dihapus`);
+    if (mergedIns > 0) parts.push(`${mergedIns} kelas baru ditambahkan`);
+    if (mergedUpd > 0) parts.push(`${mergedUpd} kelas diperbarui`);
+    if (mergedDel > 0) parts.push(`${mergedDel} kelas dihapus`);
 
     const message = `Prodi ${prodi}: ${parts.join(", ")}.`;
+    const severity = mergedDel > 0 && mergedIns === 0 ? "warning" : "success";
 
-    await ctx.db.insert("update_events", {
-      prodi,
-      type: args.type,
-      title,
-      message,
-      severity: del > 0 && ins === 0 ? "warning" : "success",
-      dismissed_by: [],
-      active: true,
-    });
+    if (activeEvent) {
+      // Update existing banner and clear dismissed list so users see the new counts
+      await ctx.db.patch(activeEvent._id, {
+        title,
+        message,
+        severity,
+        inserted: mergedIns,
+        updated: mergedUpd,
+        deleted: mergedDel,
+        dismissed_by: [], // Reset dismissal so the banner pops back up
+      });
+    } else {
+      // Create new banner
+      await ctx.db.insert("update_events", {
+        prodi,
+        type: args.type,
+        title,
+        message,
+        severity,
+        dismissed_by: [],
+        active: true,
+        inserted: mergedIns,
+        updated: mergedUpd,
+        deleted: mergedDel,
+      });
+    }
   },
 });
