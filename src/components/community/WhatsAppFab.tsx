@@ -18,9 +18,9 @@ export function WhatsAppFab() {
   const [showChannels, setShowChannels] = useState(false);
   const [cooldown, setCooldown] = useState(false);
   const [hasSeen, setHasSeen] = useLocalStorage("has_seen_wa_popup", false);
-  // Auto-open on mount, once
+  // Auto-open after mount (deferred so prerender captures DOM without popover)
   useEffect(() => {
-    if (!hasSeen) setOpen(true);
+    if (!hasSeen) setTimeout(() => setOpen(true), 0);
   }, [hasSeen]);
 
   const openLink = useCallback(
