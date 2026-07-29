@@ -1,7 +1,6 @@
 import { useState, useCallback } from "react";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useLanguage } from "@/context/LanguageContext";
 
 const WA_UPDATE =
@@ -12,9 +11,7 @@ const RATE_LIMIT_MS = 2_000;
 
 export function WhatsAppFab() {
   const { t } = useLanguage();
-  const [name, setName] = useState("");
   const [open, setOpen] = useState(false);
-  const [showChannels, setShowChannels] = useState(false);
   const [cooldown, setCooldown] = useState(false);
 
   const openLink = useCallback(
@@ -27,20 +24,8 @@ export function WhatsAppFab() {
     [cooldown],
   );
 
-  const handleNext = useCallback(() => {
-    setShowChannels(true);
-  }, []);
-
   return (
-    <Popover
-      open={open}
-      onOpenChange={(next) => {
-        setOpen(next);
-        if (next) {
-          setShowChannels(false);
-          setName("");
-        }
-      }}>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <button
           type="button"
@@ -60,75 +45,50 @@ export function WhatsAppFab() {
             </span>
           </div>
 
-          {/* Description */}
-          <p className="text-body-sm text-muted-foreground">
-            {t("community.desc")}
-          </p>
+          {/* WA Community 1: Update KRSan */}
+          <div className="rounded-card border bg-card p-3">
+            <p className="text-body-sm font-medium text-foreground">
+              Update KRSan
+            </p>
+            <p className="mt-0.5 text-caption text-muted-foreground">
+              {t("community.update_desc")}
+            </p>
+            <Button
+              size="sm"
+              className="mt-2 w-full"
+              onClick={() => openLink(WA_UPDATE)}
+              disabled={cooldown}
+            >
+              {t("community.join")}
+            </Button>
+          </div>
 
-          {!showChannels ? (
-            <>
-              {/* Name input */}
-              <Input
-                placeholder={t("community.name_placeholder")}
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                maxLength={100}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") handleNext();
-                }}
-              />
-              <Button size="sm" className="w-full" onClick={handleNext}>
-                {t("community.next")}
-              </Button>
-            </>
-          ) : (
-            <>
-              {/* WA Community 1: Update KRSan */}
-              <div className="rounded-card border bg-card p-3">
-                <p className="text-body-sm font-medium text-foreground">
-                  Update KRSan
-                </p>
-                <p className="mt-0.5 text-caption text-muted-foreground">
-                  {t("community.update_desc")}
-                </p>
-                <Button
-                  size="sm"
-                  className="mt-2 w-full"
-                  onClick={() => openLink(WA_UPDATE)}
-                  disabled={cooldown}
-                >
-                  {t("community.join")}
-                </Button>
-              </div>
+          {/* WA Community 2: Ikut bikin/testing */}
+          <div className="rounded-card border bg-card p-3">
+            <p className="text-body-sm font-medium text-foreground">
+              {t("community.build_title")}
+            </p>
+            <p className="mt-0.5 text-caption text-muted-foreground">
+              {t("community.build_desc")}
+            </p>
+            <Button
+              size="sm"
+              className="mt-2 w-full"
+              onClick={() => openLink(WA_BUILD)}
+              disabled={cooldown}
+            >
+              {t("community.join")}
+            </Button>
+          </div>
 
-              {/* WA Community 2: Ikut bikin/testing */}
-              <div className="rounded-card border bg-card p-3">
-                <p className="text-body-sm font-medium text-foreground">
-                  {t("community.build_title")}
-                </p>
-                <p className="mt-0.5 text-caption text-muted-foreground">
-                  {t("community.build_desc")}
-                </p>
-                <Button
-                  size="sm"
-                  className="mt-2 w-full"
-                  onClick={() => openLink(WA_BUILD)}
-                  disabled={cooldown}
-                >
-                  {t("community.join")}
-                </Button>
-              </div>
-
-              {/* Dismiss */}
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                className="w-full text-center text-caption text-muted-foreground underline underline-offset-2 hover:text-foreground"
-              >
-                {t("community.later")}
-              </button>
-            </>
-          )}
+          {/* Dismiss */}
+          <button
+            type="button"
+            onClick={() => setOpen(false)}
+            className="w-full text-center text-caption text-muted-foreground underline underline-offset-2 hover:text-foreground"
+          >
+            {t("community.later")}
+          </button>
         </div>
       </PopoverContent>
     </Popover>
