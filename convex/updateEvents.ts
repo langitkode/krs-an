@@ -1,4 +1,5 @@
 import { mutation, query, internalMutation } from "./_generated/server";
+import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
 import { requireAdmin } from "./lib";
 
@@ -29,10 +30,7 @@ export const listActiveEvents = query({
 export const listEventHistory = query({
   args: {
     prodi: v.string(),
-    paginationOpts: v.object({
-      numItems: v.number(),
-      cursor: v.union(v.string(), v.null()),
-    }),
+    paginationOpts: paginationOptsValidator,
   },
   handler: async (ctx, args) => {
     return await ctx.db
@@ -106,6 +104,26 @@ export const deactivateEvent = mutation({
     await ctx.db.patch(args.eventId, { active: false });
   },
 });
+
+/**
+ * Admin utility: deactivate ALL active events at once.
+ * Use once to flush stale/accumulated data after a migration.
+ */
+export const deactivateAllEvents = mutation({
+  args: {},
+  handler: async (ctx) => {
+    await requireAdmin(ctx);
+    const active = await ctx.db
+      .query("update_events")
+      .withIndex("by_active", (q) => q.eq("active", true))
+      .collect();
+    await Promise.all(
+      active.map((e) => ctx.db.patch(e._id, { active: false })),
+    );
+    return { deactivated: active.length };
+  },
+});
+
 
 /**
  * Internal mutation called by import/split/delete operations.
