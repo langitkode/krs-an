@@ -1,6 +1,7 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import { getAuthedUser, requireAdmin } from "./lib";
+import { rateLimit } from "./rateLimitConfig";
 
 const MAX_MESSAGE_LENGTH = 500;
 
@@ -16,6 +17,7 @@ export const submit = mutation({
     rating: v.number(),
     message: v.optional(v.string()),
     saveCount: v.number(),
+    anonymousId: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     // --- validation ---
@@ -26,6 +28,11 @@ export const submit = mutation({
     const msg = args.message?.trim() || "";
     if (msg.length > MAX_MESSAGE_LENGTH) {
       throw new Error(`Message must not exceed ${MAX_MESSAGE_LENGTH} characters`);
+    }
+
+    // --- rate limiting ---
+    if (args.anonymousId) {
+      await rateLimit(ctx, { name: "submitFeedback", key: args.anonymousId, throws: true });
     }
 
     // --- identity ---

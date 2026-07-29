@@ -2,6 +2,7 @@ import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import { logAudit } from "./audit";
 import { getAuthedUser, requireUser, requireAdmin } from "./lib";
+import { rateLimit } from "./rateLimitConfig";
 
 // Helper to get current user
 export const getCurrentUser = query({
@@ -31,6 +32,7 @@ export const updatePreferences = mutation({
   },
   handler: async (ctx, args) => {
     const user = await requireUser(ctx);
+    await rateLimit(ctx, { name: "updatePreferences", key: user._id, throws: true });
     await ctx.db.patch(user._id, {
       preferredAiModel: args.preferredAiModel,
     });
@@ -44,6 +46,8 @@ export const ensureUser = mutation({
     if (!identity) {
       throw new Error("Called ensureUser without authentication present");
     }
+
+    await rateLimit(ctx, { name: "ensureUser", key: identity.tokenIdentifier, throws: true });
 
     const user = await ctx.db
       .query("users")
@@ -134,6 +138,7 @@ export const generateServiceToken = mutation({
   args: { type: v.optional(v.string()) },
   handler: async (ctx, args) => {
     const user = await requireUser(ctx);
+    await rateLimit(ctx, { name: "generateToken", key: user._id, throws: true });
 
     if (user.credits <= 0) {
       throw new Error("Daily limit reached. Come back tomorrow!");

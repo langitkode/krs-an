@@ -1,6 +1,7 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import { getAuthedUser, requireUser } from "./lib";
+import { rateLimit } from "./rateLimitConfig";
 
 /**
  * Save a generated plan to the archive
@@ -14,6 +15,7 @@ export const savePlan = mutation({
   },
   handler: async (ctx, args) => {
     const user = await requireUser(ctx);
+    await rateLimit(ctx, { name: "planWrite", key: user._id, throws: true });
 
     // Check plan limit
     const existingPlans = await ctx.db
@@ -80,6 +82,7 @@ export const deletePlan = mutation({
   args: { planId: v.id("plans") },
   handler: async (ctx, args) => {
     const user = await requireUser(ctx);
+    await rateLimit(ctx, { name: "planWrite", key: user._id, throws: true });
 
     const plan = await ctx.db.get(args.planId);
     if (!plan || plan.userId !== user._id) {
@@ -97,6 +100,7 @@ export const renamePlan = mutation({
   args: { planId: v.id("plans"), newName: v.string() },
   handler: async (ctx, args) => {
     const user = await requireUser(ctx);
+    await rateLimit(ctx, { name: "planWrite", key: user._id, throws: true });
 
     const plan = await ctx.db.get(args.planId);
     if (!plan || plan.userId !== user._id) {
@@ -114,6 +118,7 @@ export const createShareLink = mutation({
   args: { planId: v.id("plans") },
   handler: async (ctx, args) => {
     const user = await requireUser(ctx);
+    await rateLimit(ctx, { name: "createShareLink", key: user._id, throws: true });
 
     const plan = await ctx.db.get(args.planId);
     if (!plan || plan.userId !== user._id) {

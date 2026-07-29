@@ -4,6 +4,7 @@ import { paginationOptsValidator } from "convex/server";
 import { logAudit } from "./audit";
 import { requireAdmin, normalizeDayOfWeek } from "./lib";
 import { internal } from "./_generated/api";
+import { rateLimit } from "./rateLimitConfig";
 
 // checkAdmin used to be defined here (and duplicated in users.ts). It is now
 // requireAdmin in ./lib. Re-exported under the old name so existing importers
@@ -131,6 +132,7 @@ export const bulkImportMaster = mutation({
   },
   handler: async (ctx, args) => {
     const user = await requireAdmin(ctx);
+    await rateLimit(ctx, { name: "adminMutations", throws: true });
 
     const inputs = args.courses.map((c) => ({
       ...c,
@@ -195,6 +197,7 @@ export const clearMasterData = mutation({
   args: { prodi: v.optional(v.string()) },
   handler: async (ctx, args) => {
     const user = await requireAdmin(ctx);
+    await rateLimit(ctx, { name: "adminMutations", throws: true });
     let items;
     if (args.prodi) {
       items = await ctx.db
@@ -241,6 +244,7 @@ export const updateMasterCourse = mutation({
   },
   handler: async (ctx, args) => {
     await requireAdmin(ctx);
+    await rateLimit(ctx, { name: "adminMutations", throws: true });
     const updates = args.updates.schedule
       ? {
           ...args.updates,
@@ -258,6 +262,7 @@ export const deleteMasterCourse = mutation({
   args: { id: v.id("master_courses") },
   handler: async (ctx, args) => {
     await requireAdmin(ctx);
+    await rateLimit(ctx, { name: "adminMutations", throws: true });
     await ctx.db.delete(args.id);
   },
 });
@@ -266,6 +271,7 @@ export const batchDeleteMaster = mutation({
   args: { ids: v.array(v.id("master_courses")) },
   handler: async (ctx, args) => {
     await requireAdmin(ctx);
+    await rateLimit(ctx, { name: "adminMutations", throws: true });
     await Promise.all(args.ids.map((id) => ctx.db.delete(id)));
     return { success: true, count: args.ids.length };
   },
@@ -280,6 +286,7 @@ export const moveMasterCoursesToProdi = mutation({
   args: { ids: v.array(v.id("master_courses")), prodi: v.string() },
   handler: async (ctx, args) => {
     await requireAdmin(ctx);
+    await rateLimit(ctx, { name: "adminMutations", throws: true });
     const normalized = args.prodi.toUpperCase().trim().replace(/\.$/, "");
     await Promise.all(
       args.ids.map((id) => ctx.db.patch(id, { prodi: normalized })),
@@ -298,6 +305,7 @@ export const copyMasterCoursesToProdi = mutation({
   args: { ids: v.array(v.id("master_courses")), prodi: v.string() },
   handler: async (ctx, args) => {
     await requireAdmin(ctx);
+    await rateLimit(ctx, { name: "adminMutations", throws: true });
     const normalized = args.prodi.toUpperCase().trim().replace(/\.$/, "");
     const rows = await Promise.all(args.ids.map((id) => ctx.db.get(id)));
     const toCopy = rows.filter((r): r is NonNullable<typeof r> => r !== null);
@@ -335,6 +343,7 @@ export const splitMasterCoursesByPrefix = mutation({
   },
   handler: async (ctx, args) => {
     await requireAdmin(ctx);
+    await rateLimit(ctx, { name: "adminMutations", throws: true });
     const sourceNormalized = args.sourceProdi
       .toUpperCase()
       .trim()
@@ -407,6 +416,7 @@ export const addCurriculumItem = mutation({
   },
   handler: async (ctx, args) => {
     await requireAdmin(ctx);
+    await rateLimit(ctx, { name: "adminMutations", throws: true });
     return await ctx.db.insert("curriculum", args);
   },
 });
@@ -429,6 +439,7 @@ export const addCurriculumItems = mutation({
   },
   handler: async (ctx, args) => {
     await requireAdmin(ctx);
+    await rateLimit(ctx, { name: "adminMutations", throws: true });
     const existing = await ctx.db
       .query("curriculum")
       .withIndex("by_prodi_semester", (q) =>
@@ -464,6 +475,7 @@ export const dropCurriculumTerm = mutation({
   args: {},
   handler: async (ctx) => {
     await requireAdmin(ctx);
+    await rateLimit(ctx, { name: "adminMutations", throws: true });
     const rows = await ctx.db.query("curriculum").collect();
     const drifted = rows.filter((row) => row.term !== undefined);
     await Promise.all(
@@ -484,6 +496,7 @@ export const normalizeMasterCourseDays = mutation({
   args: {},
   handler: async (ctx) => {
     await requireAdmin(ctx);
+    await rateLimit(ctx, { name: "adminMutations", throws: true });
     const rows = await ctx.db.query("master_courses").collect();
     const patches = rows.flatMap((row) => {
       const normalized = row.schedule.map((s) => ({
@@ -504,6 +517,7 @@ export const removeCurriculumItem = mutation({
   args: { id: v.id("curriculum") },
   handler: async (ctx, args) => {
     await requireAdmin(ctx);
+    await rateLimit(ctx, { name: "adminMutations", throws: true });
     await ctx.db.delete(args.id);
   },
 });
@@ -512,6 +526,7 @@ export const batchDeleteCurriculum = mutation({
   args: { ids: v.array(v.id("curriculum")) },
   handler: async (ctx, args) => {
     await requireAdmin(ctx);
+    await rateLimit(ctx, { name: "adminMutations", throws: true });
     await Promise.all(args.ids.map((id) => ctx.db.delete(id)));
     return { success: true, deletedCount: args.ids.length };
   },
@@ -521,6 +536,7 @@ export const fixProdiFormatting = mutation({
   args: {},
   handler: async (ctx) => {
     await requireAdmin(ctx);
+    await rateLimit(ctx, { name: "adminMutations", throws: true });
     const masterItems = await ctx.db.query("master_courses").collect();
     const curriculumItems = await ctx.db.query("curriculum").collect();
 
@@ -570,6 +586,7 @@ export const addProdiOption = mutation({
   },
   handler: async (ctx, args) => {
     await requireAdmin(ctx);
+    await rateLimit(ctx, { name: "adminMutations", throws: true });
     const normalized = args.name.toUpperCase().trim().replace(/\.$/, "");
     const existing = await ctx.db
       .query("prodi_options")
@@ -588,6 +605,7 @@ export const removeProdiOption = mutation({
   args: { id: v.id("prodi_options") },
   handler: async (ctx, args) => {
     await requireAdmin(ctx);
+    await rateLimit(ctx, { name: "adminMutations", throws: true });
     await ctx.db.delete(args.id);
   },
 });
@@ -602,6 +620,7 @@ export const seedProdiOptions = mutation({
   args: {},
   handler: async (ctx) => {
     await requireAdmin(ctx);
+    await rateLimit(ctx, { name: "adminMutations", throws: true });
     const seedNames: { name: string; comingSoon?: boolean }[] = [
       { name: "INFORMATIKA" },
       { name: "SISTEM INFORMASI" },

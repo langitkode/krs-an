@@ -130,4 +130,15 @@ export default defineSchema({
     saveCount: v.number(),
     createdAt: v.number(),
   }).index("by_user", ["userId"]),
+
+  // Rate limit state for convex-helpers/server/rateLimit.
+  // Each row stores a token-bucket or fixed-window counter keyed by
+  // (name + optional key). The module's defineRateLimits manages this
+  // table automatically; do not write to it directly.
+  rateLimits: defineTable({
+    name: v.string(),
+    key: v.optional(v.string()),
+    ts: v.number(),
+    value: v.number(),
+  }).index("nameKey", ["name", "key"]),
 });
