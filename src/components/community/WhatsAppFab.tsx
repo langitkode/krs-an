@@ -18,13 +18,18 @@ export function WhatsAppFab() {
   const [showChannels, setShowChannels] = useState(false);
   const [cooldown, setCooldown] = useState(false);
   const [hasSeen, setHasSeen] = useLocalStorage("has_seen_wa_popup", false);
-  // Auto-open after mount. Delay ensures prerender capture finishes first
-  // (puppeteer captures DOM within ~30ms of `prerender-ready` event).
+  // Auto-open in the second animation frame after mount. This is deliberate:
+  // puppeteer captures the DOM in the first frame after `prerender-ready`, so
+  // opening in the second frame means the prerendered HTML is never affected.
   useEffect(() => {
-    if (!hasSeen) {
-      const id = setTimeout(() => setOpen(true), 150);
-      return () => clearTimeout(id);
-    }
+    if (hasSeen) return;
+    let cancelled = false;
+    const id = requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (!cancelled) setOpen(true);
+      });
+    });
+    return () => { cancelled = true; cancelAnimationFrame(id); };
   }, [hasSeen]);
 
   const openLink = useCallback(
