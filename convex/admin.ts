@@ -19,6 +19,7 @@ export const pingAdmin = query({
 });
 
 // Master Schedule Operations
+// Master Schedule Operations
 export const getPaginatedMasterCourses = query({
   args: {
     prodi: v.optional(v.string()),
@@ -45,16 +46,29 @@ export const getPaginatedMasterCourses = query({
       const filtered = rows.filter((row) => {
         const code = row.code.toLowerCase();
         const name = row.name.toLowerCase();
+        const nameWords = name.split(/[\s\-_]+/);
         const className = row.class.toLowerCase();
         const lecturer = row.lecturer.toLowerCase();
 
-        return searchTerms.every(
-          (term) =>
-            code.includes(term) ||
-            name.includes(term) ||
-            className.includes(term) ||
-            lecturer.includes(term),
-        );
+        return searchTerms.every((term) => {
+          // 1. Match class name exactly or as prefix (highly specific)
+          if (className === term || className.startsWith(term)) {
+            return true;
+          }
+          // 2. Match name words by prefix (prevents short terms like "a" matching inside words like "data")
+          if (nameWords.some((word) => word.startsWith(term))) {
+            return true;
+          }
+          // 3. Match code by substring
+          if (code.includes(term)) {
+            return true;
+          }
+          // 4. Match lecturer by substring
+          if (lecturer.includes(term)) {
+            return true;
+          }
+          return false;
+        });
       });
 
       const numItems = args.paginationOpts.numItems;
@@ -105,16 +119,25 @@ export const getMasterCoursesCount = query({
       const filtered = rows.filter((row) => {
         const code = row.code.toLowerCase();
         const name = row.name.toLowerCase();
+        const nameWords = name.split(/[\s\-_]+/);
         const className = row.class.toLowerCase();
         const lecturer = row.lecturer.toLowerCase();
 
-        return searchTerms.every(
-          (term) =>
-            code.includes(term) ||
-            name.includes(term) ||
-            className.includes(term) ||
-            lecturer.includes(term),
-        );
+        return searchTerms.every((term) => {
+          if (className === term || className.startsWith(term)) {
+            return true;
+          }
+          if (nameWords.some((word) => word.startsWith(term))) {
+            return true;
+          }
+          if (code.includes(term)) {
+            return true;
+          }
+          if (lecturer.includes(term)) {
+            return true;
+          }
+          return false;
+        });
       });
 
       return filtered.length;
