@@ -417,7 +417,7 @@ export function ScheduleMaker({ userData }: ScheduleMakerProps) {
         />
       )}
 
-      {step === "config" && <WhatsAppFab />}
+      {(step === "config" || step === "archive") && <WhatsAppFab />}
     </div>
   );
 }
