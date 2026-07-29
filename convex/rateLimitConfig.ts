@@ -29,8 +29,6 @@ export const { checkRateLimit, rateLimit, resetRateLimit } = defineRateLimits({
   planWrite: { kind: "token bucket", rate: 10, period: MINUTE, capacity: 20 },
   // Sharing: create share link
   createShareLink: { kind: "token bucket", rate: 5, period: MINUTE, capacity: 10 },
-  // User lifecycle: called on every auth transition
-  ensureUser: { kind: "token bucket", rate: 5, period: SECOND, capacity: 10 },
   // User preferences: rarely used
   updatePreferences: { kind: "token bucket", rate: 10, period: MINUTE, capacity: 20 },
   // Credit spending: already limited to 5/day, this is secondary defense

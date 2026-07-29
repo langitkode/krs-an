@@ -9,6 +9,7 @@ import { usePlanArchive } from "@/hooks/usePlanArchive";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { useTutorial, TutorialStep } from "@/hooks/useTutorial";
 import { TutorialModal } from "@/components/ui/TutorialModal";
+import { WhatsAppFab } from "@/components/community/WhatsAppFab";
 import { useEffect, useRef, useState } from "react";
 
 import { useScheduleSession } from "@/hooks/maker/useScheduleSession";
@@ -415,6 +416,8 @@ export function ScheduleMaker({ userData }: ScheduleMakerProps) {
           onSkip={skipTutorial}
         />
       )}
+
+      <WhatsAppFab />
     </div>
   );
 }

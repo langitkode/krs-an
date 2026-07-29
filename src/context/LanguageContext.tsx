@@ -189,6 +189,16 @@ const translations: Record<string, string> = {
   "toast.migrate_desc":
     "{count} jadwal yang dibuat sebelum Anda masuk bisa dipindahkan ke akun ini.",
   "toast.migrate_action": "Impor",
+  "community.title": "Gabung Komunitas WhatsApp",
+  "community.desc": "Dapatkan info terbaru, diskusi, dan bantuan seputar KRSan.",
+  "community.name_placeholder": "Nama kamu (opsional)",
+  "community.join": "Gabung",
+  "community.later": "Nanti aja",
+  "community.next": "Lanjut",
+  "community.update_desc": "Dapatkan info terbaru seputar KRSan.",
+  "community.build_title": "Ikut Bikin / Testing",
+  "community.build_desc": "Mau ikut bikin atau testing web kayak KRSan?",
+
   "toast.tutorial_nudge_title": "Baru pertama kali di sini?",
   "toast.tutorial_nudge_desc": "Lihat video tutorial singkat cara pakai KRSan.",
   "toast.tutorial_nudge_action": "Lihat Tutorial",

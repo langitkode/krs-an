@@ -47,8 +47,6 @@ export const ensureUser = mutation({
       throw new Error("Called ensureUser without authentication present");
     }
 
-    await rateLimit(ctx, { name: "ensureUser", key: identity.tokenIdentifier, throws: true });
-
     const user = await ctx.db
       .query("users")
       .withIndex("by_token", (q) =>
