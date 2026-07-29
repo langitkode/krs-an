@@ -1,9 +1,8 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useLanguage } from "@/context/LanguageContext";
-import { useLocalStorage } from "@/hooks/useLocalStorage";
 
 const WA_UPDATE =
   "https://chat.whatsapp.com/L2yBm9Q6ljC9VuHqVqfqll?s=cl&p=a&mlu=4&amv=1";
@@ -17,20 +16,6 @@ export function WhatsAppFab() {
   const [open, setOpen] = useState(false);
   const [showChannels, setShowChannels] = useState(false);
   const [cooldown, setCooldown] = useState(false);
-  const [hasSeen, setHasSeen] = useLocalStorage("has_seen_wa_popup", false);
-  // Auto-open in the second animation frame after mount. This is deliberate:
-  // puppeteer captures the DOM in the first frame after `prerender-ready`, so
-  // opening in the second frame means the prerendered HTML is never affected.
-  useEffect(() => {
-    if (hasSeen) return;
-    let cancelled = false;
-    const id = requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        if (!cancelled) setOpen(true);
-      });
-    });
-    return () => { cancelled = true; cancelAnimationFrame(id); };
-  }, [hasSeen]);
 
   const openLink = useCallback(
     (url: string) => {
@@ -137,10 +122,7 @@ export function WhatsAppFab() {
               {/* Dismiss */}
               <button
                 type="button"
-                onClick={() => {
-                  setOpen(false);
-                  setHasSeen(true);
-                }}
+                onClick={() => setOpen(false)}
                 className="w-full text-center text-caption text-muted-foreground underline underline-offset-2 hover:text-foreground"
               >
                 {t("community.later")}
