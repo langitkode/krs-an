@@ -96,12 +96,19 @@ export const createAutoEvent = internalMutation({
   args: {
     prodi: v.string(),
     type: v.string(),
-    inserted: v.number(),
-    updated: v.number(),
-    total: v.number(),
+    inserted: v.optional(v.number()),
+    updated: v.optional(v.number()),
+    deleted: v.optional(v.number()),
+    total: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const prodi = args.prodi.toUpperCase().trim().replace(/\.$/, "");
+    const ins = args.inserted ?? 0;
+    const upd = args.updated ?? 0;
+    const del = args.deleted ?? 0;
+    const tot = args.total ?? (ins + upd + del);
+
+    if (tot === 0) return; // Nothing changed
 
     const existing = await ctx.db
       .query("update_events")
@@ -115,22 +122,32 @@ export const createAutoEvent = internalMutation({
       stale.map((e) => ctx.db.patch(e._id, { active: false })),
     );
 
-    let title: string;
-    let message: string;
-    if (args.inserted > 0) {
-      title = `${args.total} kelas diperbarui`;
-      message = `Prodi ${prodi}: ${args.inserted} kelas baru, ${args.updated} kelas diperbarui.`;
-    } else {
-      title = `${args.total} kelas diperbarui`;
-      message = `Prodi ${prodi}: ${args.total} kelas diperbarui.`;
+    // Generate rich title based on modification type
+    let title = "Jadwal kuliah diperbarui";
+    if (ins > 0 && upd === 0 && del === 0) {
+      title = `${ins} kelas baru ditambahkan`;
+    } else if (del > 0 && ins === 0 && upd === 0) {
+      title = `${del} kelas dihapus`;
+    } else if (upd > 0 && ins === 0 && del === 0) {
+      title = `${upd} kelas diperbarui`;
+    } else if (tot > 0) {
+      title = `${tot} perubahan jadwal kelas`;
     }
+
+    // Generate descriptive details
+    const parts: string[] = [];
+    if (ins > 0) parts.push(`${ins} kelas baru ditambahkan`);
+    if (upd > 0) parts.push(`${upd} kelas diperbarui`);
+    if (del > 0) parts.push(`${del} kelas dihapus`);
+
+    const message = `Prodi ${prodi}: ${parts.join(", ")}.`;
 
     await ctx.db.insert("update_events", {
       prodi,
       type: args.type,
       title,
       message,
-      severity: "success",
+      severity: del > 0 && ins === 0 ? "warning" : "success",
       dismissed_by: [],
       active: true,
     });

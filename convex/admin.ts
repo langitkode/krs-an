@@ -439,24 +439,26 @@ export const splitMasterCoursesByPrefix = mutation({
       perTarget[p.prodi] = (perTarget[p.prodi] || 0) + 1;
     }
 
-    // Trigger update banners for each target prodi
+    // Trigger update banners for each target prodi (classes moved in)
     for (const [prodi, count] of Object.entries(perTarget)) {
       await ctx.runMutation(internal.updateEvents.createAutoEvent, {
         prodi,
         type: "course_import",
         inserted: count,
         updated: 0,
+        deleted: 0,
         total: count,
       });
     }
 
-    // Trigger update banner for source prodi (classes moved out)
+    // Trigger update banner for source prodi (classes moved out/deleted)
     if (patches.length > 0) {
       await ctx.runMutation(internal.updateEvents.createAutoEvent, {
         prodi: sourceNormalized,
         type: "course_import",
         inserted: 0,
-        updated: patches.length,
+        updated: 0,
+        deleted: patches.length,
         total: patches.length,
       });
     }
@@ -505,7 +507,7 @@ export const copyMasterCoursesByPrefix = mutation({
 
     let inserted = 0;
     let overwritten = 0;
-    const perTarget: Record<string, number> = {};
+    const perTargetCounts: Record<string, { inserted: number; overwritten: number }> = {};
 
     await Promise.all(
       rows.map(async (row) => {
@@ -515,6 +517,10 @@ export const copyMasterCoursesByPrefix = mutation({
 
         const { _id, _creationTime, ...rest } = row;
         const payload = { ...rest, prodi: match.prodi };
+
+        if (!perTargetCounts[match.prodi]) {
+          perTargetCounts[match.prodi] = { inserted: 0, overwritten: 0 };
+        }
 
         // Upsert: check for an existing row with same code + class in the
         // target prodi. Patch if found, insert if not.
@@ -532,24 +538,29 @@ export const copyMasterCoursesByPrefix = mutation({
         if (existing) {
           await ctx.db.patch(existing._id, payload);
           overwritten++;
+          perTargetCounts[match.prodi].overwritten++;
         } else {
           await ctx.db.insert("master_courses", payload);
           inserted++;
+          perTargetCounts[match.prodi].inserted++;
         }
-
-        perTarget[match.prodi] = (perTarget[match.prodi] || 0) + 1;
       }),
     );
 
-    // Trigger update banners for each target prodi
-    for (const [prodi, count] of Object.entries(perTarget)) {
+    // Trigger update banners for each target prodi with detailed counters
+    for (const [prodi, counts] of Object.entries(perTargetCounts)) {
       await ctx.runMutation(internal.updateEvents.createAutoEvent, {
         prodi,
         type: "course_import",
-        inserted: count,
-        updated: 0,
-        total: count,
+        inserted: counts.inserted,
+        updated: counts.overwritten,
+        deleted: 0,
       });
+    }
+
+    const perTarget: Record<string, number> = {};
+    for (const [prodi, counts] of Object.entries(perTargetCounts)) {
+      perTarget[prodi] = counts.inserted + counts.overwritten;
     }
 
     const unmatched = rows.length - inserted - overwritten;
@@ -611,7 +622,8 @@ export const deleteMasterCoursesByPrefix = mutation({
         prodi: sourceNormalized,
         type: "course_import",
         inserted: 0,
-        updated: toDelete.length,
+        updated: 0,
+        deleted: toDelete.length,
         total: toDelete.length,
       });
     }
