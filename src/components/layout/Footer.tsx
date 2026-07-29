@@ -11,9 +11,11 @@ import {
 import { Icon, type IconName } from "@/components/ui/icon";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "../../context/LanguageContext";
+import { FeedbackDialog } from "../maker/FeedbackDialog";
 
 export function Footer() {
   const { t } = useLanguage();
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
   return (
     <footer className="border-t border-border bg-card py-8">
       <div className="container mx-auto max-w-6xl px-4">
@@ -38,9 +40,11 @@ export function Footer() {
               <AboutDialog />
               <HowToUseDialog />
               <DonateDialog />
-              <a
-                href="mailto:indraprhmbd@gmail.com"
-                className="group flex flex-col items-center gap-2 text-muted-foreground transition-colors hover:text-primary"
+              <FeedbackDialog open={feedbackOpen} onOpenChange={setFeedbackOpen} saveCount={0} />
+              <button
+                type="button"
+                onClick={() => setFeedbackOpen(true)}
+                className="group flex cursor-pointer flex-col items-center gap-2 text-muted-foreground transition-colors hover:text-primary"
               >
                 <span className="flex h-10 w-10 items-center justify-center rounded-card border border-border bg-muted transition-colors group-hover:bg-accent">
                   <Icon name="message" size={18} />
@@ -48,7 +52,7 @@ export function Footer() {
                 <span className="text-caps uppercase">
                   {t("footer.feedback")}
                 </span>
-              </a>
+              </button>
             </div>
           </div>
 
@@ -421,6 +425,17 @@ export function AboutDialog({ trigger }: { trigger?: React.ReactNode }) {
           <p>{t("about.how")}</p>
           <p className="rounded-card border border-border bg-muted p-4 text-caption">
             {t("about.legal")}
+          </p>
+          <p className="text-body-sm text-muted-foreground">
+            Powered by{" "}
+            <a
+              href="https://langitkode.my.id"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold underline underline-offset-2 hover:text-foreground"
+            >
+              LangitKode Creative
+            </a>
           </p>
           <p className="text-caption text-muted-foreground">
             <a

@@ -1,8 +1,9 @@
 import { SignInButton, SignOutButton, useUser } from "@clerk/clerk-react";
 import { Link } from "react-router-dom";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { ContactDialog } from "../maker/ContactDialog";
+import { FeedbackDialog } from "../maker/FeedbackDialog";
 import { useLanguage } from "../../context/LanguageContext";
 import { useSession } from "../../context/SessionContext";
 import { Button } from "@/components/ui/button";
@@ -46,6 +47,7 @@ export function Navbar({ userData }: NavbarProps) {
 
   const { plans } = usePlanArchive();
   const archiveCount = plans?.length ?? 0;
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   const credits = userData?.credits ?? 0;
 
@@ -84,9 +86,10 @@ export function Navbar({ userData }: NavbarProps) {
           </button>
         }
       />
-      <a href="mailto:indraprhmbd@gmail.com" className="w-full">
+      <FeedbackDialog open={feedbackOpen} onOpenChange={setFeedbackOpen} saveCount={0} />
+      <button type="button" className="w-full" onClick={() => setFeedbackOpen(true)}>
         <MenuItem icon="message" label={t("footer.feedback")} />
-      </a>
+      </button>
       <ContactDialog
         trigger={
           <button type="button" className="w-full">
