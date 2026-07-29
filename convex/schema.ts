@@ -140,5 +140,6 @@ export default defineSchema({
     key: v.optional(v.string()),
     ts: v.number(),
     value: v.number(),
-  }).index("nameKey", ["name", "key"]),
+  })
+    .index("name", ["name", "key"]),
 });
