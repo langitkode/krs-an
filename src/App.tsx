@@ -137,25 +137,28 @@ function App() {
               {showBimcalBanner && (
                 <div className="flex items-center justify-between gap-3 border-b border-border bg-muted px-4 py-2 text-caption text-muted-foreground">
                   <span className="min-w-0 truncate">
-                    Mau impor jadwalmu langsung ke Google Calendar / Apple Calendar?{" "}
-                    <a
-                      href="https://bimcalendar.vercel.app"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={() => setHasSeenBimcalBanner(true)}
-                      className="font-semibold text-foreground underline underline-offset-2 hover:text-primary"
+                    Mau impor jadwalmu ke Google Calendar / Apple Calendar?
+                  </span>
+                  <div className="flex shrink-0 items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        window.open("https://bimcalendar.vercel.app", "_blank");
+                        setHasSeenBimcalBanner(true);
+                      }}
+                      className="rounded-control bg-foreground/10 px-2.5 py-1 font-bold hover:bg-foreground/20"
                     >
                       Coba Bimcalendar
-                    </a>
-                  </span>
-                  <button
-                    type="button"
-                    aria-label="Tutup"
-                    onClick={() => setHasSeenBimcalBanner(true)}
-                    className="shrink-0 rounded-control p-1 hover:bg-foreground/10"
-                  >
-                    <Icon name="close" size={14} />
-                  </button>
+                    </button>
+                    <button
+                      type="button"
+                      aria-label="Tutup"
+                      onClick={() => setHasSeenBimcalBanner(true)}
+                      className="rounded-control p-1 hover:bg-foreground/10"
+                    >
+                      <Icon name="close" size={14} />
+                    </button>
+                  </div>
                 </div>
               )}
 

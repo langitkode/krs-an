@@ -8,7 +8,6 @@ import type { ArchivedPlan, Plan } from "@/types";
 import { MakerShell } from "./MakerShell";
 import { cn } from "@/lib/utils";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
-import { useLocalStorage } from "@/hooks/useLocalStorage";
 
 
 interface ScheduleArchiveProps {
@@ -222,33 +221,20 @@ function DonateBanner() {
   );
 }
 
-function BimcalBanner({ onDismiss }: { onDismiss: () => void }) {
+function BimcalBanner() {
   return (
     <div className="flex items-center gap-2 rounded-card border border-border bg-muted px-3 py-2 text-caption text-muted-foreground">
       <Icon name="sparkles" size={14} className="shrink-0" />
       <p className="flex-1">
         Mau impor jadwalmu ke Google Calendar / Apple Calendar?
       </p>
-      <div className="flex shrink-0 items-center gap-1.5">
-        <button
-          type="button"
-          className="rounded-control bg-primary px-2.5 py-1 text-caption font-bold text-primary-foreground hover:bg-primary/90 transition-colors"
-          onClick={() => {
-            window.open("https://bimcalendar.vercel.app", "_blank");
-            onDismiss();
-          }}
-        >
-          Coba Bimcalendar
-        </button>
-        <button
-          type="button"
-          aria-label="Tutup"
-          onClick={onDismiss}
-          className="rounded-control p-1 hover:bg-foreground/10"
-        >
-          <Icon name="close" size={14} />
-        </button>
-      </div>
+      <button
+        type="button"
+        className="shrink-0 rounded-control bg-primary px-2.5 py-1 text-caption font-bold text-primary-foreground hover:bg-primary/90 transition-colors"
+        onClick={() => window.open("https://bimcalendar.vercel.app", "_blank")}
+      >
+        Coba Bimcalendar
+      </button>
     </div>
   );
 }
@@ -264,10 +250,6 @@ export function ScheduleArchive({
   useDocumentTitle("page.title.archive");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
-  const [bimcalDismissed, setBimcalDismissed] = useLocalStorage(
-    "has_seen_bimcal_banner",
-    false,
-  );
 
   const aiPlans = archived?.filter((p) => p.isSmartGenerated) || [];
   const manualPlans = archived?.filter((p) => !p.isSmartGenerated) || [];
@@ -330,9 +312,8 @@ export function ScheduleArchive({
         )}
 
         <DonateBanner />
-        {!bimcalDismissed && (
-          <BimcalBanner onDismiss={() => setBimcalDismissed(true)} />
-        )}
+        <BimcalBanner />
+
 
         <Tabs
           defaultValue={aiPlans.length > 0 ? "ai" : "saved"}
