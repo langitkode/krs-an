@@ -224,7 +224,7 @@ function DonateBanner() {
 function BimcalBanner() {
   return (
     <div className="flex items-center gap-2 rounded-card border border-border bg-muted px-3 py-2 text-caption text-muted-foreground">
-      <Icon name="sparkles" size={14} className="shrink-0" />
+      <Icon name="calendar" size={14} className="shrink-0" />
       <p className="flex-1">
         Mau impor jadwalmu ke Google Calendar / Apple Calendar?
       </p>

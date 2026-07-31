@@ -57,6 +57,7 @@ const MAP = {
   list: "list",
   message: "message-square",
   coffee: "coffee",
+  calendar: "calendar",
 
   // brand marks
   github: "github",
