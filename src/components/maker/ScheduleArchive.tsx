@@ -232,25 +232,28 @@ function BimcalBanner() {
     <div className="flex items-center gap-2 rounded-card border border-border bg-muted px-3 py-2 text-caption text-muted-foreground">
       <Icon name="sparkles" size={14} className="shrink-0" />
       <p className="flex-1">
-        Mau impor jadwalmu langsung ke Google Calendar / Apple Calendar?{" "}
-        <a
-          href="https://bimcalendar.vercel.app"
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={() => setDismissed(true)}
-          className="font-semibold text-foreground underline underline-offset-2 hover:text-primary"
+        Mau impor jadwalmu ke Google Calendar / Apple Calendar?
+      </p>
+      <div className="flex shrink-0 items-center gap-1.5">
+        <button
+          type="button"
+          className="rounded-control bg-primary px-2.5 py-1 text-caption font-bold text-primary-foreground hover:bg-primary/90 transition-colors"
+          onClick={() => {
+            window.open("https://bimcalendar.vercel.app", "_blank");
+            setDismissed(true);
+          }}
         >
           Coba Bimcalendar
-        </a>
-      </p>
-      <button
-        type="button"
-        aria-label="Tutup"
-        onClick={() => setDismissed(true)}
-        className="shrink-0 rounded-control p-1 hover:bg-foreground/10"
-      >
-        <Icon name="close" size={14} />
-      </button>
+        </button>
+        <button
+          type="button"
+          aria-label="Tutup"
+          onClick={() => setDismissed(true)}
+          className="rounded-control p-1 hover:bg-foreground/10"
+        >
+          <Icon name="close" size={14} />
+        </button>
+      </div>
     </div>
   );
 }
