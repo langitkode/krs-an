@@ -81,6 +81,12 @@ function App() {
   );
   const showTutorialBanner = !hasSeenTutorialNudge;
 
+  const [hasSeenBimcalBanner, setHasSeenBimcalBanner] = useLocalStorage(
+    "has_seen_bimcal_banner",
+    false,
+  );
+  const showBimcalBanner = !hasSeenBimcalBanner;
+
   return (
     <div className="h-[100dvh] flex flex-col bg-background font-sans overflow-hidden">
       <Toaster />
@@ -125,6 +131,31 @@ function App() {
                       <Icon name="close" size={14} />
                     </button>
                   </div>
+                </div>
+              )}
+
+              {showBimcalBanner && (
+                <div className="flex items-center justify-between gap-3 border-b border-border bg-muted px-4 py-2 text-caption text-muted-foreground">
+                  <span className="min-w-0 truncate">
+                    Mau impor jadwalmu langsung ke Google Calendar / Apple Calendar?{" "}
+                    <a
+                      href="https://bimcalendar.vercel.app"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => setHasSeenBimcalBanner(true)}
+                      className="font-semibold text-foreground underline underline-offset-2 hover:text-primary"
+                    >
+                      Coba Bimcalendar
+                    </a>
+                  </span>
+                  <button
+                    type="button"
+                    aria-label="Tutup"
+                    onClick={() => setHasSeenBimcalBanner(true)}
+                    className="shrink-0 rounded-control p-1 hover:bg-foreground/10"
+                  >
+                    <Icon name="close" size={14} />
+                  </button>
                 </div>
               )}
 

@@ -8,6 +8,8 @@ import type { ArchivedPlan, Plan } from "@/types";
 import { MakerShell } from "./MakerShell";
 import { cn } from "@/lib/utils";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
+
 
 interface ScheduleArchiveProps {
   archived: ArchivedPlan[] | undefined;
@@ -220,6 +222,39 @@ function DonateBanner() {
   );
 }
 
+function BimcalBanner() {
+  const [dismissed, setDismissed] = useLocalStorage(
+    "has_seen_bimcal_banner",
+    false,
+  );
+  if (dismissed) return null;
+  return (
+    <div className="flex items-center gap-2 rounded-card border border-border bg-muted px-3 py-2 text-caption text-muted-foreground">
+      <Icon name="sparkles" size={14} className="shrink-0" />
+      <p className="flex-1">
+        Mau impor jadwalmu langsung ke Google Calendar / Apple Calendar?{" "}
+        <a
+          href="https://bimcalendar.vercel.app"
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={() => setDismissed(true)}
+          className="font-semibold text-foreground underline underline-offset-2 hover:text-primary"
+        >
+          Coba Bimcalendar
+        </a>
+      </p>
+      <button
+        type="button"
+        aria-label="Tutup"
+        onClick={() => setDismissed(true)}
+        className="shrink-0 rounded-control p-1 hover:bg-foreground/10"
+      >
+        <Icon name="close" size={14} />
+      </button>
+    </div>
+  );
+}
+
 export function ScheduleArchive({
   archived,
   onImport,
@@ -293,6 +328,7 @@ export function ScheduleArchive({
         )}
 
         <DonateBanner />
+        <BimcalBanner />
 
         <Tabs
           defaultValue={aiPlans.length > 0 ? "ai" : "saved"}
