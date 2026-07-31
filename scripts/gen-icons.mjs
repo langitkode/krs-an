@@ -58,6 +58,10 @@ const MAP = {
   message: "message-square",
   coffee: "coffee",
   calendar: "calendar",
+  move: "move",
+  maximize: "maximize",
+  minimize: "minimize",
+  grid: "layout-grid",
 
   // brand marks
   github: "github",

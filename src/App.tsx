@@ -135,7 +135,7 @@ function App() {
               )}
 
               {showBimcalBanner && (
-                <div className="flex items-center justify-between gap-3 border-b border-border bg-muted px-4 py-2 text-caption text-muted-foreground">
+                <div className="flex items-center justify-between gap-3 border-b border-primary/20 bg-primary/10 px-4 py-2 text-caption text-primary">
                   <span className="min-w-0 truncate">
                     Mau impor jadwalmu ke Google Calendar / Apple Calendar?
                   </span>
@@ -146,7 +146,7 @@ function App() {
                         window.open("https://bimcalendar.vercel.app", "_blank");
                         setHasSeenBimcalBanner(true);
                       }}
-                      className="rounded-control bg-foreground/10 px-2.5 py-1 font-bold hover:bg-foreground/20"
+                      className="rounded-control bg-primary px-2.5 py-1 font-bold text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm"
                     >
                       Coba Bimcalendar
                     </button>
@@ -154,7 +154,7 @@ function App() {
                       type="button"
                       aria-label="Tutup"
                       onClick={() => setHasSeenBimcalBanner(true)}
-                      className="rounded-control p-1 hover:bg-foreground/10"
+                      className="rounded-control p-1 hover:bg-primary/20 text-primary"
                     >
                       <Icon name="close" size={14} />
                     </button>
