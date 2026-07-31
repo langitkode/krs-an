@@ -222,12 +222,7 @@ function DonateBanner() {
   );
 }
 
-function BimcalBanner() {
-  const [dismissed, setDismissed] = useLocalStorage(
-    "has_seen_bimcal_banner",
-    false,
-  );
-  if (dismissed) return null;
+function BimcalBanner({ onDismiss }: { onDismiss: () => void }) {
   return (
     <div className="flex items-center gap-2 rounded-card border border-border bg-muted px-3 py-2 text-caption text-muted-foreground">
       <Icon name="sparkles" size={14} className="shrink-0" />
@@ -240,7 +235,7 @@ function BimcalBanner() {
           className="rounded-control bg-primary px-2.5 py-1 text-caption font-bold text-primary-foreground hover:bg-primary/90 transition-colors"
           onClick={() => {
             window.open("https://bimcalendar.vercel.app", "_blank");
-            setDismissed(true);
+            onDismiss();
           }}
         >
           Coba Bimcalendar
@@ -248,7 +243,7 @@ function BimcalBanner() {
         <button
           type="button"
           aria-label="Tutup"
-          onClick={() => setDismissed(true)}
+          onClick={onDismiss}
           className="rounded-control p-1 hover:bg-foreground/10"
         >
           <Icon name="close" size={14} />
@@ -269,6 +264,10 @@ export function ScheduleArchive({
   useDocumentTitle("page.title.archive");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
+  const [bimcalDismissed, setBimcalDismissed] = useLocalStorage(
+    "has_seen_bimcal_banner",
+    false,
+  );
 
   const aiPlans = archived?.filter((p) => p.isSmartGenerated) || [];
   const manualPlans = archived?.filter((p) => !p.isSmartGenerated) || [];
@@ -331,7 +330,9 @@ export function ScheduleArchive({
         )}
 
         <DonateBanner />
-        <BimcalBanner />
+        {!bimcalDismissed && (
+          <BimcalBanner onDismiss={() => setBimcalDismissed(true)} />
+        )}
 
         <Tabs
           defaultValue={aiPlans.length > 0 ? "ai" : "saved"}
