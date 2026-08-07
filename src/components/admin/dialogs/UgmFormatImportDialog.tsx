@@ -17,15 +17,24 @@ import { Icon } from "@/components/ui/icon";
 import { toast } from "sonner";
 import { useProdiOptions } from "../hooks/useProdiOptions";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
-import { parseUgmBlockFormat } from "@/lib/parsers/ugmBlockParser";
+import {
+  parseUgmBlockFormat,
+  type ParsedMasterCourse,
+} from "@/lib/parsers/ugmBlockParser";
+import {
+  isUgmTsvFormat,
+  parseUgmTsvFormat,
+} from "@/lib/parsers/ugmTsvParser";
 
 interface UgmFormatImportDialogProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-const TEMPLATE = `5	TKF210058  Penerapan Mikroprosesor
-  Kelas: FA	2	0		1. Prof. Nazrul Effendy, S.T., MT.,Ph.D.	Rabu, 13:00-14:40`;
+const TEMPLATE = `No	Mata Kuliah	SKS	Semester	Prasyarat	Dosen	Jadwal
+1	"TKKF262101  Aljabar
+ Kelas: A"	3	1		"1. Dr.-Ing. Yohan Fajar Sidik, S.T., M.Eng.
+2. Dr. Rian Fatah Mochamad, S.T., M.Eng."	Senin, 07:00-09:30`;
 
 export function UgmFormatImportDialog({
   isOpen,
@@ -58,7 +67,9 @@ export function UgmFormatImportDialog({
         }
       }
 
-      const data = parseUgmBlockFormat(rawText, normalizedProdi);
+      const data: ParsedMasterCourse[] = isUgmTsvFormat(rawText)
+        ? parseUgmTsvFormat(rawText, normalizedProdi)
+        : parseUgmBlockFormat(rawText, normalizedProdi);
       if (data.length === 0) throw new Error("Tidak ada data valid ditemukan.");
 
       await bulkImport({ courses: data });
@@ -84,8 +95,8 @@ export function UgmFormatImportDialog({
               UGM Format Importer
             </DialogTitle>
             <DialogDescription className="text-caps font-mono text-muted-foreground uppercase pt-2">
-              Parses UGM's multi-line block export (one course per block, numbered
-              lecturers, trailing schedule).
+              Parses UGM's tab-separated export (quoted multi-line fields, numbered
+              lecturers). Detects the older multi-line block format automatically.
             </DialogDescription>
           </div>
         </DialogHeader>
@@ -141,9 +152,9 @@ export function UgmFormatImportDialog({
                 className="flex-shrink-0 mt-0.5 text-muted-foreground"
               />
               <p className="text-caption text-muted-foreground">
-                Setiap kelas jadi satu blok multi-baris: baris pertama "kode
-                nama", lalu "Kelas: X" berisi SKS dan dosen bernomor. Kelas
-                tanpa jadwal (mis. Kerja Praktek) tetap masuk tanpa jadwal.
+                Tempel langsung dari tabel UGM (tab-separated). Kolom No dan
+                Prasyarat diabaikan. Format blok multi-baris lama juga masih
+                didukung dan dideteksi otomatis.
               </p>
             </div>
           </div>
