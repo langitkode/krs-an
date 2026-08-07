@@ -33,7 +33,7 @@ export function ContactDialog({ trigger }: ContactDialogProps) {
             <h2 className="text-headline text-foreground">
               {AUTHOR_PROFILE.name}
             </h2>
-            <p className="text-body font-medium text-primary uppercase">
+            <p className="text-body-sm font-medium text-primary">
               {AUTHOR_PROFILE.role}
             </p>
           </div>

@@ -1,6 +1,6 @@
 export const AUTHOR_PROFILE = {
   name: "Arsyadi Indra",
-  role: "Junior Fullstack Web Developer",
+  role: "Software Engineer | AI Automation Enthusiast",
   quote:
     "I write code that works on my machine. If it doesn't work on yours, we'll just have to trade machines.",
   description:
