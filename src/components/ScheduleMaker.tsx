@@ -67,8 +67,8 @@ export function ScheduleMaker({ userData }: ScheduleMakerProps) {
     maxSks: number;
     useMaster: boolean;
   }>("krs-session-profile", {
-    university: "UPN_VETERAN_YOGYAKARTA",
-    prodi: "INFORMATIKA",
+    university: "UGM",
+    prodi: "TEKNIK FISIKA",
     semester: DEFAULT_SEMESTER,
     maxSks: 24,
     useMaster: true,
